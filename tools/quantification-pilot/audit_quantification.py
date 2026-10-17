@@ -26,4 +26,3 @@ for e in f.by_type('IfcElement'):
 summary={'ifcopenshell':ifcopenshell.version,'schema':f.schema,'source':str(source),'sourceSha256':hashlib.sha256(source.read_bytes()).hexdigest(),'lengthScaleToM':uu.calculate_unit_scale(f),'elements':len(rows),'classes':dict(classes),'types':{k:dict(v) for k,v in types.items()},'materials':dict(material_names),'fields':dict(fields),'storeys':[{'name':s.Name,'elevation':s.Elevation} for s in f.by_type('IfcBuildingStorey')],'reinforcingBars':len(f.by_type('IfcReinforcingBar')),'reinforcingMeshes':len(f.by_type('IfcReinforcingMesh'))}
 (out/'audit-modelo.json').write_text(json.dumps({'summary':summary,'elements':rows},ensure_ascii=False,indent=2,default=str),encoding='utf-8')
 print(json.dumps(summary,ensure_ascii=False,indent=2,default=str))
-

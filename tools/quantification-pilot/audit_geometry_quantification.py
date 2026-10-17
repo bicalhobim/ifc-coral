@@ -38,4 +38,3 @@ summary={'sourceSha256':hashlib.sha256(source.read_bytes()).hexdigest(),'ifcopen
 with(out/'geometria-auditada.csv').open('w',encoding='utf-8-sig',newline='') as file:
     writer=csv.DictWriter(file,fieldnames=list(rows[0]),delimiter=';');writer.writeheader();writer.writerows(rows)
 print(json.dumps(summary,ensure_ascii=False,indent=2))
-

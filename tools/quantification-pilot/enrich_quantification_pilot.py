@@ -51,4 +51,3 @@ def csv_safe(value):return "'"+value if isinstance(value,str) and value.startswi
 with(out/'catalogo-e-estimativas.csv').open('w',encoding='utf-8-sig',newline='') as file:
     writer=csv.DictWriter(file,fieldnames=list(rows[0]),delimiter=';');writer.writeheader();writer.writerows({k:csv_safe(v) for k,v in r.items()} for r in rows)
 print(json.dumps(summary,ensure_ascii=False,indent=2))
-
