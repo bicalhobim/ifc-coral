@@ -1,0 +1,11 @@
+export type ElementRef={modelId:string;globalId:string};
+export type ModelRevision={id:string;hash:string;name:string;projectGlobalId:string};
+export type TaskRecord={id:string;modelId:string;globalId:string;slot:string;name:string;location:string;service:string;start:string;finish:string};
+export type Constraint={id:string;category:string;description:string;resolved:boolean;evidence:string;reviewer:string};
+export type WorkPackage={id:string;name:string;location:string;service:string;elements:ElementRef[];taskIds:string[];quantity:number|null;unit:'m³';quantitySource:string;coverageKnown:boolean;needDate:string;finishDate:string;criterion:string;responsible:string;capacityConfirmed:boolean;constraints:Constraint[];reviewRequired:boolean};
+export type Supply={id:string;name:string;quantity:number|null;unit:'m³';confirmed:boolean;delivery:string;unitPrice:number;freight:number;technical:boolean;evidence:string;kind:'order'|'stock';synthetic:boolean};
+export type Allocation={id:string;packageId:string;supplyId:string;quantity:number};
+export type Commitment={packageId:string;name:string;location:string;quantity:number;unit:'m³';deadline:string;criterion:string;responsible:string};
+export type Delivery={id:string;allocationId:string;date:string;received:number;rejected:number;evidence:string;reviewer:string};
+export type Actual={packageId:string;date:string;complete:boolean;evidence:string;reason:string};
+export type Project={schema:1;id:string;name:string;models:ModelRevision[];tasks:TaskRecord[];packages:WorkPackage[];supplies:Supply[];allocations:Allocation[];deliveries:Delivery[];week:{frozenAt:string;reviewer:string;commitments:Commitment[]}|null;actuals:Actual[];audit:{at:string;action:string;detail:string}[]};
