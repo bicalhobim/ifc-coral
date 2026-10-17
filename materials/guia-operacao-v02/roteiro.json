@@ -1,0 +1,924 @@
+[
+  {
+    "id": "01-inicio",
+    "title": "Acesso ao laboratório",
+    "actions": [
+      "Abra http://127.0.0.1:5178/ no navegador.",
+      "Se não abrir, peça ao Codex para executar iniciar.ps1 em C:/dev/ifc4all-2.",
+      "Comece com um projeto vazio. Veja a preparação no próximo slide."
+    ],
+    "expected": "A tela mostra IFC Coral e o botão Abrir TORRE02.",
+    "targets": [],
+    "crop": null,
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "01-inicio.jpg"
+  },
+  {
+    "id": "02-modelo",
+    "title": "O modelo e o fluxo de trabalho",
+    "actions": [
+      "Clique em Abrir TORRE02 e espere o carregamento.",
+      "A árvore e o Gantt à esquerda mostram o modelo e seu planejamento.",
+      "As etapas da oficina ficam na navegação à direita."
+    ],
+    "expected": "A barra inferior informa 1 modelo e 4.152 registros 4D.",
+    "targets": [
+      {
+        "selector": ".header-actions > .primary",
+        "n": 1,
+        "height": 36,
+        "width": 108.2734375,
+        "x": 890.640625,
+        "y": 19.5
+      },
+      {
+        "selector": ".model-host aside.panel-left",
+        "n": 2,
+        "height": 317,
+        "width": 180,
+        "x": 27,
+        "y": 103
+      },
+      {
+        "selector": ".model-host aside.panel-bottom",
+        "n": 2,
+        "height": 236,
+        "width": 661.125,
+        "x": 27,
+        "y": 432
+      },
+      {
+        "selector": ".work-nav",
+        "n": 3,
+        "height": 43,
+        "width": 516.875,
+        "x": 732.125,
+        "y": 105
+      }
+    ],
+    "crop": null,
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "02-modelo.jpg"
+  },
+  {
+    "id": "03-caso",
+    "title": "Criação do caso didático",
+    "actions": [
+      "Clique em Criar caso de concretagem.",
+      "O caso conecta elementos da laje e acrescenta dados para o exercício."
+    ],
+    "expected": "Você verá o pacote e seus campos de produção.",
+    "targets": [
+      {
+        "selector": ".welcome > button.primary",
+        "n": 1,
+        "height": 42,
+        "width": 184.484375,
+        "x": 751.125,
+        "y": 568.0859375
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "03-caso.jpg"
+  },
+  {
+    "id": "04-ajuda",
+    "title": "Ajuda ao lado de cada campo",
+    "actions": [
+      "Clique no botão ? para manter a explicação aberta.",
+      "Leia a explicação. A ajuda também abre com Tab e Enter.",
+      "Use Escape para fechar."
+    ],
+    "expected": "A explicação abre sem preencher ou alterar os dados.",
+    "targets": [
+      {
+        "selector": "button[aria-label=\"Ajuda: Quantidade de concreto (m³)\"]",
+        "n": 1,
+        "height": 17,
+        "width": 17,
+        "x": 961.5625,
+        "y": 405.53125
+      },
+      {
+        "selector": ".help-popover:not([hidden])",
+        "n": 2,
+        "height": 68.390625,
+        "width": 310,
+        "x": 668.5625,
+        "y": 432.53125
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "04-ajuda.jpg"
+  },
+  {
+    "id": "05-definicao",
+    "title": "Definição do pacote",
+    "actions": [
+      "Confira o local e o serviço que vieram do modelo.",
+      "Preencha Responsável com Equipe A.",
+      "Mantenha 12 m³ e a origem como premissa didática."
+    ],
+    "expected": "O grupo identifica quem promete e de onde vem a quantidade.",
+    "targets": [
+      {
+        "label": "Responsável",
+        "n": 2,
+        "height": 40.1953125,
+        "width": 238.4375,
+        "x": 992.5625,
+        "y": 480.3359375
+      },
+      {
+        "label": "Quantidade de concreto (m³)",
+        "n": 3,
+        "height": 40.1953125,
+        "width": 238.4375,
+        "x": 740.125,
+        "y": 566.53125
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "05-definicao.jpg"
+  },
+  {
+    "id": "06-prazo",
+    "title": "Datas e critério de conclusão",
+    "actions": [
+      "Use 06/11/2026 como necessidade e prazo neste cenário.",
+      "Confira o critério de conclusão. Marque a capacidade após conferência.",
+      "Clique em Salvar definição do pacote."
+    ],
+    "expected": "As datas do exercício ficam separadas das datas originais do IFC.",
+    "targets": [
+      {
+        "label": "Necessidade / concretagem",
+        "n": 1,
+        "height": 42.1953125,
+        "width": 238.4375,
+        "x": 740.125,
+        "y": 307.03125
+      },
+      {
+        "label": "Prazo de conclusão",
+        "n": 1,
+        "height": 42.1953125,
+        "width": 238.4375,
+        "x": 992.5625,
+        "y": 307.03125
+      },
+      {
+        "label": "Critério verificável de conclusão",
+        "n": 2,
+        "height": 62,
+        "width": 238.4375,
+        "x": 740.125,
+        "y": 395.2265625
+      },
+      {
+        "role": "checkbox",
+        "name": "Capacidade de equipe e equipamento conferida",
+        "n": 2,
+        "height": 15,
+        "width": 15,
+        "x": 996.5625,
+        "y": 406.7265625
+      },
+      {
+        "role": "button",
+        "name": "Salvar definição do pacote",
+        "n": 3,
+        "height": 36,
+        "width": 171.7109375,
+        "x": 743.125,
+        "y": 483.2265625
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "06-prazo.jpg"
+  },
+  {
+    "id": "07-evidencia",
+    "title": "Remoção de uma restrição",
+    "actions": [
+      "Role até Restrições da frente.",
+      "Informe Professor como conferente.",
+      "Escreva a evidência fictícia de liberação técnica e clique em Conferir e remover nesse bloco."
+    ],
+    "expected": "A restrição muda de Pendente para Removida com evidência.",
+    "targets": [
+      {
+        "label": "Conferente das evidências",
+        "n": 2,
+        "height": 40.1953125,
+        "width": 490.875,
+        "x": 740.125,
+        "y": 230.7265625
+      },
+      {
+        "label": "Evidência — Projeto e liberação técnica",
+        "n": 3,
+        "height": 62,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 382.921875
+      },
+      {
+        "selector": ".constraint:first-of-type button",
+        "n": 3,
+        "height": 36,
+        "width": 130.4453125,
+        "x": 760.125,
+        "y": 456.921875
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "07-evidencia.jpg"
+  },
+  {
+    "id": "08-restricoes",
+    "title": "Condições verificadas e pendências",
+    "actions": [
+      "Repita a conferência para formas, armaduras, frente, equipe e equipamento.",
+      "Use evidências fictícias identificadas como exercício.",
+      "Mantenha o concreto pendente até confirmar o fornecimento."
+    ],
+    "expected": "A frente continua bloqueada enquanto houver restrição ou fornecimento pendente.",
+    "targets": [
+      {
+        "selector": ".constraint:last-of-type",
+        "n": 3,
+        "height": 229,
+        "width": 490.875,
+        "x": 740.125,
+        "y": 394.203125
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "08-restricoes.jpg"
+  },
+  {
+    "id": "09-cobertura",
+    "title": "Conferência da cobertura existente",
+    "actions": [
+      "Clique em Suprimentos na navegação superior.",
+      "Confira a situação e marque Conferi estoque e pedidos existentes.",
+      "Leia a demanda, a cobertura e o saldo. Concreto fresco não tem estoque antecipado."
+    ],
+    "expected": "O saldo deixa de A conferir e passa a mostrar o que falta cobrir.",
+    "targets": [
+      {
+        "role": "checkbox",
+        "name": "Conferi estoque e pedidos existentes (concreto fresco não tem estoque antecipado)",
+        "n": 2,
+        "height": 15,
+        "width": 15,
+        "x": 744.125,
+        "y": 353.046875
+      },
+      {
+        "selector": ".metrics",
+        "n": 3,
+        "height": 73.5,
+        "width": 490.875,
+        "x": 740.125,
+        "y": 504.0390625
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "09-cobertura.jpg"
+  },
+  {
+    "id": "10-propostas",
+    "title": "Comparação de fornecedores",
+    "actions": [
+      "Compare as três propostas e seus prazos.",
+      "A entrega de A está fora da janela. C ainda tem lacuna técnica.",
+      "Clique no resumo de Fornecedor B para abrir os detalhes."
+    ],
+    "expected": "As três propostas estão identificadas como simulação.",
+    "targets": [
+      {
+        "selector": "details[data-supplier=\"Fornecedor A\"] > summary",
+        "n": 1,
+        "height": 40.5,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 333.5390625
+      },
+      {
+        "selector": "details[data-supplier=\"Fornecedor C\"] > summary",
+        "n": 2,
+        "height": 40.5,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 500.5390625
+      },
+      {
+        "selector": "details[data-supplier=\"Fornecedor B\"] > summary",
+        "n": 3,
+        "height": 40.5,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 417.0390625
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "10-propostas.jpg"
+  },
+  {
+    "id": "11-confirmacao",
+    "title": "Confirmação da janela de entrega",
+    "actions": [
+      "Confira a quantidade e a entrega prometida.",
+      "Marque a confirmação somente com evidência.",
+      "Registre a evidência didática e clique em Salvar proposta / confirmação."
+    ],
+    "expected": "A proposta fica confirmada. A quantidade ainda precisa ser reservada.",
+    "targets": [
+      {
+        "label": "Quantidade — Fornecedor B",
+        "n": 1,
+        "height": 40.1953125,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 165.734375
+      },
+      {
+        "label": "Entrega prometida — Fornecedor B",
+        "n": 1,
+        "height": 42.1953125,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 238.9296875
+      },
+      {
+        "role": "checkbox",
+        "name": "Fornecedor confirmou esta janela e quantidade",
+        "n": 2,
+        "height": 15,
+        "width": 15,
+        "x": 761.125,
+        "y": 329.125
+      },
+      {
+        "label": "Evidência — Fornecedor B",
+        "n": 3,
+        "height": 62,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 383.125
+      },
+      {
+        "role": "button",
+        "name": "Salvar proposta / confirmação",
+        "n": 3,
+        "height": 36,
+        "width": 191.78125,
+        "x": 760.125,
+        "y": 457.125
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "11-confirmacao.jpg"
+  },
+  {
+    "id": "12-reserva",
+    "title": "Reserva para o pacote",
+    "actions": [
+      "No mesmo fornecedor, confira 12 no campo Reservar m³.",
+      "Clique em Reservar para este pacote.",
+      "A reserva vincula esta quantidade à concretagem."
+    ],
+    "expected": "A cobertura elegível será 12 m³ e o saldo a cobrir será zero.",
+    "targets": [
+      {
+        "label": "Reservar m³ — Fornecedor B",
+        "n": 1,
+        "height": 40.1953125,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 393.921875
+      },
+      {
+        "role": "button",
+        "name": "Reservar para este pacote",
+        "n": 2,
+        "height": 36,
+        "width": 167.546875,
+        "x": 760.125,
+        "y": 446.1171875
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "12-reserva.jpg"
+  },
+  {
+    "id": "13-material",
+    "title": "Fechamento da restrição de material",
+    "actions": [
+      "Clique em Produção na navegação superior.",
+      "Repita o passo 8 para Concreto e janela de entrega. Cite a confirmação de B e a reserva.",
+      "Informe o conferente e clique em Conferir e remover no bloco do concreto."
+    ],
+    "expected": "As quatro restrições têm evidência e o pacote pode passar à reunião semanal.",
+    "targets": [
+      {
+        "selector": ".constraint:last-of-type",
+        "n": 3,
+        "height": 192.59375,
+        "width": 490.875,
+        "x": 740.125,
+        "y": 430.203125
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "13-material.jpg"
+  },
+  {
+    "id": "14-compromisso",
+    "title": "Preparação do plano semanal",
+    "actions": [
+      "Clique em Semana / PPC e confira Pronto para compromisso.",
+      "Mantenha selecionado o pacote que será assumido.",
+      "Preencha o responsável com Professor e clique em Assumir compromissos e congelar semana."
+    ],
+    "expected": "O PPC ainda é Não aplicável, pois a semana não foi congelada.",
+    "targets": [
+      {
+        "selector": ".badge",
+        "n": 1,
+        "height": 24.3984375,
+        "width": 161.9296875,
+        "x": 740.125,
+        "y": 270.6484375
+      },
+      {
+        "role": "checkbox",
+        "name": "Concretagem da laje — cenário didático — Pronto",
+        "n": 2,
+        "height": 15,
+        "width": 15,
+        "x": 744.125,
+        "y": 491.046875
+      },
+      {
+        "role": "button",
+        "name": "Assumir compromissos e congelar semana",
+        "n": 3,
+        "height": 36,
+        "width": 258.765625,
+        "x": 743.125,
+        "y": 597.2421875
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "14-compromisso.jpg"
+  },
+  {
+    "id": "15-semana",
+    "title": "Compromisso registrado",
+    "actions": [
+      "Confira o nome, o prazo, a quantidade e o critério congelados.",
+      "O compromisso entra no denominador do PPC.",
+      "Registre a execução somente quando houver evidência."
+    ],
+    "expected": "Existe 1 compromisso. Antes do apontamento, o PPC é 0%.",
+    "targets": [
+      {
+        "selector": ".metrics",
+        "n": 1,
+        "height": 73.5,
+        "width": 490.875,
+        "x": 740.125,
+        "y": 366.546875
+      },
+      {
+        "selector": ".frozen-note",
+        "n": 2,
+        "height": 42,
+        "width": 490.875,
+        "x": 740.125,
+        "y": 458.046875
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "15-semana.jpg"
+  },
+  {
+    "id": "16-recebimento",
+    "title": "Recebimento e liberação",
+    "actions": [
+      "Volte a Suprimentos e role até Recebimento e liberação desta reserva.",
+      "Informe 06/11/2026, recebidos 12 e rejeitados 0.",
+      "Registre o romaneio didático e Professor como conferente. Clique em Registrar recebimento e liberação."
+    ],
+    "expected": "O registro separa a promessa do fornecedor da entrega efetiva.",
+    "targets": [
+      {
+        "label": "Data efetiva de recebimento",
+        "n": 2,
+        "height": 42.1953125,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 129.9140625
+      },
+      {
+        "label": "Quantidade recebida (m³)",
+        "n": 2,
+        "height": 40.1953125,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 205.109375
+      },
+      {
+        "label": "Romaneio / evidência de liberação",
+        "n": 3,
+        "height": 62,
+        "width": 456.875,
+        "x": 757.125,
+        "y": 351.5
+      },
+      {
+        "role": "button",
+        "name": "Registrar recebimento e liberação",
+        "n": 3,
+        "height": 36,
+        "width": 211.0078125,
+        "x": 760.125,
+        "y": 498.6953125
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "16-recebimento.jpg"
+  },
+  {
+    "id": "17-realizado",
+    "title": "Apontamento da execução",
+    "actions": [
+      "Volte a Semana / PPC. Marque o critério somente se ele foi cumprido por inteiro.",
+      "Use 06/11/2026 e descreva a conclusão simulada no campo de evidência.",
+      "Clique em Registrar realizado."
+    ],
+    "expected": "O PPC considera o prazo e o critério que foram congelados.",
+    "targets": [
+      {
+        "role": "checkbox",
+        "name": "Critério integralmente cumprido e conferido",
+        "n": 1,
+        "height": 15,
+        "width": 15,
+        "x": 761.125,
+        "y": 253.640625
+      },
+      {
+        "role": "button",
+        "name": "Registrar realizado",
+        "n": 3,
+        "height": 36,
+        "width": 129.328125,
+        "x": 760.125,
+        "y": 551.8359375
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "17-realizado.jpg"
+  },
+  {
+    "id": "19-exportacao",
+    "title": "Arquivo portátil do projeto",
+    "actions": [
+      "Abra o menu Arquivos.",
+      "Clique em Exportar projeto.",
+      "O arquivo inclui o IFC e as decisões do exercício."
+    ],
+    "expected": "O navegador baixa IFC-Coral-projeto.json, sem chave de IA.",
+    "targets": [
+      {
+        "selector": ".file-menu > summary",
+        "n": 1,
+        "height": 40.5,
+        "width": 95.1953125,
+        "x": 1006.9140625,
+        "y": 17.25
+      },
+      {
+        "role": "button",
+        "name": "Exportar projeto",
+        "n": 2,
+        "height": 40,
+        "width": 187,
+        "x": 906.109375,
+        "y": 117.75
+      }
+    ],
+    "crop": null,
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "19-exportacao.jpg"
+  },
+  {
+    "id": "20-arquivo",
+    "title": "Conservação do trabalho",
+    "actions": [
+      "Guarde o JSON baixado numa pasta fácil de encontrar.",
+      "O salvamento automático não substitui esse arquivo.",
+      "Você poderá reabrir o projeto em outra sessão."
+    ],
+    "expected": "A mensagem inferior confirma a exportação do projeto.",
+    "targets": [
+      {
+        "selector": ".app-status",
+        "n": 2,
+        "height": 25,
+        "width": 1280,
+        "x": 0,
+        "y": 695
+      }
+    ],
+    "crop": null,
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "20-arquivo.jpg"
+  },
+  {
+    "id": "21-reabertura",
+    "title": "Reabertura do projeto",
+    "actions": [
+      "No menu Arquivos, clique em Reabrir projeto.",
+      "Selecione o JSON que você exportou.",
+      "Espere a conferência do IFC e o carregamento."
+    ],
+    "expected": "Pacote, evidências, compromisso e resultado reaparecem.",
+    "targets": [
+      {
+        "role": "button",
+        "name": "Reabrir projeto",
+        "n": 1,
+        "height": 40,
+        "width": 187,
+        "x": 906.109375,
+        "y": 159.75
+      }
+    ],
+    "crop": null,
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "21-reabertura.jpg"
+  },
+  {
+    "id": "23-recomeco",
+    "title": "Preparação de um novo ensaio",
+    "actions": [
+      "Se já houver um trabalho seu, use Arquivos > Exportar projeto e guarde o JSON.",
+      "No menu Arquivos, selecione Novo projeto.",
+      "Confirme Exportei; começar novo. O próximo passo será abrir a TORRE02."
+    ],
+    "expected": "Um projeto vazio para o teste. O arquivo exportado continua disponível para reabrir seu trabalho.",
+    "targets": [
+      {
+        "role": "button",
+        "name": "Exportei; começar novo",
+        "n": 3,
+        "height": 36,
+        "width": 156.1640625,
+        "x": 577.5703125,
+        "y": 404.53125
+      }
+    ],
+    "crop": null,
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "23-recomeco.jpg"
+  },
+  {
+    "id": "18-ppc",
+    "title": "Leitura do PPC",
+    "actions": [
+      "Confira o painel de indicadores.",
+      "Neste exercício, 1 compromisso de 1 foi concluído no prazo.",
+      "Use o histórico para revisar as decisões e os desvios."
+    ],
+    "expected": "PPC de 100% no cenário didático concluído no prazo.",
+    "targets": [
+      {
+        "selector": ".metrics",
+        "n": 1,
+        "height": 73.5,
+        "width": 490.875,
+        "x": 740.125,
+        "y": 400.546875
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "18-ppc.jpg"
+  },
+  {
+    "id": "22-ia",
+    "title": "Apoio opcional da IA",
+    "actions": [
+      "Clique em IA. Escolha Gemini ou OpenAI.",
+      "Informe sua chave. Consulte os modelos e preencha um modelo disponível na sua conta.",
+      "Escolha o apoio e abra Ver os dados. Após conferir, solicite a análise e revise a resposta."
+    ],
+    "expected": "Opcional, com possível custo de API. Chamadas reais ainda não foram validadas. O fluxo anterior funciona sem IA.",
+    "targets": [
+      {
+        "role": "combobox",
+        "name": "Provedor",
+        "n": 1,
+        "height": 41.5,
+        "width": 238.4375,
+        "x": 740.125,
+        "y": 300.640625
+      },
+      {
+        "role": "button",
+        "name": "Consultar modelos",
+        "n": 2,
+        "height": 36,
+        "width": 130.1484375,
+        "x": 743.125,
+        "y": 543.03125
+      },
+      {
+        "role": "button",
+        "name": "Solicitar análise com minha chave",
+        "n": 3,
+        "height": 36,
+        "width": 211.046875,
+        "x": 879.2734375,
+        "y": 543.03125
+      }
+    ],
+    "crop": {
+      "height": 591,
+      "width": 550.875,
+      "x": 715.125,
+      "y": 90
+    },
+    "dims": {
+      "height": 720,
+      "width": 1280
+    },
+    "image": "22-ia.jpg"
+  }
+]

@@ -31,6 +31,17 @@ O núcleo funciona sem IA. Na aba **IA**, Gemini e OpenAI aceitam chave individu
 
 [Guia do aluno](docs/GUIA_DO_ALUNO.md) · [Resultados e limites](docs/ACEITE.md) · [Continuidade](docs/PROGRESSO.md)
 
+## Roteiro de operação com telas
+
+O guia tem 23 passos, com prints reais, marcações de clique, exemplos de preenchimento e resultado esperado. Percorre o caso de concretagem da abertura do IFC à exportação do projeto. A interface v02 usa fundo claro, roxo, menu **Arquivos** e ajudas **?** que abrem com mouse, teclado ou clique.
+
+- [PowerPoint editável](materials/guia-operacao-v02/5.6%20IFC%20Coral%20-%20Guia%20de%20operacao%20passo%20a%20passo.pptx)
+- [PDF para acompanhar o teste](materials/guia-operacao-v02/5.6%20IFC%20Coral%20-%20Guia%20de%20operacao%20passo%20a%20passo.pdf)
+- [Roteiro em Markdown](materials/guia-operacao-v02/5.6%20IFC%20Coral%20-%20Roteiro%20do%20guia.md)
+- [Exemplo concluído, para reabrir pelo menu Arquivos](materials/guia-operacao-v02/Exemplo-concluido.IFC-Coral.json)
+
+Para ensaiar do zero, exporte seu projeto atual e use **Arquivos > Novo projeto**. O arquivo de exemplo é opcional e contém um resultado didático de PPC 100%, com 1 compromisso cumprido no prazo. As fontes e os dados reais não são alterados pelo roteiro.
+
 ## Desenvolvimento
 
 ```powershell

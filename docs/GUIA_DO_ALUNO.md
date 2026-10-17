@@ -2,6 +2,8 @@
 
 Uma concretagem aparece no cronograma. A frente está pronta para recebê-la? É essa decisão que o grupo vai justificar com as telas do IFC Coral.
 
+Para acompanhar cada clique, consulte o [guia ilustrado em PDF](../materials/guia-operacao-v02/5.6%20IFC%20Coral%20-%20Guia%20de%20operacao%20passo%20a%20passo.pdf). Na interface, o botão **?** mostra a explicação ao passar o mouse, receber foco ou clicar. Escape fecha a ajuda. As ações de importar, exportar e reabrir ficam no menu **Arquivos**.
+
 ## 1 · Entender o local e o serviço
 
 Abra a TORRE02. A árvore organiza o modelo e o Gantt mostra o planejamento de origem. Selecione uma tarefa e observe os elementos destacados. “Ampliar modelo” revela também o painel de propriedades. Um pavimento IFC é referência espacial; a equipe define os limites de sua frente de trabalho.

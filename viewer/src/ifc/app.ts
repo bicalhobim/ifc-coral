@@ -7,7 +7,7 @@ const WORKER_URL = `${import.meta.env.BASE_URL}engine/worker.mjs`;
 const WASM_PATH = `${location.origin}${import.meta.env.BASE_URL}engine/`;
 
 const SELECT_MAT = {
-  color: new THREE.Color("#2563eb"),
+  color: new THREE.Color("#a100ff"),
   renderedFaces: RenderedFaces.TWO,
   opacity: 1,
   transparent: false,
@@ -35,6 +35,7 @@ export class Viewer {
 
     world.scene = new OBC.SimpleScene(this.components);
     world.scene.setup();
+    world.scene.three.background = new THREE.Color("#f4f2f8");
     world.renderer = new OBC.SimpleRenderer(this.components, viewport);
     world.camera = new OBC.SimpleCamera(this.components);
     this.world = world;

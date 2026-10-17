@@ -22,7 +22,7 @@ interface TreeNode {
 const MS_DAY = 86_400_000;
 const MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const MONTH_INITIALS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
-const TASK_BAR_COLOR = "#2563eb";
+const TASK_BAR_COLOR = "#a100ff";
 
 export function monthTicks(start: Date, end: Date): { label: string; x: number; year: number; initial: string }[] {
   const span = end.getTime() - start.getTime() || 1;

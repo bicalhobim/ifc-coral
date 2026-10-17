@@ -37,6 +37,15 @@ Ruling: calendário explícito simplificado de dias corridos (2 para forneciment
 1. Abrir README.md e docs/ACEITE.md nesta pasta, iniciar via iniciar.ps1 se necessário.
 2. Professor experimentar a decisão com TORRE02; selecionar a frente final do exercício.
 3. Validar Gemini/OpenAI ao vivo com chave individual, sem salvá-la em projeto/captura.
-4. Produzir slides do professor e template de cinco slides do grupo usando telas verificadas; atualizar livro/caderno com interfaces finais.
+4. Usar o guia operacional de 23 slides em materials/guia-operacao-v02 para o teste do professor. Produzir depois os slides conceituais da aula e o template de cinco slides do grupo; atualizar livro/caderno com interfaces finais.
 5. Receber template de equalização e demanda/fornecedores da demonstração de agentes antes de executar contatos reais.
 6. Preparar distribuição limpa e licença/créditos definitivos, então publicar quando solicitado.
+
+## Interface v02 e guia operacional
+
+- Interface clara, minimalista, com navegação segmentada, menu Arquivos, propostas expansíveis e ajuda contextual por mouse/foco/clique/Escape. Evidências usam campos multilinha; erro de validação conserva o texto digitado. Novo projeto retorna à etapa Produção.
+- Autor confirmou a referência cromática Accenture. Tokens conferidos no gerador local: #A100FF e #7500C0. Nenhum nome, logo, copyright ou chevron corporativo transferido para aplicativo ou slides. Variante educacional salva em C:/Users/lucas/.codex/skills/slides-educacionais-lucas-bicalho, com assinatura Professor Lucas Bicalho.
+- 23 capturas reais obtidas em origem de ensaio separada, http://127.0.0.1:5180/, preservando o projeto da porta 5178. Fluxo repetido após a correção de paleta: 6 elementos IFC, 12 m³ didáticos, quatro restrições conferidas, B confirmado, reserva, compromisso, recebimento e conclusão no prazo. PPC 100% (1/1). Exportação e reabertura conferidas.
+- Entrega: PPTX editável com marcações, PDF de consulta, roteiro Markdown, prints originais e JSON portátil do exemplo concluído. Pasta materials/guia-operacao-v02. Guia de operação não substitui os slides conceituais da disciplina nem o template de apresentação do grupo.
+- Verificação: 25 testes, typecheck, três selfchecks e build aprovados. Build mantém aviso de tamanho do bundle. Interface 640x850 sem transbordamento horizontal; teste de mensagem de validação preservou a evidência. Navegador de ensaio sem erros capturados.
+- Limites preservados: nenhuma chamada real de Gemini/OpenAI com chave, nenhum contato, compra ou pagamento real. Documentos institucionais aprovados e repositório original preservados.
