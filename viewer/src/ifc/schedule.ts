@@ -23,9 +23,10 @@ export interface ElementTask {
 }
 
 const BUILDING_CATEGORIES: RegExp[] = [
-  /WALL/, /SLAB/, /COLUMN/, /BEAM/, /FOOTING/, /ROOF/,
-  /STAIR/, /RAILING/, /COVERING/, /MEMBER/, /PLATE/,
-  /WINDOW/, /DOOR/, /BUILDINGELEMENTPROXY/,
+  /^IFCWALL(?:STANDARDCASE|ELEMENTEDCASE)?$/i, /^IFCSLAB(?:STANDARDCASE|ELEMENTEDCASE)?$/i,
+  /^IFCCOLUMN(?:STANDARDCASE)?$/i, /^IFCBEAM(?:STANDARDCASE)?$/i, /^IFCFOOTING$/i, /^IFCPILE$/i, /^IFCROOF$/i,
+  /^IFCSTAIR(?:FLIGHT)?$/i, /^IFCRAILING$/i, /^IFCCOVERING$/i, /^IFCMEMBER(?:STANDARDCASE)?$/i, /^IFCPLATE(?:STANDARDCASE)?$/i,
+  /^IFCWINDOW(?:STANDARDCASE)?$/i, /^IFCDOOR(?:STANDARDCASE)?$/i, /^IFCBUILDINGELEMENTPROXY$/i,
 ];
 
 // Alias PT/EN → nome exato da propriedade no IFC
@@ -114,7 +115,8 @@ export async function buildSchedule(
   volumes: Map<string,ElementVolume> = new Map(),
 ): Promise<ElementTask[]> {
   const byCategory = await model.getItemsOfCategories(BUILDING_CATEGORIES);
-  const localIds = Object.values(byCategory).flat() as number[];
+  // Categorias devem conter ocorrências físicas, não Ifc*Type com Psets herdados.
+  const localIds = Array.from(new Set(Object.values(byCategory).flat())) as number[];
   if (localIds.length === 0) return [];
 
   const guids = await model.getGuidsByLocalIds(localIds);

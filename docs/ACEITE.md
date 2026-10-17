@@ -2,6 +2,8 @@
 
 Estado: **laboratório local funcional**. Não é a declaração de conclusão de todos os RF/CA do documento 5.4. O núcleo foi exercitado com TORRE02 real e dados de produção/suprimentos sintéticos. Nenhuma mensagem externa, pedido ou pagamento foi realizado.
 
+**Correção do inventário após auditoria IfcOpenShell:** a referência vigente é **764 elementos físicos / 2.292 registros 4D**. As contagens antigas de 1.384/4.152, preservadas abaixo como histórico do ensaio, incluíam 620 definições Ifc*Type. A consulta de categorias foi corrigida e ganhou regressão; a seleção das seis lajes e seus 34,707 m³ permanece válida. Última verificação: **38 testes**, typecheck, três selfchecks e build aprovados.
+
 ## Evidência executada
 
 - Base IFC4ALL antes da adaptação: TORRE02 carregada; visualizador, árvore e Gantt presentes. Selfchecks originais de schedule, gantt e tree aprovados.
@@ -59,3 +61,7 @@ As seis lajes da concretagem PAV 01 têm **34,707 m³ declarados no QTO**; o apl
 Caso novo e pacote da seleção receberam 34,707 m³; a demanda alimentou as propostas fictícias. O arquivo exportado/reaberto e o CSV conservaram o quantitativo. Aplicação explícita em pacote editável foi testada; no projeto antigo do professor, a quantidade de 12 m³ e o bloqueio do compromisso congelado permaneceram. Preços da matriz CA-05 acima se referem ao caso sintético anterior de 12 m³.
 
 Inspeção em 1280×720 e 640×850 confirmou que o painel lateral e o inferior ficam fora do canvas; na tela estreita, documento/corpo com 625 px. A divisória do 4D respondeu ao teclado e a oficina recolhida liberou largura para o modelo. Referência operacional vigente: [Navegação, 4D e quantitativos](NAVEGACAO_4D_QUANTIDADES.md). Guia ilustrado v02 é histórico e será atualizado após o teste desta interface pelo professor.
+
+## Ensaio de catálogo de aço/fôrmas
+
+IfcOpenShell 0.9.0.post1 executou auditoria e geometria dos 764 elementos. Cópia derivada em artifacts/quantification-discovery contém propriedades com unidades, fonte e status: 649 estimativas paramétricas de aço propostas; 115 elementos de fundação/contenção com taxa pendente; nenhuma área de fôrma aprovada e nenhuma compra/execução aprovada. GUIDs, QTOs e original foram verificados na reabertura. As taxas 60/85/120 kg/m³ são cenário didático baseado em comparáveis, não valores normativos ou dimensionamento estrutural. O módulo de catálogo, os descontos de contato e o domínio de fornecimento em kg/m² continuam planejados conforme a especificação; esses ensaios não constituem seu aceite.

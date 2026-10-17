@@ -84,7 +84,8 @@ export class Viewer {
     const before = new Set(this.fragments.list.keys());
     try {
       await ifcLoader.load(bytes, true, name);
-      await this.orient('iso');
+      // Reabertura em guia de fundo não deve esperar uma animação de câmera.
+      await this.orient('iso',[],false);
       return this.model;
     } catch (error) {
       for (const [id, model] of this.fragments.list) {
@@ -206,7 +207,7 @@ export class Viewer {
     if(!boxes.length)return;const union=boxes.reduce((a,b)=>a.union(b),boxes[0].clone());await this.world.camera.controls.fitToSphere(union.getBoundingSphere(new THREE.Sphere()),true);
   }
 
-  async orient(direction:string,tasks:{model:FRAGS.FragmentsModel;localId:number}[]=[]){
+  async orient(direction:string,tasks:{model:FRAGS.FragmentsModel;localId:number}[]=[],animate=true){
     if(!this.model)return;const boxes:THREE.Box3[]=[];
     if(tasks.length){for(const model of new Set(tasks.map(t=>t.model)))boxes.push(...await model.getBoxes(Array.from(new Set(tasks.filter(t=>t.model===model).map(t=>t.localId)))));}
     else boxes.push(...await this.model.getBoxes());if(!boxes.length)return;
@@ -215,7 +216,7 @@ export class Viewer {
     const offset=direction==='top'?new THREE.Vector3(0,distance,.001):direction==='front'?new THREE.Vector3(0,0,distance):direction==='side'?new THREE.Vector3(distance,0,0):new THREE.Vector3(distance*.8,distance*.6,distance*.8);
     await this.world.camera.controls.setLookAt(center.x+offset.x,center.y+offset.y,center.z+offset.z,center.x,center.y,center.z,false);
     // fitToBox gira para o eixo mais próximo e pode mostrar uma laje de perfil.
-    await this.world.camera.controls.fitToSphere(box.getBoundingSphere(new THREE.Sphere()),true);
+    await this.world.camera.controls.fitToSphere(box.getBoundingSphere(new THREE.Sphere()),animate);
   }
 
   async applySimulation(visible:{model:FRAGS.FragmentsModel;localId:number}[],hidden:{model:FRAGS.FragmentsModel;localId:number}[],active:{model:FRAGS.FragmentsModel;localId:number}[]){

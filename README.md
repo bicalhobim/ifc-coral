@@ -31,6 +31,12 @@ O núcleo funciona sem IA. Na aba **IA**, Gemini e OpenAI aceitam chave individu
 
 [Guia do aluno](docs/GUIA_DO_ALUNO.md) · [Resultados e limites](docs/ACEITE.md) · [Continuidade](docs/PROGRESSO.md)
 
+## Evolução proposta: quantificação por serviço
+
+O [estudo e desenho do catálogo](docs/superpowers/specs/2026-10-17-catalogo-quantificacao-design.md) separa concreto, aço e fôrmas, com regras por classe/função/método e origem dos números. O [plano técnico](docs/superpowers/plans/2026-10-17-catalogo-quantificacao.md) organiza as próximas entregas. Há um IFC derivado **de ensaio**, com estimativas marcadas e pendências, em `artifacts/quantification-discovery`; o módulo completo e o fornecimento em kg/m² ainda são proposta, não funcionalidades implementadas.
+
+Inventário corrigido da TORRE02: **764 ocorrências físicas e 2.292 registros 4D**. Definições Ifc*Type, antes indevidamente incluídas, ficam fora da contagem.
+
 ## Roteiro de operação com telas
 
 O [roteiro atual de navegação, 4D e volume IFC](docs/NAVEGACAO_4D_QUANTIDADES.md) acompanha a interface v03. A origem do quantitativo pode ser consultada no botão **?**; o cálculo não estima volume pela geometria nem converte automaticamente todo volume em concreto.

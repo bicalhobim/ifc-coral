@@ -7,3 +7,5 @@ artifacts/
 !.env.example
 *.log
 *.tsbuildinfo
+__pycache__/
+*.py[cod]

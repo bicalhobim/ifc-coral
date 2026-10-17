@@ -23,3 +23,8 @@ test('Fragments GUID mapping is used even when GlobalId attribute is not returne
  const model={modelId:'m',getItemsOfCategories:async()=>({IFCSLAB:[22]}),getGuidsByLocalIds:async()=>['real-guid'],getItemsData:async()=>[{_guid:{value:'real-guid'},Name:{value:'Laje'},pset:[{Name:{value:'Task1'},NominalValue:{value:'Concretagem'}},{Name:{value:'Task1Inicio'},NominalValue:{value:'2026-11-06'}},{Name:{value:'Task1Fim'},NominalValue:{value:'2026-11-06'}}]}]};
  const [task]=await buildSchedule(model,'logical-model');assert.equal(task.globalId,'real-guid');assert.equal(taskIdentity(task),JSON.stringify(['logical-model','real-guid','Task1']));
 });
+test('schedule includes physical occurrences and piles, never IFC type definitions or duplicate local IDs',async()=>{
+ const categories={IFCBEAM:[10],IFCBEAMTYPE:[11],IFCSLAB:[20,20],IFCSLABTYPE:[21],IFCWALLSTANDARDCASE:[30],IFCWALLTYPE:[31],IFCPILE:[40],IFCFOOTINGTYPE:[41]};
+ const model={modelId:'m',getItemsOfCategories:async patterns=>Object.fromEntries(Object.entries(categories).filter(([name])=>patterns.some(p=>p.test(name)))),getGuidsByLocalIds:async ids=>ids.map(id=>`guid-${id}`),getItemsData:async ids=>ids.map(id=>({Name:{value:`Element ${id}`},pset:[{Name:{value:'Task1'},NominalValue:{value:'Concretagem'}},{Name:{value:'Task1Inicio'},NominalValue:{value:'2026-11-06'}},{Name:{value:'Task1Fim'},NominalValue:{value:'2026-11-07'}}]}))};
+ const tasks=await buildSchedule(model,'logical');assert.deepEqual(tasks.map(t=>t.globalId),['guid-10','guid-20','guid-30','guid-40']);
+});
