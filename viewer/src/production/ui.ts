@@ -4,7 +4,8 @@ import {assessReadiness,packageBalance,resolveConstraint,allocate,freezeWeek,rec
 import {addConcreteCase} from './case.ts';
 import {mountAI} from './ai-ui.ts';
 import {helpButton,simplifyExplanations} from '../ui/help.ts';
-type Hooks={getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;loadDemo:()=>void};
+import type {VolumeSummary} from '../ifc/quantities.ts';
+type Hooks={getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;loadDemo:()=>void;quantity:(refs:WorkPackage['elements'])=>VolumeSummary};
 export function el<K extends keyof HTMLElementTagNameMap>(tag:K,text='',cls=''){const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;return n;}
 function btn(text:string,action:()=>void,cls=''){const b=el('button',text,cls);b.type='button';b.onclick=action;return b;}
 function field(label:string,value:string,type='text'){
@@ -15,7 +16,7 @@ function field(label:string,value:string,type='text'){
  if(i instanceof HTMLInputElement){i.type=type;if(type==='number'){i.min='0';i.step='any';}}else i.rows=2;
  i.value=value;heading.append(caption);
  const tips:Record<string,string>={
- 'Quantidade de concreto (m³)':'No caso didático, use 12 m³. Essa quantidade é uma premissa, não um cálculo extraído do IFC.',
+ 'Quantidade de concreto (m³)':'O volume declarado no IFC pode preencher a demanda. Confira o recorte, o serviço e a origem. Perdas e ajustes de compra não estão incluídos.',
  'Origem / premissa da quantidade':'Registre a fonte do quantitativo e o que a equipe conferiu. Quantidade proposta pela IA exige conferência técnica.',
  'Necessidade / concretagem':'Data em que o concreto precisa estar na frente de trabalho. A janela de entrega deve ser confirmada pelo fornecedor.',
  'Prazo de conclusão':'Data limite para cumprir integralmente o critério que será congelado no compromisso semanal.',
@@ -27,6 +28,7 @@ function field(label:string,value:string,type='text'){
 }
 function check(label:string,checked:boolean){const l=el('label','','check');const i=el('input');i.type='checkbox';i.checked=checked;l.append(i,document.createTextNode(label));return {label:l,input:i};}
 const money=(v:number)=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const volume=(v:number)=>`${v.toLocaleString('pt-BR',{maximumFractionDigits:6})} m³`;
 export class ProductionPanel{
  readonly element=el('section','','workshop');private tab='Produção';private selected='';private reviewer='';
  private hooks:Hooks;private error='';private lastTab='';private expandedSupplies=new Set<string>();private projectId='';
@@ -46,8 +48,8 @@ export class ProductionPanel{
  body.append(el('p','OFICINA DE PLANEJAMENTO','eyebrow'),el('h1','Sua próxima concretagem, sob controle.'),el('p','Prepare a frente, confirme o fornecimento e assuma compromissos com evidências.','welcome-copy'));
  const journey=el('ol','','journey');for(const title of ['Escolher o local e o serviço','Conferir as restrições','Preparar o fornecimento','Comparar promessa e resultado'])journey.append(el('li',title));body.append(journey);
  if(!p.tasks.length)body.append(btn('Abrir modelo de exemplo',()=>this.hooks.loadDemo(),'primary'));
- else body.append(btn('Criar caso de concretagem',()=>this.action(x=>addConcreteCase(x,x.tasks)),'primary'),btn('Criar pacote da seleção 4D',()=>this.createFromSelection()));
- body.append(el('p','Exercício didático com TORRE02. Quantidades e propostas do caso são fictícias.','simulation-note'));return;}
+ else body.append(btn('Criar caso de concretagem',()=>this.action(x=>{addConcreteCase(x,x.tasks);const pkg=x.packages[0],q=this.hooks.quantity(pkg.elements);pkg.quantity=q.totalM3===null?null:Math.round(q.totalM3*1e6)/1e6;pkg.quantitySource=q.source;x.supplies.forEach(s=>s.quantity=pkg.quantity);log(x,'Quantidade IFC conferida',q.source);}),'primary'),btn('Criar pacote da seleção 4D',()=>this.createFromSelection()));
+ body.append(el('p','Exercício com TORRE02. Volume declarado no IFC quando disponível; datas e cotações do cenário são simuladas.','simulation-note'));return;}
  const select=el('select');select.setAttribute('aria-label','Pacote de trabalho');
  for(const pkg of p.packages){const op=el('option',pkg.name);op.value=pkg.id;select.append(op);}
  if(!p.packages.some(x=>x.id===this.selected))this.selected=p.packages[0].id;
@@ -62,11 +64,16 @@ export class ProductionPanel{
  simplifyExplanations(body);body.scrollTop=previousScroll;
  }
  private createFromSelection(){this.action(p=>{
- const ids=this.hooks.selection();const tasks=p.tasks.filter(t=>ids.includes(t.id));if(!tasks.length)throw new Error('Selecione uma tarefa ou grupo no Gantt antes de criar o pacote.');
+ const ids=this.hooks.selection();let tasks=p.tasks.filter(t=>ids.includes(t.id));if(!tasks.length)throw new Error('Abra o 4D e selecione uma atividade, ou clique em um elemento do modelo.');
+ const concrete=tasks.filter(t=>/concretagem|concrete/i.test(t.name));if(concrete.length)tasks=concrete;
  const first=tasks[0];const elements=Array.from(new Map(tasks.map(t=>[JSON.stringify([t.modelId,t.globalId]),{modelId:t.modelId,globalId:t.globalId}])).values());
- const pkg:WorkPackage={id:uid(),name:first.name,location:first.location,service:first.service,elements,taskIds:ids,quantity:null,unit:'m³',coverageKnown:false,quantitySource:'Quantidade ainda não conferida. Recorte desta versão: concreto em m³.',needDate:first.start,finishDate:first.finish,criterion:'',responsible:'',capacityConfirmed:false,reviewRequired:false,constraints:['Projeto','Frente e predecessoras','Equipe e equipamento','Suprimento'].map(description=>({id:uid(),category:description,description,resolved:false,evidence:'',reviewer:''}))};p.packages.push(pkg);this.selected=pkg.id;log(p,'Pacote criado',pkg.name);
+ const q=this.hooks.quantity(elements),amount=concrete.length?q.totalM3:null;
+ const pkg:WorkPackage={id:uid(),name:first.name,location:first.location,service:concrete.length?'Concretagem':first.service,elements,taskIds:tasks.map(t=>t.id),quantity:amount===null?null:Math.round(amount*1e6)/1e6,unit:'m³',coverageKnown:false,quantitySource:concrete.length?q.source:'Seleção sem atividade de concretagem identificada. Confira serviço e quantitativo antes de definir demanda.',needDate:first.start,finishDate:first.finish,criterion:'',responsible:'',capacityConfirmed:false,reviewRequired:false,constraints:['Projeto','Frente e predecessoras','Equipe e equipamento','Suprimento'].map(description=>({id:uid(),category:description,description,resolved:false,evidence:'',reviewer:''}))};p.packages.push(pkg);this.selected=pkg.id;log(p,'Pacote criado',pkg.name);
  });}
  private production(body:HTMLElement,pkg:WorkPackage,p:Project){
+ const q=this.hooks.quantity(pkg.elements),callout=el('div','','quantity-callout');callout.append(el('strong',q.totalM3===null?'Volume IFC a conferir':`${q.totalM3.toLocaleString('pt-BR',{maximumFractionDigits:3})} m³ no IFC`),helpButton('Origem do volume IFC',q.source));
+ const frozen=p.week?.commitments.some(c=>c.packageId===pkg.id),concrete=/concretagem|concrete/i.test(pkg.name+' '+pkg.service);
+ const apply=btn('Usar volume IFC neste pacote',()=>this.action(x=>{if(frozen)throw new Error('O compromisso já foi congelado. Preserve o quantitativo assumido.');if(q.totalM3===null||!concrete)throw new Error('Confira o serviço de concretagem e o quantitativo completo.');const target=x.packages.find(t=>t.id===pkg.id)!;target.quantity=Math.round(q.totalM3*1e6)/1e6;target.quantitySource=q.source;log(x,'Quantidade IFC aplicada',q.source);}));apply.disabled=q.totalM3===null||!!frozen||!concrete;callout.append(apply);if(frozen)callout.append(el('p','Compromisso congelado: o volume assumido permanece preservado.'));body.append(callout);
  body.append(el('p','Planeje por local e serviço. O pavimento do IFC ajuda a localizar; o pacote é uma decisão da equipe, não uma EAP gerada automaticamente.','lead'));
  const origin=p.tasks.find(t=>pkg.taskIds.includes(t.id));if(origin)body.append(el('p',`Origem IFC: ${origin.start} → ${origin.finish}. As datas abaixo pertencem ao cenário de trabalho.`,'notice'));
  const fields=[field('Nome do pacote',pkg.name),field('Local / frente',pkg.location),field('Serviço',pkg.service),field('Responsável',pkg.responsible),field('Quantidade de concreto (m³)',pkg.quantity===null?'':String(pkg.quantity),'number'),field('Origem / premissa da quantidade',pkg.quantitySource),field('Necessidade / concretagem',pkg.needDate,'date'),field('Prazo de conclusão',pkg.finishDate,'date'),field('Critério verificável de conclusão',pkg.criterion)];
@@ -84,7 +91,7 @@ export class ProductionPanel{
  const known=check('Conferi estoque e pedidos existentes (concreto fresco não tem estoque antecipado)',pkg.coverageKnown);
  known.input.onchange=()=>this.action(x=>{x.packages.find(q=>q.id===pkg.id)!.coverageKnown=known.input.checked;log(x,'Cobertura conferida',pkg.name);});body.append(known.label);
  body.append(el('p','Pacote de fornecimento · concreto usinado','eyebrow'),el('p','A necessidade vem da produção. A compra precisa chegar à frente certa, na janela certa, com a especificação conferida.','lead'),el('p',pkg.quantitySource,'simulation-note'));
- const metrics=el('div','','metrics');for(const [label,value]of [['Demanda',pkg.quantity===null?'Desconhecida':`${pkg.quantity} m³`],['Cobertura elegível',`${balance.covered} m³`],['Saldo a cobrir',balance.balance===null?'A conferir':`${balance.balance} m³`]])metrics.append(this.metric(label,value));body.append(metrics);
+ const metrics=el('div','','metrics');for(const [label,value]of [['Demanda',pkg.quantity===null?'Desconhecida':volume(pkg.quantity)],['Cobertura elegível',volume(balance.covered)],['Saldo a cobrir',balance.balance===null?'A conferir':volume(balance.balance)]])metrics.append(this.metric(label,value));body.append(metrics);
  const timeline=el('div','','timeline');for(const [label,value]of [['Iniciar compra',dates.start],['Emitir pedido',dates.order],['Entrega prevista',dates.delivery],['Necessidade na frente',dates.need]])timeline.append(this.metric(label,value));body.append(timeline,el('p','Cenário: 2 dias corridos de fornecimento + 1 dia de preparação. Sem calendário de feriados. Concreto fresco exige janela de entrega; não conta como estoque antecipado.','fine'));
  if(balance.excess>0)body.append(el('p',`Atenção: ${balance.excess} m³ de excesso de cobertura. Reveja reservas.`,'notice warn'));
  for(const s of p.supplies){const card=el('details','','supply-card');card.dataset.supplier=s.name;card.open=this.expandedSupplies.has(s.id);card.ontoggle=()=>{if(card.open)this.expandedSupplies.add(s.id);else this.expandedSupplies.delete(s.id);};const summary=el('summary');summary.append(el('strong',s.name),el('span',s.quantity===null?'Valor a conferir':money(quoteTotal(s.quantity,s.unitPrice,s.freight)),'quote-total'),el('small',(s.synthetic?'Simulação · ':'')+(s.delivery!==pkg.needDate?'Fora da janela':s.confirmed?'Janela confirmada':'A confirmar')));card.append(summary);card.append(el('span',s.synthetic?'COTAÇÃO FICTÍCIA':'INFORMADO PELO USUÁRIO','badge'),el('p',`${s.quantity??'?'} m³ × ${money(s.unitPrice)} + ${money(s.freight)} = ${s.quantity===null?'A conferir':money(quoteTotal(s.quantity,s.unitPrice,s.freight))}`,'price'));

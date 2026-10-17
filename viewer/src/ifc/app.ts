@@ -38,12 +38,14 @@ export class Viewer {
     world.scene.three.background = new THREE.Color("#f4f2f8");
     world.renderer = new OBC.SimpleRenderer(this.components, viewport);
     world.camera = new OBC.SimpleCamera(this.components);
+    await world.camera.controls.setLookAt(30,20,30,0,0,0,false);
     this.world = world;
+    new ResizeObserver(()=>{world.renderer?.resize();world.camera.updateAspect();}).observe(viewport);
 
     this.components.init();
     this.components.get(OBC.Grids).create(world);
 
-    // Fragments precisa de um worker; carregado do CDN oficial.
+    // Worker Fragments empacotado localmente para a versão fixada do motor.
     const response = await fetch(WORKER_URL);
     if (!response.ok) throw new Error('Worker BIM local indisponível.');
     const blob = await response.blob();
@@ -82,7 +84,7 @@ export class Viewer {
     const before = new Set(this.fragments.list.keys());
     try {
       await ifcLoader.load(bytes, true, name);
-      await this.fitToModel();
+      await this.orient('iso');
       return this.model;
     } catch (error) {
       for (const [id, model] of this.fragments.list) {
@@ -145,9 +147,9 @@ export class Viewer {
   }
 
   /** Atributos + PSets de um elemento (para o painel de propriedades). */
-  async getItemData(localId: number): Promise<any | null> {
-    if (!this.model) return null;
-    const [item] = await this.model.getItemsData([localId], {
+  async getItemData(localId: number, model = this.model): Promise<any | null> {
+    if (!model) return null;
+    const [item] = await model.getItemsData([localId], {
       attributesDefault: true,
       relations: {
         IsDefinedBy: { attributes: true, relations: true },
@@ -191,11 +193,41 @@ export class Viewer {
     return best.localId;
   }
 
-  private async fitToModel() {
+  async fitToModel() {
     if (!this.model) return;
     const boxes = await this.model.getBoxes();
     if (!boxes?.length) return;
     const union = boxes.reduce((acc, b) => acc.union(b), boxes[0].clone());
-    this.world.camera.controls.fitToBox(union, true);
+    await this.world.camera.controls.fitToSphere(union.getBoundingSphere(new THREE.Sphere()), true);
   }
+
+  async fitToElements(tasks:{model:FRAGS.FragmentsModel;localId:number}[]){
+    const boxes:THREE.Box3[]=[];for(const model of new Set(tasks.map(t=>t.model))){boxes.push(...await model.getBoxes(Array.from(new Set(tasks.filter(t=>t.model===model).map(t=>t.localId)))));}
+    if(!boxes.length)return;const union=boxes.reduce((a,b)=>a.union(b),boxes[0].clone());await this.world.camera.controls.fitToSphere(union.getBoundingSphere(new THREE.Sphere()),true);
+  }
+
+  async orient(direction:string,tasks:{model:FRAGS.FragmentsModel;localId:number}[]=[]){
+    if(!this.model)return;const boxes:THREE.Box3[]=[];
+    if(tasks.length){for(const model of new Set(tasks.map(t=>t.model)))boxes.push(...await model.getBoxes(Array.from(new Set(tasks.filter(t=>t.model===model).map(t=>t.localId)))));}
+    else boxes.push(...await this.model.getBoxes());if(!boxes.length)return;
+    const box=boxes.reduce((a,b)=>a.union(b),boxes[0].clone()),center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());
+    const distance=Math.max(size.x,size.y,size.z)*1.8||20;
+    const offset=direction==='top'?new THREE.Vector3(0,distance,.001):direction==='front'?new THREE.Vector3(0,0,distance):direction==='side'?new THREE.Vector3(distance,0,0):new THREE.Vector3(distance*.8,distance*.6,distance*.8);
+    await this.world.camera.controls.setLookAt(center.x+offset.x,center.y+offset.y,center.z+offset.z,center.x,center.y,center.z,false);
+    // fitToBox gira para o eixo mais próximo e pode mostrar uma laje de perfil.
+    await this.world.camera.controls.fitToSphere(box.getBoundingSphere(new THREE.Sphere()),true);
+  }
+
+  async applySimulation(visible:{model:FRAGS.FragmentsModel;localId:number}[],hidden:{model:FRAGS.FragmentsModel;localId:number}[],active:{model:FRAGS.FragmentsModel;localId:number}[]){
+    await this.clearHighlights();
+    for(const model of this.fragments.list.values()){
+      const show=Array.from(new Set(visible.filter(t=>t.model===model).map(t=>t.localId))),hide=Array.from(new Set(hidden.filter(t=>t.model===model).map(t=>t.localId)));
+      if(hide.length)await model.setVisible(hide,false);if(show.length)await model.setVisible(show,true);
+      const current=Array.from(new Set(active.filter(t=>t.model===model).map(t=>t.localId)));
+      if(current.length){await model.highlight(current,SELECT_MAT);this._highlighted.set(model,current);}
+    }
+    await this.fragments.core.update(true);
+  }
+
+  async showAll(){await this.clearHighlights();for(const model of this.fragments.list.values())await model.resetVisible();await this.fragments.core.update(true);}
 }

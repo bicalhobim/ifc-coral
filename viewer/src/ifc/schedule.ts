@@ -1,4 +1,5 @@
 import type * as FRAGS from "@thatopen/fragments";
+import type {ElementVolume} from './quantities.ts';
 
 export interface ElementTask {
   model: FRAGS.FragmentsModel;
@@ -13,6 +14,7 @@ export interface ElementTask {
   start: Date;
   finish: Date;
   durationDays: number;
+  volume?: ElementVolume;
   /** Hierarquia Summary1-4 (ex: "1.3 Estruturas" → "1.3.2 TORRE 02" → …). */
   summary1?: string;
   summary2?: string;
@@ -109,6 +111,7 @@ function findAlias(props: Map<string, string>, aliases: string[]): string | unde
 export async function buildSchedule(
   model: FRAGS.FragmentsModel,
   modelKey = model.modelId,
+  volumes: Map<string,ElementVolume> = new Map(),
 ): Promise<ElementTask[]> {
   const byCategory = await model.getItemsOfCategories(BUILDING_CATEGORIES);
   const localIds = Object.values(byCategory).flat() as number[];
@@ -184,6 +187,7 @@ export async function buildSchedule(
         start: te.start,
         finish: te.finish,
         durationDays: te.days,
+        volume: globalId ? volumes.get(globalId) : undefined,
         summary1,
         summary2,
         summary3,

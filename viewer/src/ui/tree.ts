@@ -90,10 +90,11 @@ function node(item: SpatialTreeItem, hooks: TreeHooks): HTMLElement {
   const row = document.createElement("div");
   row.className = "tree-node";
   const kids = item.children ?? [];
+  const initiallyClosed=kids.length>0&&item.category?.toUpperCase()==='IFCBUILDINGSTOREY';
 
   const caret = document.createElement("span");
   caret.className = "tree-caret";
-  caret.textContent = kids.length ? "▾" : "";
+  caret.textContent = kids.length ? (initiallyClosed?'▸':'▾') : "";
   const label = document.createElement("span");
   label.textContent = spatialLabel(item, hooks.labelMap);
   row.append(caret, label);
@@ -112,6 +113,7 @@ function node(item: SpatialTreeItem, hooks: TreeHooks): HTMLElement {
   if (kids.length) {
     const childBox = document.createElement("div");
     childBox.className = "tree-children";
+    childBox.hidden=initiallyClosed;
     for (const c of kids) childBox.appendChild(node(c, hooks));
     caret.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -134,6 +136,8 @@ export function selectNodeById(container: HTMLElement, localId: number): void {
   container.querySelectorAll(".tree-node.selected").forEach((n) => n.classList.remove("selected"));
   const row = container.querySelector<HTMLElement>(`.tree-node[data-local-id="${localId}"]`);
   if (!row) return;
+  let parent:HTMLElement|null=row.parentElement;
+  while(parent&&parent!==container){if(parent.classList.contains('tree-children')){parent.hidden=false;const caret=parent.previousElementSibling?.querySelector('.tree-caret');if(caret)caret.textContent='▾';}parent=parent.parentElement;}
   row.classList.add("selected");
   row.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }

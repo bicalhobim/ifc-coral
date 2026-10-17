@@ -1,9 +1,11 @@
 import type { ElementTask } from "../ifc/schedule";
 import { groupTasks, taskGroupKey } from '../ifc/identity.ts';
 import {csvCell} from './csv.ts';
+import {simulationDates,simulationFrame} from '../ifc/simulation.ts';
+import {summarizeVolumes} from '../ifc/quantities.ts';
 
 export interface GanttHooks {
-  onScrub: (date: Date, visible: ElementTask[], hidden: ElementTask[]) => void;
+  onScrub: (date: Date, visible: ElementTask[], hidden: ElementTask[],active:ElementTask[]) => Promise<void>|void;
   onSelect: (tasks: ElementTask[]) => void;
 }
 
@@ -65,14 +67,20 @@ export class Gantt {
   private _tree!: TreeNode[];
   private _flat: TreeNode[] = [];
   private _selected: TreeNode | null = null;
+  private selection:ElementTask[]=[];
+  private dates:number[]=[];private index=0;private scope='all';private playing=false;private run=0;private timer:ReturnType<typeof setTimeout>|undefined;
+  private speed=850;private controls?:HTMLElement;private frameQueue:Promise<void>=Promise.resolve();
+  private filter='';
 
   render(container: HTMLElement, tasks: ElementTask[], hooks: GanttHooks) {
+    this.pause();this.selection=[];this.scope='all';this.dates=simulationDates(tasks);this.index=Math.max(0,this.dates.length-1);
     this._container = container;
     this._tasks = tasks;
     this._hooks = hooks;
     this.mode = "gantt";
     this._selected = null;
     this._tree = this.buildTree(tasks);
+    this.updateDomain();
     this._renderView();
   }
 
@@ -159,12 +167,12 @@ export class Gantt {
 
   // ── renderização ────────────────────────────────────────────────
 
-  private flatten(nodes: TreeNode[]): TreeNode[] {
+  private flatten(nodes: TreeNode[], includeCollapsed=false): TreeNode[] {
     const out: TreeNode[] = [];
     const walk = (list: TreeNode[]) => {
       for (const n of list) {
         out.push(n);
-        if (!n.collapsed && n.children.length > 0) walk(n.children);
+        if ((includeCollapsed||!n.collapsed) && n.children.length > 0) walk(n.children);
       }
     };
     walk(nodes);
@@ -172,7 +180,8 @@ export class Gantt {
   }
 
   private _renderView() {
-    const { _container: container, _tasks: tasks, _hooks: hooks } = this;
+    const { _container: container, _tasks: tasks } = this;
+    const previousScroll=container.querySelector('.gantt-body')?.scrollTop??0;
     container.innerHTML = "";
     container.appendChild(this.toolbar());
 
@@ -191,10 +200,11 @@ export class Gantt {
       body.className = "gantt-body";
       body.append(this.combinedPanel());
       container.appendChild(body);
-      container.appendChild(this.scrubber(tasks, hooks));
+      body.scrollTop=previousScroll;
     } else {
       container.appendChild(this.fullTable(tasks));
     }
+    container.appendChild(this.playback());
   }
 
   private x(t: number): number {
@@ -204,13 +214,17 @@ export class Gantt {
 
   /** Toggle: se já está selecionado, desmarca. Senão, seleciona. */
   private selectNode(n: TreeNode | null) {
+    this.pause();
     if (n && this._selected === n) {
       this._selected = null;
+      this.selection=[];
       this._hooks.onSelect([]);
     } else {
       this._selected = n;
-      if (n) this._hooks.onSelect(collectAllTasks(n));
+      this.selection=n?collectAllTasks(n):[];
+      if (n) this._hooks.onSelect(this.selection);
     }
+    this.scope=this.selection.length?'selection':'all';this.dates=simulationDates(this.scopeTasks());this.index=Math.max(0,this.dates.length-1);this.updateDomain();
   }
 
   // ── toolbar (toggle + export) ───────────────────────────────────
@@ -236,13 +250,18 @@ export class Gantt {
 
     bar.appendChild(toggle);
     bar.appendChild(exportBtn);
+    const search=document.createElement('input');search.type='search';search.className='gantt-search';search.placeholder='Buscar atividade ou pavimento';search.setAttribute('aria-label','Buscar atividade no 4D');search.value=this.filter;search.oninput=()=>{this.filter=search.value.toLocaleLowerCase('pt-BR');for(const row of this._container.querySelectorAll<HTMLElement>('[data-activity-search]'))row.hidden=!!this.filter&&!row.dataset.activitySearch?.includes(this.filter);};bar.append(search);
+    const quantity=document.createElement('span');quantity.className='gantt-selection-summary';
+    const summary=summarizeVolumes(this.selection);
+    quantity.textContent=summary.count?`${summary.count} elementos · ${summary.totalM3===null?`${summary.measured}/${summary.count} com volume`:summary.totalM3.toLocaleString('pt-BR',{maximumFractionDigits:3})+' m³'}`:'Selecione uma atividade';
+    quantity.title=summary.source;bar.append(quantity);
     return bar;
   }
 
   // ── export CSV ──────────────────────────────────────────────────
 
   private exportCSV() {
-    const rows = [["#", "Grupo 1", "Grupo 2", "Grupo 3", "Grupo 4", "Pavimento", "Tarefa", "Início", "Término", "Dias"]];
+    const rows = [["#", "Grupo 1", "Grupo 2", "Grupo 3", "Grupo 4", "Pavimento", "Tarefa", "Início", "Término", "Dias", "Volume IFC (m³)"]];
     const byTaskName = groupTasks(this._tasks);
     const sorted = [...byTaskName.values()]
       .map((ts) => ts[0])
@@ -251,7 +270,7 @@ export class Gantt {
       rows.push([
         String(i + 1), t.summary1 || "—", t.summary2 || "—", t.summary3 || "—", t.summary4 || "—",
         t.storey || "—",
-        t.name, fmt(t.start), fmt(t.finish), `${t.durationDays}`,
+        t.name, fmt(t.start), fmt(t.finish), `${t.durationDays}`,this.volumeLabel(byTaskName.get(taskGroupKey(t))??[t]),
       ]);
     });
     const csv = rows.map((r) => r.map(csvCell).join(";")).join("\n");
@@ -278,7 +297,9 @@ export class Gantt {
     const monthsBars = document.createElement("div");
     monthsBars.className = "gantt-combined-months-bars";
 
-    const ticks = monthTicks(new Date(this.domainStart), new Date(this.domainEnd));
+    const ticks = this.domainEnd-this.domainStart<=62*MS_DAY
+      ? Array.from({length:Math.floor((this.domainEnd-this.domainStart)/MS_DAY)+1},(_,i)=>{const d=new Date(this.domainStart+i*MS_DAY);return {label:fmt(d),x:this.x(+d),year:d.getFullYear(),initial:String(d.getDate())};}).filter((_,i)=>i%Math.max(1,Math.ceil((this.domainEnd-this.domainStart)/MS_DAY/12))===0)
+      : monthTicks(new Date(this.domainStart), new Date(this.domainEnd));
 
     const yearsRow = document.createElement("div");
     yearsRow.className = "gantt-years-row";
@@ -348,7 +369,7 @@ export class Gantt {
       labelSpan.style.overflow = "hidden";
       labelSpan.style.textOverflow = "ellipsis";
       labelSpan.style.whiteSpace = "nowrap";
-      if (elemCount > 1) labelSpan.title = `${elemCount} elementos`;
+      labelSpan.title = `${n.label}\n${elemCount} elementos · Volume IFC: ${this.volumeLabel(allTasks)} m³`;
       info.appendChild(labelSpan);
 
       const datesSpan = document.createElement("span");
@@ -392,6 +413,9 @@ export class Gantt {
       row.appendChild(bars);
 
       row.style.cursor = "pointer";
+      row.dataset.activitySearch=n.label.toLocaleLowerCase('pt-BR');row.hidden=!!this.filter&&!row.dataset.activitySearch.includes(this.filter);
+      row.setAttribute('role','button');row.tabIndex=0;row.setAttribute('aria-label',n.label);
+      row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();this.selectNode(n);this._renderView();}});
       row.addEventListener("click", () => {
         this.selectNode(n);
         this._renderView();
@@ -399,11 +423,11 @@ export class Gantt {
       panel.appendChild(row);
     });
 
-    const today = Date.now();
-    if (today >= this.domainStart && today <= this.domainEnd) {
+    const today = this.dates[this.index];
+    if (today!==undefined&&today >= this.domainStart && today <= this.domainEnd) {
       const line = document.createElement("div");
-      line.className = "gantt-today-combined";
-      line.style.left = `calc(50% + ${this.x(today)}% * 50 / 100)`;
+      line.className = "gantt-today-combined simulation-cursor";
+      line.style.left = `calc(50% + ${this.x(today)/2}%)`;
       panel.appendChild(line);
     }
 
@@ -415,7 +439,7 @@ export class Gantt {
   private fullTable(tasks: ElementTask[]): HTMLElement {
     const wrap = document.createElement("div");
     wrap.className = "gantt-full-table";
-    const cols = ["#", "Grupo 1", "Grupo 2", "Grupo 3", "Grupo 4", "Pavimento", "Tarefa", "Início", "Término", "Dias"];
+    const cols = ["#", "Grupo 1", "Grupo 2", "Grupo 3", "Grupo 4", "Pavimento", "Tarefa", "Início", "Término", "Dias", "Volume IFC (m³)"];
     const header = document.createElement("div");
     header.className = "gantt-tr gantt-th";
     for (const c of cols) {
@@ -430,15 +454,18 @@ export class Gantt {
       .map((ts) => ts[0])
       .sort((a, b) => msDate(a.start) - msDate(b.start));
 
-    let selectedIdx = -1;
+    const nodes=new Map(this.flatten(this._tree,true).map(n=>[n.id,n]));
+    let selectedIdx = groups.findIndex(t=>this._selected?.id===`task::${taskGroupKey(t)}`);
     groups.forEach((t, i) => {
       const tr = document.createElement("div");
       tr.className = "gantt-tr";
+      tr.classList.toggle('gantt-table-selected',i===selectedIdx);
+      tr.dataset.activitySearch=[t.name,t.summary1,t.summary2,t.summary3,t.summary4].join(' ').toLocaleLowerCase('pt-BR');tr.hidden=!!this.filter&&!tr.dataset.activitySearch.includes(this.filter);
       tr.style.cursor = "pointer";
       const cells = [
         String(i + 1), t.summary1 || "—", t.summary2 || "—", t.summary3 || "—", t.summary4 || "—",
         t.storey || "—",
-        t.name, fmt(t.start), fmt(t.finish), `${t.durationDays}d`,
+        t.name, fmt(t.start), fmt(t.finish), `${t.durationDays}d`,this.volumeLabel(byTaskName.get(taskGroupKey(t))??[t]),
       ];
       for (const c of cells) {
         const cell = document.createElement("span");
@@ -447,13 +474,8 @@ export class Gantt {
         tr.appendChild(cell);
       }
       tr.addEventListener("click", () => {
-        if (selectedIdx === i) {
-          selectedIdx = -1;
-          this._hooks.onSelect([]);
-        } else {
-          selectedIdx = i;
-          this._hooks.onSelect(byTaskName.get(taskGroupKey(t)) ?? [t]);
-        }
+        this.selectNode(nodes.get(`task::${taskGroupKey(t)}`)??null);
+        selectedIdx=this._selected?i:-1;this.syncControls();
         wrap.querySelectorAll(".gantt-tr").forEach((r, ri) => {
           r.classList.toggle("gantt-table-selected", ri === selectedIdx + 1 && selectedIdx >= 0);
         });
@@ -465,33 +487,46 @@ export class Gantt {
 
   // ── scrubber 4D ─────────────────────────────────────────────────
 
-  private scrubber(tasks: ElementTask[], hooks: GanttHooks): HTMLElement {
-    const wrap = document.createElement("div");
-    wrap.className = "gantt-scrubber";
-    const input = document.createElement("input");
-    input.type = "range";
-    input.min = "0";
-    input.max = "1000";
-    input.value = "1000";
-    const readout = document.createElement("span");
-    readout.className = "gantt-date";
-
-    const apply = () => {
-      const frac = Number(input.value) / 1000;
-      const t = this.domainStart + frac * (this.domainEnd - this.domainStart);
-      const date = new Date(t);
-      readout.textContent = fmt(date);
-      const visible: ElementTask[] = [];
-      const hidden: ElementTask[] = [];
-      for (const task of tasks) {
-        (task.start.getTime() <= t ? visible : hidden).push(task);
-      }
-      hooks.onScrub(date, visible, hidden);
-    };
-    input.addEventListener("input", apply);
-    apply();
-
-    wrap.append(document.createTextNode("Data: "), readout, input);
-    return wrap;
+  private volumeLabel(tasks:ElementTask[]){const q=summarizeVolumes(tasks);return q.totalM3===null?`A conferir (${q.measured}/${q.count})`:q.totalM3.toLocaleString('pt-BR',{maximumFractionDigits:3});}
+  private scopeTasks(){return this.scope==='selection'&&this.selection.length?this.selection:this._tasks;}
+  private updateDomain(){if(this.dates.length){this.domainStart=this.dates[0];this.domainEnd=this.dates.at(-1)!;}}
+  pause(){this.playing=false;this.run++;if(this.timer)clearTimeout(this.timer);this.timer=undefined;this.syncControls();}
+  private async applyFrame(){
+    const tasks=this.scopeTasks(),at=this.dates[this.index];if(at===undefined)return;
+    const {visible,active}=simulationFrame(tasks,at),keys=new Set(visible.map(t=>JSON.stringify([t.modelKey,t.globalId??t.localId])));
+    const hidden=simulationFrame(this._tasks,Number.NEGATIVE_INFINITY).hidden.filter(t=>!keys.has(JSON.stringify([t.modelKey,t.globalId??t.localId])));
+    const hooks=this._hooks,run=this.run;
+    this.syncControls();this.frameQueue=this.frameQueue.catch(()=>{}).then(()=>run===this.run?hooks.onScrub(new Date(at),visible,hidden,active):undefined);
+    try{await this.frameQueue;}catch{this.pause();}
+  }
+  private async play(){
+    if(this.playing){this.pause();return;}if(!this.dates.length)return;
+    if(this.index>=this.dates.length-1)this.index=0;
+    this.playing=true;const run=++this.run;this.syncControls();await this.applyFrame();
+    const next=async()=>{if(!this.playing||run!==this.run)return;if(this.index>=this.dates.length-1){this.pause();return;}this.index++;await this.applyFrame();if(this.playing&&run===this.run)this.timer=setTimeout(()=>void next(),this.speed);};
+    if(this.playing&&run===this.run)this.timer=setTimeout(()=>void next(),this.speed);
+  }
+  private syncControls(){
+    const summary=this._container?.querySelector<HTMLElement>('.gantt-selection-summary'),q=summarizeVolumes(this.selection);
+    if(summary){summary.textContent=q.count?`${q.count} elementos · ${q.totalM3===null?`${q.measured}/${q.count} com volume`:q.totalM3.toLocaleString('pt-BR',{maximumFractionDigits:3})+' m³'}`:'Selecione uma atividade';summary.title=q.source;}
+    const root=this.controls;if(!root)return;const range=root.querySelector<HTMLInputElement>('input'),date=root.querySelector('.gantt-date'),play=root.querySelector<HTMLButtonElement>('.play'),scope=root.querySelector<HTMLSelectElement>('[aria-label="Escopo da simulação"]');
+    if(range){range.max=String(Math.max(0,this.dates.length-1));range.value=String(this.index);}if(date)date.textContent=this.dates[this.index]===undefined?'Sem datas':fmt(new Date(this.dates[this.index]));
+    if(play){play.textContent=this.playing?'❚❚':'▶';play.setAttribute('aria-label',this.playing?'Pausar simulação':'Reproduzir simulação');play.title=this.playing?'Pausar':'Reproduzir';}
+    if(scope)scope.value=this.scope;
+    const cursor=this._container?.querySelector<HTMLElement>('.simulation-cursor');if(cursor&&this.dates[this.index]!==undefined)cursor.style.left=`calc(50% + ${this.x(this.dates[this.index])/2}%)`;
+  }
+  private playback(){
+    const wrap=document.createElement('div');wrap.className='gantt-playback';this.controls=wrap;
+    const buttons=document.createElement('div');buttons.className='playback-buttons';
+    const control=(name:string,symbol:string,fn:()=>void,cls='')=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',name);b.title=name;b.textContent=symbol;b.className=cls;b.onclick=fn;buttons.append(b);};
+    control('Voltar ao início','↤',()=>{this.pause();this.index=0;void this.applyFrame();});
+    control('Etapa anterior','‹',()=>{this.pause();this.index=Math.max(0,this.index-1);void this.applyFrame();});
+    control('Reproduzir simulação','▶',()=>void this.play(),'play');
+    control('Próxima etapa','›',()=>{this.pause();this.index=Math.min(this.dates.length-1,this.index+1);void this.applyFrame();});
+    const opts=document.createElement('div');opts.className='playback-controls';const date=document.createElement('span');date.className='gantt-date';date.setAttribute('aria-label','Data da simulação');
+    const scope=document.createElement('select');scope.setAttribute('aria-label','Escopo da simulação');for(const [value,label]of [['all','Modelo inteiro'],['selection','Seleção']]){const o=document.createElement('option');o.value=value;o.textContent=label;o.disabled=value==='selection'&&!this.selection.length;scope.append(o);}scope.value=this.scope;scope.onchange=()=>{const value=scope.value;this.pause();this.scope=value;this.dates=simulationDates(this.scopeTasks());this.index=0;this.updateDomain();this._renderView();void this.applyFrame();};
+    const speed=document.createElement('select');speed.setAttribute('aria-label','Velocidade da simulação');for(const [value,label]of [[1600,'Lenta'],[850,'Normal'],[300,'Rápida']] as const){const o=document.createElement('option');o.value=String(value);o.textContent=label;speed.append(o);}speed.value=String(this.speed);speed.onchange=()=>{this.speed=Number(speed.value);};
+    opts.append(date,scope,speed);const range=document.createElement('input');range.type='range';range.className='playback-range';range.min='0';range.step='1';range.setAttribute('aria-label','Data do planejamento 4D');range.oninput=()=>{const value=Number(range.value);this.pause();this.index=value;void this.applyFrame();};
+    wrap.append(buttons,opts,range);this.syncControls();return wrap;
   }
 }

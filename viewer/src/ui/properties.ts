@@ -53,7 +53,7 @@ export function renderPropertiesMulti(
 
   const btnExport = document.createElement("button");
   btnExport.className = "props-nav-export";
-  btnExport.textContent = "Exportar Todos";
+  btnExport.textContent = "CSV";
   btnExport.title = "Exportar propriedades de todos os elementos selecionados";
   btnExport.addEventListener("click", () => exportAllCSV(items));
 

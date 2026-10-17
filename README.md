@@ -20,8 +20,8 @@ Esta cópia do professor utiliza uma junction de `viewer/node_modules` para as d
 
 ## Oficina
 
-1. **Abrir TORRE02.** Inspecionar estrutura espacial, tarefa e elementos. Ampliar o modelo para consultar propriedades. O 4D representa datas do IFC; não comprova execução.
-2. **Criar caso de concretagem.** A geometria e os GlobalIds são reais. Os 12 m³, datas de cenário e fornecedores A/B/C são premissas sintéticas, não extração do IFC nem compra real.
+1. **Abrir TORRE02.** Use os ícones Modelo IFC, Propriedades e Planejamento 4D na barra sobre o modelo. Os painéis abrem ao lado ou abaixo do canvas, sem cobri-lo. Selecione a atividade e use ▶ para reproduzir as datas planejadas; isso não comprova execução.
+2. **Criar caso de concretagem.** O caso novo usa o volume declarado nos QTOs do IFC: as seis lajes do PAV 01 somam **34,707 m³**. O volume entra na demanda; datas do cenário e fornecedores A/B/C continuam fictícios. Sem QTO/unidade válidos e completos, a quantidade fica a conferir. Perdas de compra não são acrescentadas. Projetos anteriores mantêm suas quantidades.
 3. **Produção.** Conferir local, serviço, quantidade/origem, responsável, capacidade e critério. Remover restrições com evidência e conferente.
 4. **Suprimentos.** Conferir cobertura existente, comparar proposta técnica/prazo/preço, confirmar a janela e reservar quantidade. Recebimento parcial, rejeição e atraso são registrados à parte.
 5. **Semana/PPC.** Selecionar pacotes prontos e congelar os compromissos. Registrar realizado e motivo de desvio. O denominador original é preservado.
@@ -33,7 +33,9 @@ O núcleo funciona sem IA. Na aba **IA**, Gemini e OpenAI aceitam chave individu
 
 ## Roteiro de operação com telas
 
-O guia tem 23 passos, com prints reais, marcações de clique, exemplos de preenchimento e resultado esperado. Percorre o caso de concretagem da abertura do IFC à exportação do projeto. A interface v02 usa fundo claro, roxo, menu **Arquivos** e ajudas **?** que abrem com mouse, teclado ou clique.
+O [roteiro atual de navegação, 4D e volume IFC](docs/NAVEGACAO_4D_QUANTIDADES.md) acompanha a interface v03. A origem do quantitativo pode ser consultada no botão **?**; o cálculo não estima volume pela geometria nem converte automaticamente todo volume em concreto.
+
+O guia ilustrado abaixo é a **edição anterior, v02**, com 23 passos, prints e premissa didática de 12 m³. Fica preservado como histórico; suas posições de clique e sua quantidade não representam a interface atual. A atualização dos slides será feita após o teste desta navegação pelo professor.
 
 - [PowerPoint editável](materials/guia-operacao-v02/5.6%20IFC%20Coral%20-%20Guia%20de%20operacao%20passo%20a%20passo.pptx)
 - [PDF para acompanhar o teste](materials/guia-operacao-v02/5.6%20IFC%20Coral%20-%20Guia%20de%20operacao%20passo%20a%20passo.pdf)

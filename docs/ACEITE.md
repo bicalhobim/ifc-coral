@@ -14,7 +14,7 @@ Estado: **laboratório local funcional**. Não é a declaração de conclusão d
 - Interface examinada em 1366 × 900 e 640 × 850; nesta última, largura de documento e conteúdo **625 px**, sem transbordamento horizontal. Capturas em artifacts/.
 - Gemini/OpenAI: testes com transporte simulado para listagem, conteúdo, falha, resposta vazia, isolamento de dados e ausência de segredo na exportação. Interface bloqueou consulta sem chave. **Nenhuma chamada paga real foi executada.**
 
-Testes de domínio/integração Node: **25** após o fechamento. Typecheck, três selfchecks e build de produção devem acompanhar a revisão registrada no Git. O build avisa sobre bundle grande (engine BIM); esse aviso não é erro de compilação e a otimização de carregamento permanece pendente.
+Testes de domínio/integração Node: **25** no fechamento inicial; **37** após a interface v03 e leitura de QTO. Typecheck, três selfchecks e build aprovados na última verificação. O build avisa sobre bundle grande (engine BIM); esse aviso não é erro de compilação e a otimização de carregamento permanece pendente.
 
 ## Matriz em relação aos cenários do documento 5.4
 
@@ -49,3 +49,13 @@ Um revisor separado examinou o código e reproduziu falhas. Foram corrigidos: co
 4. Capturar as telas finais e produzir slides do professor e template de cinco slides do grupo. A gravação de agentes depende da demanda real e do template de equalização do autor.
 
 Outros limites: sem colaboração simultânea, ERP, permissões de projeto, múltiplos ciclos semanais ou calendário de feriados. O mapa desta versão é a visão do pacote de concreto selecionado; exportação integral é JSON, não uma equalização comercial completa. Chaves e respostas de IA não têm persistência; o grupo registra apenas a análise revisada em sua apresentação. Rótulos e tamanho do bundle ainda podem ser refinados sem mudar o núcleo didático.
+
+## Incremento v03 · verificação adicional
+
+O recorte acima continua como histórico. A interface atual acrescenta painéis encaixados sem cobrir o modelo, orientação/enquadramento e reprodução 4D real por datas de atividade. Play, pausa, passos, slider, troca de escopo e fechamento do painel foram operados no navegador. Geometria visível é estado **planejado**, sem inferência de execução.
+
+As seis lajes da concretagem PAV 01 têm **34,707 m³ declarados no QTO**; o aplicativo não calcula esse valor pela geometria. Soma por modelo/GlobalId elimina repetição entre fases. Unidades explícitas/do projeto e conversões volumétricas declaradas são tratadas; ausência, conflito ou cobertura parcial deixam a demanda pendente. Os testes incluem o IFC real, unidade desconhecida, prefixo SI cúbico, conversão de pé cúbico, conflito, comentário STEP e elementos em modelos diferentes.
+
+Caso novo e pacote da seleção receberam 34,707 m³; a demanda alimentou as propostas fictícias. O arquivo exportado/reaberto e o CSV conservaram o quantitativo. Aplicação explícita em pacote editável foi testada; no projeto antigo do professor, a quantidade de 12 m³ e o bloqueio do compromisso congelado permaneceram. Preços da matriz CA-05 acima se referem ao caso sintético anterior de 12 m³.
+
+Inspeção em 1280×720 e 640×850 confirmou que o painel lateral e o inferior ficam fora do canvas; na tela estreita, documento/corpo com 625 px. A divisória do 4D respondeu ao teclado e a oficina recolhida liberou largura para o modelo. Referência operacional vigente: [Navegação, 4D e quantitativos](NAVEGACAO_4D_QUANTIDADES.md). Guia ilustrado v02 é histórico e será atualizado após o teste desta interface pelo professor.
