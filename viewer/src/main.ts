@@ -13,14 +13,23 @@ import type {Project,TaskRecord,WorkPackage} from './production/types.ts';
 import {stageModels} from './production/runtime.ts';
 import './ui/coral.css';
 import {helpButton} from './ui/help.ts';
-import {readIfcVolumes,summarizeVolumes} from './ifc/quantities.ts';
+import {readIfcVolumes,summarizeVolumes,readIfcMetadata} from './ifc/quantities.ts';
+import {QuantificationPanel} from './quantification/ui.ts';
+import type {MeasureSnapshot} from './quantification/review.ts';
+import type {ElementMetadata} from './quantification/types.ts';
 const root=document.getElementById('app')!;
 const header=el('header','','coral-header'),wordmark=el('div','','wordmark'),actions=el('div','','header-actions');
 wordmark.append(el('strong','IFC Coral'),el('span','Planejamento de produção'));header.append(wordmark,actions);
 const layout=el('main','','coral-layout'),modelHost=el('section','','model-host'),status=el('div','Preparando ambiente BIM…','app-status');status.setAttribute('role','status');root.append(header,layout,status);
-const viewer=new Viewer(),gantt=new Gantt();const h=buildShell(modelHost,(name,open)=>{if(name==='timeline'&&!open)gantt.pause();});layout.append(modelHost);
+const viewer=new Viewer(),gantt=new Gantt();const h=buildShell(modelHost,(name,open)=>{if(name==='timeline'&&!open)gantt.pause();if(name==='quantification'&&open)quantTool.render();});layout.append(modelHost);
 let project=createProject(),selected:ElementTask[]=[],busy=false,initialized=false;
 let runtime=new Map<string,{model:FragmentsModel;tasks:ElementTask[]}>(),modelBytes=new Map<string,Uint8Array>();
+let reviewedMeasures:MeasureSnapshot[]=[];
+const metadataCache=new Map<string,Map<string,ElementMetadata>>();
+const quantTool=new QuantificationPanel({selection:()=>{
+ const refs=new Map(selected.filter(t=>t.globalId&&t.modelKey).map(t=>[JSON.stringify([t.modelKey,t.globalId]),t]));return [...refs.values()].flatMap(t=>{const model=project.models.find(m=>m.id===t.modelKey);if(!model)return [];let data=metadataCache.get(model.hash);if(!data){data=readIfcMetadata(new TextDecoder().decode(modelBytes.get(model.id)),model.id,model.hash);metadataCache.set(model.hash,data);}const element=data.get(t.globalId!);return element?[{element,volume:{amount:t.volume?.m3??null,unit:'m³',source:t.volume?.source??''}}]:[];});
+},reviews:()=>reviewedMeasures,saveReviews:rows=>{reviewedMeasures=rows;message('Conferências registradas. Exporte para preservar os resultados.');},generate:()=>{message('Conferências prontas para a integração aos pacotes.');}});h.quantEl.append(quantTool.element);
+async function loadQuantReport(){if(project.models.some(m=>m.hash==='885c3b3ace554f9e3091d611645cccac875a583241d5971c57703bb4a36030dc'))try{const r=await fetch(`${import.meta.env.BASE_URL}models/TORRE02_quantification.json`);if(r.ok)quantTool.addReport(await r.text());}catch{/* Optional geometry report: missing report stays pending. */}}
 function message(value:string,error=false){status.textContent=value;status.classList.toggle('error',error);}
 function persist(){try{saveLocal(project);message('Salvo neste navegador · Exporte para levar a outro computador.');}catch{message('Não foi possível salvar no navegador. Exporte seu projeto agora.',true);}}
 const quantityFor=(refs:WorkPackage['elements'])=>summarizeVolumes(refs.map(e=>({modelKey:e.modelId,globalId:e.globalId,volume:runtime.get(e.modelId)?.tasks.find(t=>t.globalId===e.globalId)?.volume})));
@@ -36,12 +45,13 @@ function toRecord(t:ElementTask):TaskRecord{return {id:taskIdentity(t),modelId:t
 async function selectAndShow(id:number,model=viewer.model){
  const revision=++selectionRevision;gantt.pause();await visual(()=>viewer.select(id,model));if(revision!==selectionRevision)return;
  const tasks=Array.from(runtime.values()).flatMap(r=>r.tasks).filter(t=>t.model===model&&t.localId===id),data=await viewer.getItemData(id,model);if(revision!==selectionRevision)return;
- selected=tasks;renderProperties(h.propsEl,data);appendQuantity(tasks);h.setPanel('properties',true);
+ selected=tasks;renderProperties(h.propsEl,data);appendQuantity(tasks);h.setPanel('properties',true);quantTool.render();
 }
 function appendQuantity(tasks:ElementTask[]){const q=summarizeVolumes(tasks),box=el('div','','quantity-callout');box.append(el('p',`Volume da seleção · ${q.count} elemento(s)`),el('strong',q.totalM3===null?`Volume a conferir (${q.measured}/${q.count})`:`${q.totalM3.toLocaleString('pt-BR',{maximumFractionDigits:3})} m³`),helpButton('Origem do volume IFC',q.source));h.propsEl.prepend(box);}
 async function showPackage(pkg:WorkPackage){gantt.pause();const tasks=pkg.elements.flatMap(e=>runtime.get(e.modelId)?.tasks.filter(t=>t.globalId===e.globalId)??[]);await visual(async()=>{await viewer.showAll();await viewer.highlightElements(tasks);await viewer.fitToElements(tasks);});modelHost.querySelector<HTMLElement>('.simulation-overlay')!.hidden=true;message(`${pkg.elements.length} referências IFC do pacote · ${tasks.length} registros 4D localizados.`);}
 function spatialIds(item:SpatialTreeItem):number[]{return [...(item.localId!=null?[item.localId]:[]),...(item.children??[]).flatMap(spatialIds)];}
 async function drawModelViews(){
+ await loadQuantReport();
  selectionRevision++;modelHost.querySelector<HTMLElement>('.simulation-overlay')!.hidden=true;h.propsEl.replaceChildren(el('p','Selecione um elemento ou atividade.','empty'));
  h.treeEl.replaceChildren();const allTasks=Array.from(runtime.values()).flatMap(x=>x.tasks);
  for(const [id,{model}]of runtime){const raw=await viewer.getSpatial(model);if(!raw)continue;const spatial:SpatialTreeItem={localId:null,category:null,children:materializeSpatial(raw)};const ids=spatialIds(spatial),labels=new Map<number,string>();if(ids.length){const data=await model.getItemsData(ids,{attributesDefault:false,attributes:['Name']});data.forEach((item,i)=>{const name=(item as Record<string,unknown>).Name as {value?:string}|string|undefined;if(name)labels.set(ids[i],typeof name==='string'?name:name.value??'Pavimento');});}const wrapper=el('div','','tree-model');wrapper.dataset.modelKey=id;h.treeEl.append(wrapper);renderTree(wrapper,project.models.find(m=>m.id===id)?.name??id,spatial,{onSelect:id=>void selectAndShow(id,model),labelMap:labels});}
@@ -49,7 +59,7 @@ async function drawModelViews(){
  message(`${project.models.length} modelo(s) · ${new Set(allTasks.map(t=>`${t.modelKey}:${t.globalId}`)).size} elementos com cronograma · ${allTasks.length} registros 4D. Datas IFC são planejamento, não execução.`);
 }
 function selectActivities(tasks:ElementTask[]){
- const revision=++selectionRevision;selected=tasks;modelHost.querySelector<HTMLElement>('.simulation-overlay')!.hidden=true;
+ const revision=++selectionRevision;selected=tasks;quantTool.render();modelHost.querySelector<HTMLElement>('.simulation-overlay')!.hidden=true;
  void visual(async()=>{await viewer.showAll();await viewer.highlightElements(tasks);});
  if(!tasks.length){h.propsEl.replaceChildren();h.setPanel('properties',false);message('Seleção desfeita.');return;}
  void Promise.all(Array.from(new Set(tasks.map(t=>t.model))).map(m=>m.getItemsData(Array.from(new Set(tasks.filter(t=>t.model===m).map(t=>t.localId))),{attributesDefault:true,relations:{IsDefinedBy:{attributes:true,relations:true}}})))

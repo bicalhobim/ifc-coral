@@ -280,3 +280,15 @@ dialog p { font-size: 13px; line-height: 1.65; color: #97869f; }
 .model-host .props-nav-counter { font-size: 10px; color: #6e5a80; }
 .model-host .props-nav-export { margin-left: auto; }
 .model-host .props { overflow-x: hidden; }
+.model-host.has-quant { grid-template-columns: 300px minmax(150px,1fr); }
+.model-host .panel-quant .panel-body { overflow: auto; padding: 10px; }
+.quant-tool { font-size: 12px; line-height: 1.5; }
+.quant-nav { display: flex; gap: 4px; position: sticky; top: 0; background: white; padding-bottom: 6px; z-index: 2; }
+.quant-tool button { font-size: 11px; padding: 7px 9px; margin: 4px 2px; }
+.quant-tool h3 { margin: 3px 0; font-size: 13px; }
+.quant-result { border: 1px solid #e8ddf1; border-radius: 10px; padding: 10px; margin: 10px 0; }
+.quant-result > strong { font-size: 20px; color: #7500c0; }
+.quant-tool p { margin: 6px 0; overflow-wrap: anywhere; white-space: pre-line; }
+.quant-field { display: block; margin: 8px 0; font-size: 11px; }
+.quant-field input,.quant-tool select { width: 100%; min-width: 0; margin-top: 3px; border: 1px solid #ddd2e6; border-radius: 6px; padding: 7px; }
+@media (max-width:740px) { .model-host.has-quant { grid-template-columns: min(250px,52%) minmax(130px,1fr); } .coral-layout { grid-template-columns: minmax(0,1fr); } }

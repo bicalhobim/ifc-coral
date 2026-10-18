@@ -2,6 +2,13 @@ export type ElementVolume={m3:number|null;source:string;reason?:string};
 export type VolumeElement={modelKey?:string;globalId?:string;volume?:ElementVolume};
 export type VolumeSummary={totalM3:number|null;knownM3:number;count:number;measured:number;missing:number;source:string};
 type Entity={type:string;args:string[]};
+export function readIfcMetadata(text:string,modelId:string,modelHash:string):Map<string,import('../quantification/types.ts').ElementMetadata>{
+ const all=entities(text),out=new Map<string,import('../quantification/types.ts').ElementMetadata>(),types=new Map<number,Entity>();
+ for(const e of all.values())if(e.type==='IFCRELDEFINESBYTYPE'){const typ=all.get(Number(ref(e.args[5])));if(typ)for(const id of refs(e.args[4]))types.set(id,typ);}
+ for(const [id,e]of all){if(!/^(IFCBEAM|IFCCOLUMN|IFCSLAB|IFCWALL|IFCFOOTING|IFCPILE)(STANDARDCASE|ELEMENTEDCASE)?$/.test(e.type))continue;const globalId=label(e.args[0]);
+ out.set(globalId,{modelId,modelHash,globalId,ifcClass:e.type,predefinedType:e.args[8]?.replaceAll('.','')??'',typeName:e.args[4]==='$'?label(types.get(id)?.args[2]):label(e.args[4]),properties:{}});}
+ return out;
+}
 function splitArgs(text:string):string[]{
  const out:string[]=[];let quoted=false,depth=0,start=0;
  for(let i=0;i<text.length;i++){const c=text[i];if(c==="'"){if(quoted&&text[i+1]==="'"){i++;continue;}quoted=!quoted;}if(quoted)continue;if(c==='(')depth++;if(c===')')depth--;if(c===','&&depth===0){out.push(text.slice(start,i).trim());start=i+1;}}

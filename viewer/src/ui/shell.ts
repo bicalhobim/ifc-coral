@@ -1,6 +1,6 @@
-export type ViewerPanel='model'|'properties'|'timeline';
+export type ViewerPanel='model'|'properties'|'timeline'|'quantification';
 export interface ShellHandles {
- viewportEl:HTMLElement;ganttEl:HTMLElement;treeEl:HTMLElement;propsEl:HTMLElement;fileInput:HTMLInputElement;
+ viewportEl:HTMLElement;ganttEl:HTMLElement;treeEl:HTMLElement;propsEl:HTMLElement;quantEl:HTMLElement;fileInput:HTMLInputElement;
  fitButton:HTMLButtonElement;allButton:HTMLButtonElement;viewButtons:Record<string,HTMLButtonElement>;
  setPanel:(name:ViewerPanel,open:boolean)=>void;
 }
@@ -16,10 +16,10 @@ export function buildShell(root:HTMLElement,onPanelChange?:(name:ViewerPanel,ope
  const fileInput=document.createElement('input');Object.assign(fileInput,{type:'file',accept:'.ifc',multiple:true,hidden:true});
  const panes={} as Record<ViewerPanel,HTMLElement>,buttons={} as Record<ViewerPanel,HTMLButtonElement>;
  const setPanel=(name:ViewerPanel,open:boolean)=>{
-  if(name!=='timeline'&&open)for(const other of ['model','properties'] as const){panes[other].hidden=true;buttons[other].setAttribute('aria-pressed','false');}
+  if(name!=='timeline'&&open)for(const other of ['model','properties','quantification'] as const){panes[other].hidden=true;buttons[other].setAttribute('aria-pressed','false');}
   panes[name].hidden=!open;buttons[name].setAttribute('aria-pressed',String(open));
-  root.classList.toggle('has-dock',!panes.model.hidden||!panes.properties.hidden);root.classList.toggle('timeline-open',!panes.timeline.hidden);
-  dock.hidden=panes.model.hidden&&panes.properties.hidden;
+  root.classList.toggle('has-dock',!panes.model.hidden||!panes.properties.hidden||!panes.quantification.hidden);root.classList.toggle('has-quant',!panes.quantification.hidden);root.classList.toggle('timeline-open',!panes.timeline.hidden);
+  dock.hidden=panes.model.hidden&&panes.properties.hidden&&panes.quantification.hidden;
   onPanelChange?.(name,open);
  };
  const panel=(name:ViewerPanel,title:string,cls:string)=>{
@@ -28,10 +28,11 @@ export function buildShell(root:HTMLElement,onPanelChange?:(name:ViewerPanel,ope
   const close=tool(`Fechar ${title.toLowerCase()}`,'<path d="m6 6 12 12M18 6 6 18"/>',()=>setPanel(name,false));close.classList.add('panel-min');head.append(label,close);
   const body=node('div','panel-body');p.append(head,body);panes[name]=p;return {p,body};
  };
- const left=panel('model','Modelo IFC','panel-left'),right=panel('properties','Propriedades','panel-right'),bottom=panel('timeline','Planejamento 4D','panel-bottom');
+ const left=panel('model','Modelo IFC','panel-left'),right=panel('properties','Propriedades','panel-right'),bottom=panel('timeline','Planejamento 4D','panel-bottom'),quant=panel('quantification','Quantificação','panel-quant');
  const search=document.createElement('input');search.className='tree-search';search.placeholder='Buscar no modelo…';search.setAttribute('aria-label','Buscar no modelo');
- treeEl.textContent='Abra um IFC para explorar a estrutura.';propsEl.textContent='Selecione um elemento ou atividade.';left.body.append(search,treeEl);right.body.append(propsEl);bottom.body.append(ganttEl);dock.append(left.p,right.p);dock.hidden=true;
+ treeEl.textContent='Abra um IFC para explorar a estrutura.';propsEl.textContent='Selecione um elemento ou atividade.';left.body.append(search,treeEl);right.body.append(propsEl);bottom.body.append(ganttEl);dock.append(left.p,right.p,quant.p);dock.hidden=true;
  for(const [name,label,icon]of [['model','Modelo IFC',icons.model],['properties','Propriedades',icons.properties],['timeline','Planejamento 4D',icons.timeline]] as const){buttons[name]=tool(label,icon,()=>setPanel(name,panes[name].hidden));buttons[name].setAttribute('aria-pressed','false');buttons[name].setAttribute('aria-controls',panes[name].id);toolbar.append(buttons[name]);}
+ buttons.quantification=tool('Quantificação','<path d="M5 3h14v18H5zM8 7h8M8 11h2M14 11h2M8 15h2M14 15h2"/>',()=>setPanel('quantification',panes.quantification.hidden));buttons.quantification.setAttribute('aria-pressed','false');toolbar.append(buttons.quantification);
  const separator=node('span','viewer-separator');toolbar.append(separator);
  const fitButton=tool('Enquadrar modelo',icons.fit,()=>{}),allButton=tool('Mostrar modelo completo',icons.all,()=>{});toolbar.append(fitButton,allButton);
  const hint=node('span','viewer-toolbar-hint');hint.textContent='Modelo · Propriedades · 4D';toolbar.append(hint);
@@ -43,5 +44,5 @@ export function buildShell(root:HTMLElement,onPanelChange?:(name:ViewerPanel,ope
  resize.onpointerdown=e=>{resize.setPointerCapture(e.pointerId);const start=e.clientY,initial=bottom.p.getBoundingClientRect().height;const move=(m:PointerEvent)=>height(initial+start-m.clientY);const up=()=>{resize.removeEventListener('pointermove',move);resize.removeEventListener('pointerup',up);};resize.addEventListener('pointermove',move);resize.addEventListener('pointerup',up);};
  resize.onkeydown=e=>{if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();height(bottom.p.getBoundingClientRect().height+(e.key==='ArrowUp'?20:-20));}};
  bottom.p.prepend(resize);root.append(toolbar,dock,viewportEl,bottom.p,fileInput);
- return {viewportEl,ganttEl,treeEl,propsEl,fileInput,fitButton,allButton,viewButtons,setPanel};
+ return {viewportEl,ganttEl,treeEl,propsEl,quantEl:quant.body,fileInput,fitButton,allButton,viewButtons,setPanel};
 }
