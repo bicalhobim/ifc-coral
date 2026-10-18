@@ -35,16 +35,21 @@ const measureRule=obj({id:txt,elementRef:obj({modelId:txt,modelHash:txt,globalId
 const snapshotRule=obj({measure:measureRule,fingerprint:txt,amount:pos,reviewOrigin:literal('calculated','manual'),reviewer:txt,at:txt,method:txt,evidence:txt});
 const packageFields={id:txt,name:txt,location:txt,service:txt,elements:list(ref),taskIds:list(txt),quantity:nullable(pos),quantitySource:txt,coverageKnown:bool,needDate:date,finishDate:date,criterion:txt,responsible:txt,capacityConfirmed:bool,constraints:list(constraint),reviewRequired:bool};
 const supplyFields={id:txt,name:txt,quantity:nullable(pos),confirmed:bool,delivery:date,unitPrice:pos,freight:pos,technical:bool,evidence:txt,kind:literal('order','stock'),synthetic:bool};
+const commitmentRule=obj({packageId:txt,name:txt,location:txt,quantity:pos,unit,deadline:date,criterion:txt,responsible:txt});
+const mapEntryRule=obj({id:txt,resourceCode:txt,specification:txt,unit,location:txt,resourceIds:list(txt),packageIds:list(txt),quantity:pos,balance:nullable(pos),reusable:bool,needDate:date,receiptDate:date,orderDate:date,startDate:date,occupiedUntil:date,blockers:list(txt),promisedDates:list(date),frozenCommitments:list(commitmentRule)});
+const longText:Rule=v=>{if(typeof v!=='string'||v.length>5_000_000)fail();};
+const supplyPlanRule=obj({id:txt,at:txt,reviewer:txt,evidence:txt,fingerprint:longText,entries:list(mapEntryRule)});
 const schemaFor=(version:1|2)=>obj({schema:literal(version),id:txt,name:txt,models:list(obj({id:txt,hash:txt,name:txt,projectGlobalId:txt})),tasks:list(obj({id:txt,modelId:txt,globalId:txt,slot:txt,name:txt,location:txt,service:txt,start:date,finish:date})),
  packages:list(obj({...packageFields,unit:version===1?literal('m³'):unit},version===1?{}:{serviceCode:service,measureLinks:list(obj({id:txt,fingerprint:txt}))})),
  supplies:list(obj({...supplyFields,unit:version===1?literal('m³'):unit},version===1?{}:{resourceCode:txt,specification:txt,reusable:bool,availableUntil:date})),
  allocations:list(obj({id:txt,packageId:txt,supplyId:txt,quantity:pos})),deliveries:list(obj({id:txt,allocationId:txt,date:date,received:pos,rejected:pos,evidence:txt,reviewer:txt})),
  week:nullable(obj({frozenAt:txt,reviewer:txt,commitments:list(obj({packageId:txt,name:txt,location:txt,quantity:pos,unit:version===1?literal('m³'):unit,deadline:date,criterion:txt,responsible:txt}))})),actuals:list(obj({packageId:txt,date:date,complete:bool,evidence:txt,reason:txt})),audit:list(obj({at:txt,action:txt,detail:txt})),
  ...(version===2?{measures:list(snapshotRule),resources:list(obj({id:txt,packageId:txt,resourceCode:txt,specification:txt,specificationConfirmed:bool,quantity:pos,unit,needDate:date,from:date,to:date,factor:pos,lossPercent:pos,leadDays:pos,preparationDays:pos,reusable:bool,cycleDays:pos,evidence:txt,procurementBlockers:list(txt)})),resourceAllocations:list(obj({id:txt,requirementId:txt,supplyId:txt,quantity:pos}))}:{})
-},version===2?{quantificationCatalog:list(quantRule)}:{});
+},version===2?{quantificationCatalog:list(quantRule),supplyPlans:list(supplyPlanRule)}:{});
 const schema=schemaFor(2),legacySchema=schemaFor(1);
 export function validateProject(p:Project):void{
  schema(p);
+ for(const plan of p.supplyPlans??[])if(!plan.reviewer.trim()||!plan.evidence.trim()||plan.fingerprint!==JSON.stringify(plan.entries))fail();
  for(const s of p.measures){if(!s.reviewer.trim()||!s.evidence.trim()||!s.method.trim()||!isReviewCurrent(s,s.measure)||s.reviewOrigin==='calculated'&&(s.measure.status==='pending'||s.amount!==s.measure.amount))fail();const expected={concrete:'m³',reinforcement:'kg',formwork:'m²'}[s.measure.serviceCode];if(s.measure.unit!==expected)fail();}
  const unique=(rows:{id:string}[])=>{if(rows.some(x=>!x.id.trim())||new Set(rows.map(x=>x.id)).size!==rows.length)fail();};
  [p.models,p.tasks,p.packages,p.supplies,p.allocations,p.deliveries,p.resources,p.resourceAllocations].forEach(unique);

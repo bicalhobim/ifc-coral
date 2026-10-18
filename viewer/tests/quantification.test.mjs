@@ -33,3 +33,8 @@ test('geometric formwork candidate cannot become approved service area without c
  const r=calculateMeasures({element:meta(),geometry:{candidateArea:21.8,deductedArea:0,contactsResolved:false,source:'mesh',method:'suspended'}},catalog.find(r=>r.id==='slab'))[2];
  assert.equal(r.amount,null);assert.equal(r.inputs.candidateArea,21.8);assert.equal(r.status,'pending');
 });
+test('geometry report of a different formwork method cannot be reused as a complete measure',()=>{
+ const rule={...catalog[1],formMethod:'wall-one-face'};
+ const r=calculateMeasures({element:meta(),geometry:{candidateArea:21.8,deductedArea:0,contactsResolved:true,source:'mesh',method:'suspended'}},rule)[2];
+ assert.equal(r.amount,null);assert.equal(r.status,'pending');
+});

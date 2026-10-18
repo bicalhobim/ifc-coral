@@ -8,6 +8,7 @@ export function calculateMeasures(input:MeasureInput,rule:QuantRule):MeasureResu
  const make=(serviceCode:ServiceCode,unit:MeasureResult['unit'],origin:MeasureResult['origin'],amount:number|null,inputs:Record<string,unknown>,pendingReasons:string[],evidence:string[]):MeasureResult=>({id:JSON.stringify([input.element.modelId,input.element.globalId,serviceCode]),elementRef:structuredClone(input.element),serviceCode,ruleId:rule.id,ruleVersion:rule.version,ruleSnapshot:structuredClone(rule),inputs,amount,unit,origin,status:pendingReasons.length?'pending':'draft',pendingReasons,evidence});
  const formReasons:string[]=[];
  if(!rule.formMethod||!g?.method)formReasons.push('Confirmar método executivo.');
+ if(g?.method&&g.method!==rule.formMethod)formReasons.push('Relatório geométrico calculado por outro método; recalcular ou conferir manualmente.');
  if(!g||g.candidateArea===null||g.deductedArea===null||!g.contactsResolved)formReasons.push('Conferir geometria e contatos.');
  if(g&&g.candidateArea!==null&&g.deductedArea!==null&&g.deductedArea>g.candidateArea+1e-6)formReasons.push('Descontos excedem a área candidata.');
  return [

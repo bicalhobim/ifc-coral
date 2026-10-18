@@ -65,3 +65,15 @@ Inspeção em 1280×720 e 640×850 confirmou que o painel lateral e o inferior f
 ## Ensaio de catálogo de aço/fôrmas
 
 IfcOpenShell 0.9.0.post1 executou auditoria e geometria dos 764 elementos. Cópia derivada em artifacts/quantification-discovery contém propriedades com unidades, fonte e status: 649 estimativas paramétricas de aço propostas; 115 elementos de fundação/contenção com taxa pendente; nenhuma área de fôrma aprovada e nenhuma compra/execução aprovada. GUIDs, QTOs e original foram verificados na reabertura. As taxas 60/85/120 kg/m³ são cenário didático baseado em comparáveis, não valores normativos ou dimensionamento estrutural. O módulo de catálogo, os descontos de contato e o domínio de fornecimento em kg/m² continuam planejados conforme a especificação; esses ensaios não constituem seu aceite.
+# Quantificação v04 — escopo atual
+
+Catálogo e revisão humana, geometria local IfcOpenShell, schema 2 multiunidade, composição de recurso principal, capacidade reutilizável e mapa de suprimentos implementados. Consulte [o roteiro atual](QUANTIFICACAO.md). Os registros das versões anteriores abaixo são históricos.
+
+- TORRE02: 764 ocorrências físicas, 2.292 registros de fases; nenhum tipo como consumo. Base e kit institucional preservados.
+- Concreto: QTO declarado em m³. Aço: cenário estimado, não barras modeladas. Fôrmas: área geométrica/candidata separada da medida conferida.
+- Contatos coplanares tratados; interpenetrações, métodos de fundação/contenção e taxas não confirmadas permanecem pendentes. Não há área final automática aprovada na TORRE02.
+- Schema 1 continua legível por migração de cópia validada; quantidades e critérios congelados não são recalculados. Reservas com unidades/especificações distintas não se cobrem.
+- Serviço de fôrmas difere de capacidade de painéis. Reuso usa períodos de ocupação; a composição exige ciclo e especificação. Um recurso principal por pacote neste recorte.
+- Compra exige especificação/BBS conferido. Mapa confirmado é planejamento; não dispara contato, pedido ou pagamento. Agentes comerciais e chamadas reais Gemini/OpenAI não foram validados nesta entrega.
+- Guia PPTX/PDF v02 continua histórico, não retrata a ferramenta v04. Capturas e arquivo portátil do ensaio ficam em `artifacts/quantification-v1/browser`; guia atual em Markdown.
+

@@ -6,6 +6,7 @@ import {mountAI} from './ai-ui.ts';
 import {helpButton,simplifyExplanations} from '../ui/help.ts';
 import type {VolumeSummary} from '../ifc/quantities.ts';
 import {composeResource,reserveResource,resourceCoverage,compatible,quantificationNeedsReview,refreshPackageMeasures} from './resources.ts';
+import {buildSupplyMap,confirmSupplyMap} from './supply-map.ts';
 type Hooks={getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;loadDemo:()=>void;quantity:(refs:WorkPackage['elements'])=>VolumeSummary};
 export function el<K extends keyof HTMLElementTagNameMap>(tag:K,text='',cls=''){const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;return n;}
 function btn(text:string,action:()=>void,cls=''){const b=el('button',text,cls);b.type='button';b.onclick=action;return b;}
@@ -92,6 +93,7 @@ export class ProductionPanel{
  if(c.resolved)card.append(el('p',`${c.evidence} · Conferido por ${c.reviewer}`),btn('Reabrir restrição',()=>this.action(x=>{const q=x.packages.find(q=>q.id===pkg.id)!.constraints.find(q=>q.id===c.id)!;q.resolved=false;log(x,'Restrição reaberta',q.description);})));else{const evidence=field(`Evidência — ${c.description}`,c.evidence);card.append(evidence.label,btn('Conferir e remover',()=>this.action(x=>resolveConstraint(x,pkg.id,c.id,evidence.input.value,this.reviewer))));}body.append(card);}
  }
  private supply(body:HTMLElement,pkg:WorkPackage,p:Project){
+ this.supplyMap(body,p);
  if(pkg.measureLinks?.length||pkg.unit!=='m³'){this.resourceSupply(body,pkg,p);return;}
  const balance=packageBalance(p,pkg),dates=supplyWindow(pkg.needDate,2,1);
  const known=check('Conferi estoque e pedidos existentes (concreto fresco não tem estoque antecipado)',pkg.coverageKnown);
@@ -116,6 +118,17 @@ export class ProductionPanel{
  card.append(date.label,received.label,rejected.label,evidence.label,reviewer.label,btn('Registrar recebimento e liberação',()=>this.action(x=>recordDelivery(x,{allocationId,date:date.input.value,received:Number(received.input.value),rejected:Number(rejected.input.value),evidence:evidence.input.value,reviewer:reviewer.input.value}))));body.append(card);
  }
  private metric(label:string,value:string){const card=el('div','','metric');card.append(el('small',label),el('strong',value));return card;}
+ private supplyMap(body:HTMLElement,p:Project){
+  const rows=buildSupplyMap(p),box=el('details','','map-preview');box.append(el('summary',`Mapa de suprimentos — ${rows.length} pacote(s) de fornecimento`));
+  if(!rows.length)box.append(el('p','Defina a composição de recursos nos pacotes para gerar o mapa. O caso A/B/C original permanece no fluxo anterior.'));
+  for(const row of rows){const card=el('article','','quant-result');card.append(el('h3',row.specification),el('p',`${row.location} · ${row.packageIds.length} pacote(s) consumidor(es)`),el('strong',`${row.quantity.toLocaleString('pt-BR',{maximumFractionDigits:3})} ${row.unit}${row.reusable?' de capacidade simultânea':''}`),el('p',`Saldo a cobrir: ${row.balance===null?'A conferir':row.balance.toLocaleString('pt-BR',{maximumFractionDigits:3})+' '+row.unit}`),el('p',`Preparar: ${row.startDate}\nPedido previsto: ${row.orderDate}\nReceber até: ${row.receiptDate}\nNecessidade: ${row.needDate}${row.reusable?'\nOcupação até: '+row.occupiedUntil:''}`));
+   for(const reason of row.blockers)card.append(el('p',reason,'notice warn'));if(row.promisedDates.length)card.append(el('p','Promessas registradas: '+row.promisedDates.join(', ')));for(const c of row.frozenCommitments)card.append(el('p',`Compromisso preservado: ${c.quantity} ${c.unit} até ${c.deadline}.`));box.append(card);
+  }
+  const missing=p.packages.filter(pkg=>pkg.measureLinks?.length&&!p.resources.some(r=>r.packageId===pkg.id));if(missing.length)box.append(el('p',`${missing.length} pacote(s) de produção ainda sem composição de recurso.`,'notice warn'));
+  const reviewer=field('Conferente do mapa',''),evidence=field('Evidência da conferência do mapa','');box.append(reviewer.label,evidence.label,btn('Confirmar esta versão do mapa',()=>this.action(x=>confirmSupplyMap(x,rows,reviewer.input.value,evidence.input.value))));
+  const latest=p.supplyPlans?.at(-1);if(latest)box.append(el('p',`Última versão: ${new Date(latest.at).toLocaleString('pt-BR')} · ${latest.reviewer} · ${latest.fingerprint===JSON.stringify(rows)?'Vigente':'Há mudanças; revisar nova prévia'}`,'notice'));
+  box.append(btn('Exportar prévia do mapa (JSON)',()=>{const a=el('a'),url=URL.createObjectURL(new Blob([JSON.stringify({status:'preview',entries:rows,approvedVersions:p.supplyPlans??[]},null,2)],{type:'application/json'}));a.href=url;a.download='IFC-Coral-mapa-suprimentos.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}),el('p','Datas em dias corridos, sem feriados. Planejamento conferido não é requisição, pedido, compra aprovada ou recebimento.','fine'));body.append(box);
+ }
  private resourceSupply(body:HTMLElement,pkg:WorkPackage,p:Project){
   const resource=p.resources.find(r=>r.packageId===pkg.id),code=pkg.unit==='kg'?'steel':pkg.unit==='m²'?'panels':'concrete';
   const known=check('Conferi recursos, estoque e pedidos existentes',pkg.coverageKnown);known.input.onchange=()=>this.action(x=>{x.packages.find(q=>q.id===pkg.id)!.coverageKnown=known.input.checked;});body.append(known.label,el('h3','Do serviço ao recurso'),el('p',`${pkg.quantity?.toLocaleString('pt-BR')} ${pkg.unit} de serviço não definem automaticamente uma compra. Confira composição, especificação e janela.`,'notice'));

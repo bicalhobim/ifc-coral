@@ -1,5 +1,7 @@
 # Da intenção ao compromisso
 
+**Atualização v04:** o [roteiro de quantificação e suprimentos](QUANTIFICACAO.md) explica o catálogo, a conferência de concreto/aço/fôrmas, os recursos com unidades próprias e o mapa de compras. As propostas A/B/C descritas abaixo pertencem ao caso original de concreto. Nos pacotes criados pela Quantificação, o usuário compõe o recurso e registra propostas próprias.
+
 Uma concretagem aparece no cronograma. A frente está pronta para recebê-la? É essa decisão que o grupo vai justificar com as telas do IFC Coral.
 
 Para a interface atual, consulte o [roteiro de navegação e 4D](NAVEGACAO_4D_QUANTIDADES.md). O guia ilustrado v02 é histórico: usa a navegação anterior e um exemplo de 12 m³. Na interface, o botão **?** mostra a explicação ao passar o mouse, receber foco ou clicar. Escape fecha a ajuda. As ações de importar, exportar e reabrir ficam no menu **Arquivos**.
