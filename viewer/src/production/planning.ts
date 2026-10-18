@@ -1,5 +1,6 @@
 import type {Project,WorkPackage,Actual,Delivery} from './types.ts';
 import {day,log,uid} from './project.ts';
+import {resourceCoverage,quantificationNeedsReview} from './resources.ts';
 export function supplyBalance(demand:number|null,rows:{quantity:number;unit:string;confirmed:boolean}[],unit='m³'){
  if(demand!==null&&(!Number.isFinite(demand)||demand<0))throw new Error('Demanda inválida.');
  for(const r of rows)if(r.unit!==unit||!Number.isFinite(r.quantity)||r.quantity<0)throw new Error('Unidade ou quantidade incompatível.');
@@ -15,23 +16,27 @@ export function quoteTotal(quantity:number,unitPrice:number,freight:number){if([
 export function allocate(p:Project,packageId:string,supplyId:string,quantity:number){
  const s=p.supplies.find(x=>x.id===supplyId),pkg=p.packages.find(x=>x.id===packageId);
  if(!s||!pkg||s.quantity===null||!Number.isFinite(quantity)||quantity<=0)throw new Error('Confirme a quantidade antes de reservar.');
- const used=p.allocations.filter(a=>a.supplyId===supplyId).reduce((n,a)=>n+a.quantity,0);
+ if(s.unit!==pkg.unit||pkg.measureLinks?.length||p.resources.some(r=>r.packageId===packageId))throw new Error('Unidade ou fluxo de recurso incompatível. Use a reserva de recursos.');
+ const used=[...p.allocations,...p.resourceAllocations].filter(a=>a.supplyId===supplyId).reduce((n,a)=>n+a.quantity,0);
  if(used+quantity>s.quantity+1e-8)throw new Error('Reserva excede a capacidade disponível do fornecimento.');
  const reserved=p.allocations.filter(a=>a.packageId===packageId).reduce((n,a)=>n+a.quantity-p.deliveries.filter(d=>d.allocationId===a.id).reduce((sum,d)=>sum+d.rejected,0),0);
  if(pkg.quantity===null||reserved+quantity>pkg.quantity+1e-8)throw new Error('Reserva excede a demanda do pacote. Libere reservas anteriores antes de substituir.');
  p.allocations.push({id:uid(),packageId,supplyId,quantity});log(p,'Reserva de fornecimento',`${quantity} ${s.unit} de ${s.name} para ${pkg.name}`);
 }
-export function packageBalance(p:Project,pkg:WorkPackage){return supplyBalance(pkg.coverageKnown?pkg.quantity:null,p.allocations.filter(a=>a.packageId===pkg.id).map(a=>{
+export function packageBalance(p:Project,pkg:WorkPackage){const resources=p.resources.filter(r=>r.packageId===pkg.id);if(resources.length){const r=resources[0],b=resourceCoverage(p,r);return {covered:b.covered,balance:pkg.coverageKnown&&resources.length===1?b.balance:null,excess:b.excess};}return supplyBalance(pkg.coverageKnown?pkg.quantity:null,p.allocations.filter(a=>a.packageId===pkg.id).map(a=>{
  const s=p.supplies.find(s=>s.id===a.supplyId)!;
  const deliveries=p.deliveries.filter(d=>d.allocationId===a.id);
  if(deliveries.length)return {quantity:deliveries.filter(d=>d.date===pkg.needDate).reduce((n,d)=>n+d.received-d.rejected,0),unit:s.unit,confirmed:s.technical};
  return {quantity:a.quantity,unit:s.unit,confirmed:s.confirmed&&s.technical&&!!s.evidence.trim()&&s.delivery===pkg.needDate&&s.kind!=='stock'};
-}));}
+}),pkg.unit);}
 export function assessReadiness(p:Project,pkg:WorkPackage){
  const reasons:string[]=[];const balance=packageBalance(p,pkg);
  if(!pkg.elements.length)reasons.push('Vincular elementos IFC por GlobalId.');
  if(!pkg.taskIds.length||pkg.elements.some(e=>!p.tasks.some(t=>t.modelId===e.modelId&&t.globalId===e.globalId))||pkg.taskIds.some(id=>!p.tasks.some(t=>t.id===id&&pkg.elements.some(e=>e.modelId===t.modelId&&e.globalId===t.globalId))))reasons.push('Conferir vínculos com tarefas reais do IFC.');
  if(pkg.reviewRequired)reasons.push('Conferir vínculos após revisão do modelo.');
+ if(quantificationNeedsReview(p,pkg))reasons.push('Refazer conferência da quantificação após mudança de regra, taxa ou modelo.');
+ if(pkg.measureLinks?.length&&!p.resources.some(r=>r.packageId===pkg.id))reasons.push('Compor o recurso do serviço e sua especificação.');
+ for(const r of p.resources.filter(r=>r.packageId===pkg.id)){if(r.procurementBlockers.length||!r.specificationConfirmed)reasons.push('Conferir especificação de compra e método executivo.');if(r.needDate!==pkg.needDate)reasons.push('Revalidar janela do recurso após reprogramação.');}
  if(!pkg.responsible.trim())reasons.push('Definir responsável.');
  if(!pkg.capacityConfirmed)reasons.push('Confirmar capacidade da equipe e equipamentos.');
  if(!pkg.criterion.trim())reasons.push('Definir critério de conclusão.');
@@ -61,9 +66,9 @@ export function recordActual(p:Project,id:string,actual:Omit<Actual,'packageId'>
 }
 export function calculatePPC(p:Project){const commitments=p.week?.commitments??[];const completed=commitments.filter(c=>{const a=p.actuals.find(x=>x.packageId===c.packageId);return a?.complete&&a.date<=c.deadline&&!!a.evidence.trim();}).length;return {completed,total:commitments.length,percent:commitments.length?Math.round(completed/commitments.length*100):null};}
 export function recordDelivery(p:Project,input:Omit<Delivery,'id'>){
- day(input.date);const a=p.allocations.find(a=>a.id===input.allocationId);
+ day(input.date);const a=[...p.allocations,...p.resourceAllocations].find(a=>a.id===input.allocationId);
  if(!a||!input.evidence.trim()||!input.reviewer.trim()||[input.received,input.rejected].some(x=>!Number.isFinite(x)||x<0)||input.rejected>input.received)throw new Error('Recebimento inválido. Confira quantidades, evidência e conferente.');
  const received=p.deliveries.filter(d=>d.allocationId===a.id).reduce((n,d)=>n+d.received,0);
  if(received+input.received>a.quantity+1e-8)throw new Error('Recebimentos excedem a quantidade reservada.');
- p.deliveries.push({id:uid(),...input});log(p,'Recebimento conferido',`${input.received-input.rejected} m³ liberados; ${input.rejected} rejeitados em ${input.date}. ${input.reviewer}: ${input.evidence}`);
+ p.deliveries.push({id:uid(),...input});log(p,'Recebimento conferido',`${input.received-input.rejected} ${p.supplies.find(s=>s.id===a.supplyId)?.unit} liberados; ${input.rejected} rejeitados em ${input.date}. ${input.reviewer}: ${input.evidence}`);
 }

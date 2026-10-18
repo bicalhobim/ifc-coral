@@ -13,7 +13,7 @@ export function calculateMeasures(input:MeasureInput,rule:QuantRule):MeasureResu
  return [
  make('concrete','m³','declared',v,{volume:v,source:input.volume?.source??''},v===null?['Volume ausente ou conflitante.']:[],[input.volume?.source??'Sem QTO']),
  make('reinforcement','kg','estimated',v!==null&&rule.steelRate!==null?v*rule.steelRate:null,{volume:v,steelRate:rule.steelRate,formula:'volume [m³] × taxa [kg/m³]'},[...(v===null?['Volume ausente ou conflitante.']:[]),...(rule.steelRate===null?['Calibrar taxa de aço.']:[])],[rule.source]),
- make('formwork','m²','geometric',formReasons.length?null:Math.max(0,g!.candidateArea!-g!.deductedArea!),{candidateArea:g?.candidateArea??null,deductedArea:g?.deductedArea??null,method:g?.method??rule.formMethod,contactsResolved:g?.contactsResolved??false},formReasons,[g?.source??'Sem medição geométrica']),
+ make('formwork','m²','geometric',formReasons.length?null:Math.max(0,g!.candidateArea!-g!.deductedArea!),{candidateArea:g?.candidateArea??null,lowerArea:g?.lowerArea??null,deductedArea:g?.deductedArea??null,method:g?.method??rule.formMethod,contactsResolved:g?.contactsResolved??false},formReasons,[g?.source??'Sem medição geométrica']),
  ];
 }
 export function summarizeMeasures(rows:MeasureResult[],service:ServiceCode){

@@ -15,8 +15,8 @@ import './ui/coral.css';
 import {helpButton} from './ui/help.ts';
 import {readIfcVolumes,summarizeVolumes,readIfcMetadata} from './ifc/quantities.ts';
 import {QuantificationPanel} from './quantification/ui.ts';
-import type {MeasureSnapshot} from './quantification/review.ts';
 import type {ElementMetadata} from './quantification/types.ts';
+import {previewPackages,createPackages} from './production/resources.ts';
 const root=document.getElementById('app')!;
 const header=el('header','','coral-header'),wordmark=el('div','','wordmark'),actions=el('div','','header-actions');
 wordmark.append(el('strong','IFC Coral'),el('span','Planejamento de produção'));header.append(wordmark,actions);
@@ -24,11 +24,14 @@ const layout=el('main','','coral-layout'),modelHost=el('section','','model-host'
 const viewer=new Viewer(),gantt=new Gantt();const h=buildShell(modelHost,(name,open)=>{if(name==='timeline'&&!open)gantt.pause();if(name==='quantification'&&open)quantTool.render();});layout.append(modelHost);
 let project=createProject(),selected:ElementTask[]=[],busy=false,initialized=false;
 let runtime=new Map<string,{model:FragmentsModel;tasks:ElementTask[]}>(),modelBytes=new Map<string,Uint8Array>();
-let reviewedMeasures:MeasureSnapshot[]=[];
 const metadataCache=new Map<string,Map<string,ElementMetadata>>();
 const quantTool=new QuantificationPanel({selection:()=>{
  const refs=new Map(selected.filter(t=>t.globalId&&t.modelKey).map(t=>[JSON.stringify([t.modelKey,t.globalId]),t]));return [...refs.values()].flatMap(t=>{const model=project.models.find(m=>m.id===t.modelKey);if(!model)return [];let data=metadataCache.get(model.hash);if(!data){data=readIfcMetadata(new TextDecoder().decode(modelBytes.get(model.id)),model.id,model.hash);metadataCache.set(model.hash,data);}const element=data.get(t.globalId!);return element?[{element,volume:{amount:t.volume?.m3??null,unit:'m³',source:t.volume?.source??''}}]:[];});
-},reviews:()=>reviewedMeasures,saveReviews:rows=>{reviewedMeasures=rows;message('Conferências registradas. Exporte para preservar os resultados.');},generate:()=>{message('Conferências prontas para a integração aos pacotes.');}});h.quantEl.append(quantTool.element);
+},reviews:()=>project.measures,saveReviews:rows=>{const next=structuredClone(project);next.measures=structuredClone(rows);for(const pkg of next.packages)if(pkg.measureLinks?.some(l=>!rows.some(s=>s.measure.id===l.id&&s.fingerprint===l.fingerprint)))pkg.reviewRequired=true;validateProject(next);project=next;persist();panel.render();},saveRules:rules=>{const next=structuredClone(project);next.quantificationCatalog=structuredClone(rules);for(const pkg of next.packages)if(pkg.measureLinks?.some(l=>{const s=next.measures.find(s=>s.measure.id===l.id);return s&&rules.find(r=>r.id===s.measure.ruleId)?.version!==s.measure.ruleVersion;}))pkg.reviewRequired=true;validateProject(next);project=next;persist();panel.render();},generate:rows=>{
+ const preview=previewPackages(project,rows),modal=el('dialog');modal.append(el('h2','Conferir os pacotes antes de criar'),el('p','Cada serviço terá unidade própria. Recursos e especificações de compra serão definidos depois.'));
+ for(const item of preview)modal.append(el('p',`${item.name}: ${item.quantity?.toLocaleString('pt-BR',{maximumFractionDigits:3})} ${item.unit} · ${item.elements.length} elementos · ${item.needDate} → ${item.finishDate}`));
+ const confirm=el('button','Confirmar criação dos pacotes'),cancel=el('button','Cancelar');cancel.onclick=()=>{modal.close();modal.remove();};confirm.onclick=()=>{try{const next=structuredClone(project);createPackages(next,preview);validateProject(next);project=next;persist();panel.render();modal.close();modal.remove();}catch(e){message(String(e),true);}};modal.append(cancel,confirm);root.append(modal);modal.showModal();
+}});h.quantEl.append(quantTool.element);
 async function loadQuantReport(){if(project.models.some(m=>m.hash==='885c3b3ace554f9e3091d611645cccac875a583241d5971c57703bb4a36030dc'))try{const r=await fetch(`${import.meta.env.BASE_URL}models/TORRE02_quantification.json`);if(r.ok)quantTool.addReport(await r.text());}catch{/* Optional geometry report: missing report stays pending. */}}
 function message(value:string,error=false){status.textContent=value;status.classList.toggle('error',error);}
 function persist(){try{saveLocal(project);message('Salvo neste navegador · Exporte para levar a outro computador.');}catch{message('Não foi possível salvar no navegador. Exporte seu projeto agora.',true);}}
@@ -80,7 +83,7 @@ async function importIfc(bytes:Uint8Array,name:string){
 }
 async function activate(next:Project,bytes:Map<string,Uint8Array>){
  const staged=await stageModels(next,bytes,{load:(b,name)=>viewer.loadIfc(b,name),read:async(model,id)=>{const tasks=await buildSchedule(model,id,readIfcVolumes(new TextDecoder().decode(bytes.get(id)!)));return {tasks,records:tasks.filter(t=>t.globalId).map(toRecord)};},unload:m=>viewer.unload(m)});
- for(const r of runtime.values())await viewer.unload(r.model);runtime=staged;project=next;modelBytes=bytes;selected=[];persist();for(const m of next.models){try{await storeBytes(m.hash,bytes.get(m.id)!);}catch{message('Cache do IFC indisponível. Mantenha o arquivo portátil.',true);}}await drawModelViews();panel.render();
+ for(const r of runtime.values())await viewer.unload(r.model);runtime=staged;project=next;modelBytes=bytes;selected=[];quantTool.resetForProject(project.quantificationCatalog);persist();for(const m of next.models){try{await storeBytes(m.hash,bytes.get(m.id)!);}catch{message('Cache do IFC indisponível. Mantenha o arquivo portátil.',true);}}await drawModelViews();panel.render();
 }
 function chooseRevision(newId:string,candidates:{id:string;name:string}[]):Promise<string>{return new Promise((resolve,reject)=>{
  const modal=el('dialog');modal.append(el('h2','Revisão ou outro modelo?'),el('p','O GlobalId do projeto é o mesmo de um modelo aberto. Confirme se o arquivo revisa esse modelo ou representa outra disciplina.'));
