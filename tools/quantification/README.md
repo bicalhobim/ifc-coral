@@ -13,4 +13,6 @@ Geometria: faces triangulares reais em metros; volume recentrado, closure por ar
 
 Contatos coplanares opostos: interseção e união de polígonos por face, tolerância **0,00001 m**. Arestas coincidentes são soldadas com sete casas decimais. Interpenetração espacial (inclusive possível falso positivo de AABB) permanece pendente de inspeção, em vez de um desconto suposto. Esta primeira versão não executa booleanas entre sólidos interpenetrantes e não certifica formas complexas. O conferente pode registrar uma medida manual justificada.
 
+Métodos suportados: `suspended`, `bottom-sides`, `sides`, `wall-one-face`, `wall-two-faces`. Outro identificador produz pendência, não zero. Pilares e paredes com faces inclinadas fora da regra vertical também ficam pendentes; sua orientação executiva exige conferência específica. A exportação de catálogo do aplicativo contém regras; overrides por elemento ficam nos snapshots do projeto e não são reaplicados automaticamente pela CLI.
+
 Massa paramétrica de aço não define bitolas nem corte/dobra. Aprovar a medida para planejamento não autoriza compra ou execução estrutural.

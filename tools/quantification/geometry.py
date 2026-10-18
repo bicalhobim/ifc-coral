@@ -30,7 +30,10 @@ def measure_mesh(vertices, faces, method):
         dot=normals@normal
         chosen=(dot>.999) if method=='wall-one-face' else (np.abs(dot)>.999)
     volume=float(abs(np.einsum('ij,ij->i',centered[f[:,0]],np.cross(centered[f[:,1]],centered[f[:,2]])).sum())/6)
-    return {'totalArea':float(area.sum()),'lowerArea':float(area[lower].sum()),'sideArea':float(area[side].sum()),'slopeArea':float(area[(np.abs(nz)>.02)&(np.abs(nz)<.999)].sum()),'candidateArea':float(area[chosen].sum()) if method and closed else None,'volume':volume if closed else None,'closed':closed,'method':method,'unit':'m²','failures':[] if closed else ['Malha aberta, degenerada ou não manifold.'],'_triangles':tri,'_normals':normals,'_selected':chosen,'_bbox':(v.min(axis=0),v.max(axis=0))}
+    failures=[] if closed else ['Malha aberta, degenerada ou não manifold.']
+    if method not in (None,'suspended','bottom-sides','sides','wall-one-face','wall-two-faces'):failures.append('Método não suportado; conferir regra executiva.')
+    if method in ('sides','wall-one-face','wall-two-faces') and np.any((np.abs(nz)>.02)&(np.abs(nz)<.98)&valid):failures.append('Faces inclinadas: confirmar orientação e medição manual do serviço.')
+    return {'totalArea':float(area.sum()),'lowerArea':float(area[lower].sum()),'sideArea':float(area[side].sum()),'slopeArea':float(area[(np.abs(nz)>.02)&(np.abs(nz)<.999)].sum()),'candidateArea':float(area[chosen].sum()) if method and not failures else None,'volume':volume if closed else None,'closed':closed,'method':method,'unit':'m²','failures':failures,'_triangles':tri,'_normals':normals,'_selected':chosen,'_bbox':(v.min(axis=0),v.max(axis=0))}
 
 def measure_surfaces(element,method=None):
     settings=ifcopenshell.geom.settings();settings.set('use-world-coords',True)

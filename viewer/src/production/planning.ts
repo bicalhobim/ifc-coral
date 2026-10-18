@@ -1,6 +1,6 @@
 import type {Project,WorkPackage,Actual,Delivery} from './types.ts';
 import {day,log,uid} from './project.ts';
-import {resourceCoverage,quantificationNeedsReview} from './resources.ts';
+import {resourceCoverage,quantificationNeedsReview,resourceWindowCurrent} from './resources.ts';
 export function supplyBalance(demand:number|null,rows:{quantity:number;unit:string;confirmed:boolean}[],unit='m³'){
  if(demand!==null&&(!Number.isFinite(demand)||demand<0))throw new Error('Demanda inválida.');
  for(const r of rows)if(r.unit!==unit||!Number.isFinite(r.quantity)||r.quantity<0)throw new Error('Unidade ou quantidade incompatível.');
@@ -36,7 +36,7 @@ export function assessReadiness(p:Project,pkg:WorkPackage){
  if(pkg.reviewRequired)reasons.push('Conferir vínculos após revisão do modelo.');
  if(quantificationNeedsReview(p,pkg))reasons.push('Refazer conferência da quantificação após mudança de regra, taxa ou modelo.');
  if(pkg.measureLinks?.length&&!p.resources.some(r=>r.packageId===pkg.id))reasons.push('Compor o recurso do serviço e sua especificação.');
- for(const r of p.resources.filter(r=>r.packageId===pkg.id)){if(r.procurementBlockers.length||!r.specificationConfirmed)reasons.push('Conferir especificação de compra e método executivo.');if(r.needDate!==pkg.needDate)reasons.push('Revalidar janela do recurso após reprogramação.');}
+ for(const r of p.resources.filter(r=>r.packageId===pkg.id)){if(r.procurementBlockers.length||!r.specificationConfirmed)reasons.push('Conferir especificação de compra e método executivo.');if(!resourceWindowCurrent(p,r))reasons.push('Revalidar toda a janela do recurso após reprogramação, inclusive conclusão e ciclo.');}
  if(!pkg.responsible.trim())reasons.push('Definir responsável.');
  if(!pkg.capacityConfirmed)reasons.push('Confirmar capacidade da equipe e equipamentos.');
  if(!pkg.criterion.trim())reasons.push('Definir critério de conclusão.');

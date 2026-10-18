@@ -28,6 +28,8 @@ Em **Catálogo**, veja fonte, versão, taxa e método. Lajes suspensas, vigas e 
 
 Não classifique uma estaca apenas procurando a palavra “estaca”: o nome de um bloco sobre estacas também contém essa palavra. Uma classificação manual exige autor e motivo. Alterar parâmetros invalida a conferência afetada; o compromisso congelado continua com seu snapshot original.
 
+Autor e motivo da classificação ficam separados do conferente da medição no arquivo portátil. O catálogo exportado para a CLI contém apenas regras; substituições por elemento permanecem no projeto/medições e precisam de conferência própria no processamento externo. Métodos desconhecidos e pilares/paredes inclinados sem regra de orientação suportada ficam pendentes, sem área zero suposta.
+
 Em **Conferir**, registre conferente, evidência e método antes de conferir cada serviço. Para uma área manual, informe o total explicitamente; em seleção múltipla, o aplicativo avisa que faz rateio proporcional à área candidata por elemento. Se não houver pesos geométricos, selecione um elemento por vez. O rateio é rastreabilidade de uma premissa manual, não cálculo dos contatos faltantes.
 
 **Exemplo exclusivamente para testar o software:** adotar 340 m² manualmente permite percorrer o fluxo. Esse número não é resultado geométrico validado da obra. Registre essa condição na evidência; não o utilize como levantamento de fôrmas para execução.
@@ -38,6 +40,8 @@ Clique em **Pré-visualizar pacotes de produção**, confira local, serviço, el
 
 O sistema impede gerar novamente os mesmos elementos no mesmo serviço. O mesmo elemento pode participar de serviços diferentes. As tarefas são associadas pela fase correspondente do cronograma. Defina responsável, capacidade, critério de conclusão e restrições em **Produção**.
 
+Uma divergência conhecida entre volume declarado e geométrico bloqueia o resultado completo de concreto e aço. Resolva-a explicitamente com método e evidência; não escolha silenciosamente o valor conveniente. Ao revisar uma conferência, o histórico original permanece disponível.
+
 Quantidades vindas de conferências ficam protegidas na edição do pacote. Após recalibrar uma medida, **Atualizar com conferências vigentes** é uma ação explícita; exige revisão atual e libera a composição antiga para refazer. Reservas e compromissos congelados impedem essa substituição. Nenhuma revisão atualiza uma promessa silenciosamente.
 
 ## 5. Compor o recurso
@@ -47,6 +51,8 @@ Em **Suprimentos**, confira estoque e pedidos existentes. Preencha coeficiente r
 - **Concreto:** confirmar especificação e janela de entrega. Concreto fresco não conta como estoque dias antes.
 - **Aço:** massa estimada não produz bitolas, comprimentos ou dobras. Sem projeto/BBS confirmado, a reserva de compra e a confirmação do mapa permanecem bloqueadas.
 - **Painéis:** informar sistema, ciclo e disponibilidade até a liberação. São capacidade reutilizável; duas frentes sequenciais de 20 m² podem usar a mesma capacidade de 20 m². Frentes simultâneas precisam de capacidade adicional.
+
+Alterar início ou conclusão exige revalidar toda a janela de ocupação do recurso. Se a mudança causar reserva simultânea acima da capacidade, a alteração é recusada; libere/replaneje reservas explicitamente antes de recompor o recurso. Nenhuma reserva ou promessa anterior é apagada.
 
 O primeiro recorte aceita um recurso principal por pacote. Composições com múltiplos insumos, escoramento detalhado e otimização de corte não estão implementadas.
 

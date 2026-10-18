@@ -9,3 +9,13 @@ export function approveMeasure(row:MeasureResult,review:{reviewer:string;evidenc
  return {measure:structuredClone(row),fingerprint:fingerprint(row),amount,reviewOrigin:review.manualAmount===undefined?'calculated':'manual',reviewer:review.reviewer.trim(),at:new Date().toISOString(),method:review.method.trim(),evidence:review.evidence.trim()};
 }
 export function isReviewCurrent(snapshot:MeasureSnapshot,row:MeasureResult):boolean{return snapshot.fingerprint===fingerprint(row);}
+export function reviewSelection(rows:MeasureResult[],review:{reviewer:string;evidence:string;method:string},manualTotal?:number):MeasureSnapshot[]{
+ if(!review.evidence.trim())throw new Error('Informe uma evidência escrita pelo conferente.');
+ if(!rows.length||rows.some(r=>r.serviceCode!==rows[0].serviceCode))throw new Error('Confira um serviço por vez.');
+ if(manualTotal===undefined)return rows.map(r=>approveMeasure(r,review));
+ if(rows.length===1)return [approveMeasure(rows[0],{...review,manualAmount:manualTotal})];
+ const weight=(r:MeasureResult)=>Number(r.serviceCode==='formwork'?r.inputs.candidateArea:r.inputs.volume);
+ if(rows.some(r=>!Number.isFinite(weight(r))||weight(r)<=0))throw new Error('Selecione um elemento por vez para medição manual sem pesos disponíveis.');
+ const sum=rows.reduce((n,r)=>n+weight(r),0);
+ return rows.map(r=>approveMeasure(r,{...review,evidence:review.evidence.trim()+` · rateio explícito proporcional da medida total ${manualTotal} ${r.unit}`,manualAmount:manualTotal*weight(r)/sum}));
+}

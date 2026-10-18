@@ -17,5 +17,5 @@ test('lead-time edits do not rewrite an approved map or frozen commitments',()=>
 });
 test('reusable forms forecast peak capacity instead of sum of service areas',()=>{
  const {p,pkg}=fixture();p.resources=[];pkg.unit='m²';pkg.serviceCode='formwork';pkg.quantity=20;const other={...structuredClone(pkg),id:'p2',needDate:'2026-11-08',finishDate:'2026-11-08'};p.packages.push(other);
- const c={resourceCode:'panels',specification:'Sistema A',specificationConfirmed:true,factor:1,lossPercent:0,leadDays:2,preparationDays:1,reusable:true,cycleDays:1,evidence:'Ciclo conferido'};composeResource(p,pkg.id,c);composeResource(p,other.id,c);assert.equal(buildSupplyMap(p)[0].quantity,20);p.resources[1].from=p.resources[0].from;p.resources[1].to=p.resources[0].to;assert.equal(buildSupplyMap(p)[0].quantity,40);
+ const c={resourceCode:'panels',specification:'Sistema A',specificationConfirmed:true,factor:1,lossPercent:0,leadDays:2,preparationDays:1,reusable:true,cycleDays:1,evidence:'Ciclo conferido'};composeResource(p,pkg.id,c);composeResource(p,other.id,c);assert.equal(buildSupplyMap(p)[0].quantity,20);other.needDate=pkg.needDate;other.finishDate=pkg.finishDate;composeResource(p,other.id,c);assert.equal(buildSupplyMap(p)[0].quantity,40);
 });

@@ -28,3 +28,12 @@ class GeometryTests(unittest.TestCase):
         # Four bars form a 4x4 annulus with a 2x2 opening; face area is 12, not 16.
         rows=[measure_mesh(*box(*d),'suspended') for d in [(4,1,.1),(4,1,.1),(1,2,.1),(1,2,.1)]]
         self.assertAlmostEqual(sum(r['lowerArea'] for r in rows),12)
+    def test_tilted_pillar_is_correct_or_explicitly_pending(self):
+        from tools.quantification.contacts import deduct_contacts
+        v,f=box(.4,.6,3);a=.2;rot=np.array([[1,0,0],[0,np.cos(a),-np.sin(a)],[0,np.sin(a),np.cos(a)]])
+        r=measure_mesh(v@rot.T,f,'sides');contact=deduct_contacts(r,[],'sides')
+        self.assertTrue(r['candidateArea'] is None or abs(r['candidateArea']-6)<1e-7)
+        if r['candidateArea'] is None:self.assertFalse(contact['contactsResolved'])
+    def test_unknown_method_is_pending_not_zero(self):
+        from tools.quantification.contacts import deduct_contacts
+        r=measure_mesh(*box(1,1,1),'unknown-method');self.assertIsNone(r['candidateArea']);self.assertFalse(deduct_contacts(r,[],'unknown-method')['contactsResolved'])

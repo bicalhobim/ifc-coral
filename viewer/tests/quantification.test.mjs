@@ -38,3 +38,7 @@ test('geometry report of a different formwork method cannot be reused as a compl
  const r=calculateMeasures({element:meta(),geometry:{candidateArea:21.8,deductedArea:0,contactsResolved:true,source:'mesh',method:'suspended'}},rule)[2];
  assert.equal(r.amount,null);assert.equal(r.status,'pending');
 });
+test('known geometry volume divergence blocks concrete and dependent steel, with raw QTO retained as evidence',()=>{
+ const rows=calculateMeasures({element:meta(),volume:{amount:100,unit:'m³',source:'QTO'},volumeDivergence:true},catalog[1]);
+ for(const row of rows.slice(0,2)){assert.equal(row.status,'pending');assert.equal(row.amount,null);assert.equal(row.inputs.volume,100);assert.equal(row.inputs.volumeDivergence,true);}
+});

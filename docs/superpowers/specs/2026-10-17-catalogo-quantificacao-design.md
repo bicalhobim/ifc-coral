@@ -1,6 +1,6 @@
 # Catálogo de quantificação IFC · aço, fôrmas e concreto
 
-**Estado:** proposta funcional para evolução do aplicativo; diagnóstico e IFC de ensaio executados. O catálogo completo ainda não está implementado na interface.
+**Estado:** implementado na interface v04, com migração multiunidade e mapa de suprimentos. O diagnóstico e as decisões originais abaixo permanecem como contexto. Evidência, revisão e limites vigentes em [REVISAO_QUANTIFICACAO.md](../../REVISAO_QUANTIFICACAO.md); interpenetrações e métodos não confirmados continuam pendentes.
 
 **Objetivo:** transformar elementos IFC em quantidades conferíveis por serviço e, depois, em necessidades de suprimento por local e data. O estudante deve distinguir dado declarado, cálculo geométrico, estimativa paramétrica e quantidade aprovada.
 

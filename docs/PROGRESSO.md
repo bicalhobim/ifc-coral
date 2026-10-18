@@ -79,6 +79,8 @@ Ruling: calendário explícito simplificado de dias corridos (2 para forneciment
 - Verificação do aplicativo após correção: 38 testes, typecheck, três selfchecks e build passaram. O catálogo completo, o motor de descontos de contato, a migração multiunidade e o novo mapa de suprimentos ainda são trabalho proposto, não funcionalidades entregues.
 # Quantificação v04 · execução do plano de 17/10/2026
 
+**Fechamento após revisão independente:** 63 testes Node + 12 Python, typecheck, três selfchecks e build aprovados. Corrigidos janela de reuso após prorrogação, pilares inclinados, conflito de volumes, vínculo de unidade/serviço, evidência manual vazia, autoria da classificação, método desconhecido e histórico das revisões. Registro em [REVISAO_QUANTIFICACAO.md](REVISAO_QUANTIFICACAO.md). Os números de testes anteriores abaixo descrevem os marcos intermediários.
+
 O diagnóstico anterior foi evoluído para o catálogo do aplicativo. Plano executado em cinco entregas, preservando `C:/dev/ifc4all`, a junction e o material institucional aprovado.
 
 - Catálogo versionado, classificação específica e resultados com origem/unidade/entradas. Taxas 60/85/120 continuam estimativas didáticas propostas. Fundação/contenção sem taxa/método confirmado permanecem pendentes.

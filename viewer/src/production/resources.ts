@@ -35,7 +35,18 @@ export function composeResource(p:Project,id:string,c:Composition):ResourceRequi
  p.resources=p.resources.filter(x=>x.id!==r.id);p.resources.push(r);log(p,'Composição de recurso registrada',`${pkg.name}: ${r.quantity} ${r.unit} · ${r.specification}`);return r;
 }
 export const compatible=(r:ResourceRequirement,s:Supply)=>r.unit===s.unit&&r.resourceCode===s.resourceCode&&r.specification===s.specification&&r.reusable===(s.reusable===true);
+export function currentResourceWindow(p:Project,r:ResourceRequirement){const pkg=p.packages.find(pkg=>pkg.id===r.packageId);if(!pkg)throw new Error('Recurso sem pacote.');const until=new Date(pkg.needDate+'T12:00:00Z');until.setUTCDate(until.getUTCDate()+Math.max(0,r.cycleDays-1));return {from:pkg.needDate,to:r.reusable?[until.toISOString().slice(0,10),pkg.finishDate].sort().at(-1)!:pkg.needDate};}
+export function resourceWindowCurrent(p:Project,r:ResourceRequirement){const window=currentResourceWindow(p,r);return r.needDate===window.from&&r.from===window.from&&r.to===window.to;}
+export function packageMeasureBindingValid(p:Project,pkg:WorkPackage){
+ if(!pkg.measureLinks?.length)return true;
+ if(!pkg.serviceCode||new Set(pkg.measureLinks.map(l=>l.id)).size!==pkg.measureLinks.length)return false;
+ const rows=pkg.measureLinks.map(l=>[...p.measures,...p.measureHistory??[]].find(s=>s.measure.id===l.id&&s.fingerprint===l.fingerprint));
+ if(rows.some(s=>!s||s.measure.unit!==pkg.unit||s.measure.serviceCode!==pkg.serviceCode)||rows.length!==pkg.elements.length)return false;
+ const identity=(e:{modelId:string;globalId:string})=>JSON.stringify([e.modelId,e.globalId]);const wanted=new Set(pkg.elements.map(identity));
+ return wanted.size===rows.length&&rows.every(s=>wanted.has(identity(s!.measure.elementRef)))&&Math.abs(rows.reduce((n,s)=>n+s!.amount,0)-(pkg.quantity??0))<=1e-8;
+}
 export function quantificationNeedsReview(p:Project,pkg:WorkPackage){
+ if(!packageMeasureBindingValid(p,pkg))return true;
  if(!pkg.measureLinks?.length)return false;
  const snapshots=pkg.measureLinks.map(l=>p.measures.find(s=>s.measure.id===l.id&&s.fingerprint===l.fingerprint));
  return snapshots.some(s=>!s||p.models.find(m=>m.id===s.measure.elementRef.modelId)?.hash!==s.measure.elementRef.modelHash||p.quantificationCatalog&&JSON.stringify(p.quantificationCatalog.find(r=>r.id===s.measure.ruleId))!==JSON.stringify(s.measure.ruleSnapshot))||Math.abs(snapshots.reduce((n,s)=>n+(s?.amount??0),0)-(pkg.quantity??0))>1e-8;
@@ -50,17 +61,19 @@ export function refreshPackageMeasures(p:Project,id:string){
 }
 const coversWindow=(r:ResourceRequirement,s:Supply)=>r.resourceCode==='concrete'?s.delivery===r.needDate&&s.kind!=='stock':s.delivery<=r.from&&(!r.reusable||!!s.availableUntil&&s.availableUntil>=r.to);
 export function resourceCoverage(p:Project,r:ResourceRequirement){
+ if(!resourceWindowCurrent(p,r))return {covered:0,balance:r.quantity,excess:0};
  let covered=0;for(const a of p.resourceAllocations.filter(x=>x.requirementId===r.id)){const s=p.supplies.find(x=>x.id===a.supplyId);if(!s||!compatible(r,s)||!s.confirmed||!s.technical||!s.evidence.trim()||!coversWindow(r,s))continue;const ds=p.deliveries.filter(d=>d.allocationId===a.id);covered+=ds.length?ds.filter(d=>r.resourceCode==='concrete'?d.date===r.needDate:d.date<=r.from).reduce((n,d)=>n+d.received-d.rejected,0):a.quantity;}
  return {covered,balance:Math.max(0,r.quantity-covered),excess:Math.max(0,covered-r.quantity)};
 }
 function checkCapacity(p:Project,s:Supply,addition?:{requirementId:string;quantity:number}){
  const rows=p.resourceAllocations.filter(a=>a.supplyId===s.id).map(a=>({r:p.resources.find(r=>r.id===a.requirementId)!,quantity:a.quantity}));if(addition)rows.push({r:p.resources.find(r=>r.id===addition.requirementId)!,quantity:addition.quantity});const legacy=p.allocations.filter(a=>a.supplyId===s.id).reduce((n,a)=>n+a.quantity,0);
- const points=rows.flatMap(x=>[x.r.from,x.r.to]);const peak=s.reusable?Math.max(0,...points.map(date=>rows.filter(x=>x.r.from<=date&&x.r.to>=date).reduce((n,x)=>n+x.quantity,legacy))):rows.reduce((n,x)=>n+x.quantity,legacy);
+ const intervals=rows.map(x=>({...x,window:currentResourceWindow(p,x.r)}));const points=intervals.flatMap(x=>[x.window.from,x.window.to]);const peak=s.reusable?Math.max(0,...points.map(date=>intervals.filter(x=>x.window.from<=date&&x.window.to>=date).reduce((n,x)=>n+x.quantity,legacy))):rows.reduce((n,x)=>n+x.quantity,legacy);
  if(peak>(s.quantity??0)+1e-8)throw new Error('Reserva excede a capacidade disponível do recurso.');
 }
 export function reserveResource(p:Project,id:string,supplyId:string,quantity:number){
  const r=p.resources.find(x=>x.id===id),s=p.supplies.find(x=>x.id===supplyId);if(!r||!s||!compatible(r,s))throw new Error('Recurso, especificação ou unidade incompatível.');
  if(r.procurementBlockers.length||!r.specificationConfirmed)throw new Error('Especificação de compra pendente.');
+ if(!resourceWindowCurrent(p,r))throw new Error('Recompor a janela de utilização antes de reservar.');
  if(!Number.isFinite(quantity)||quantity<=0)throw new Error('Quantidade inválida.');
  checkCapacity(p,s,{requirementId:id,quantity});const reserved=p.resourceAllocations.filter(a=>a.requirementId===id).reduce((n,a)=>n+a.quantity-p.deliveries.filter(d=>d.allocationId===a.id).reduce((n,d)=>n+d.rejected,0),0);if(reserved+quantity>r.quantity+1e-8)throw new Error('Reserva excede a demanda do recurso.');
  p.resourceAllocations.push({id:uid(),requirementId:id,supplyId,quantity});log(p,'Recurso reservado',`${quantity} ${r.unit}: ${r.specification}`);

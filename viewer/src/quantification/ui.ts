@@ -2,7 +2,7 @@ import {el} from '../production/ui.ts';
 import {catalog} from './catalog.ts';
 import {classifyElement} from './classify.ts';
 import {calculateMeasures,summarizeMeasures} from './calculate.ts';
-import {approveMeasure,isReviewCurrent,type MeasureSnapshot} from './review.ts';
+import {reviewSelection,isReviewCurrent,type MeasureSnapshot} from './review.ts';
 import type {ElementMetadata,MeasureInput,MeasureResult,ServiceCode,QuantRule} from './types.ts';
 
 export type QuantSelection={element:ElementMetadata;volume?:MeasureInput['volume']};
@@ -23,12 +23,12 @@ function input(label:string,value='',type='text'){const l=el('label',label,'quan
 export class QuantificationPanel{
  readonly element=el('div','','quant-tool');private tab='Medir';private hooks:Hooks;private rules=structuredClone(catalog);private reports=new Map<string,QuantReport>();private overrides=new Map<string,{ruleId:string;author:string;reason:string}>();private error='';
  constructor(hooks:Hooks){this.hooks=hooks;this.render();}
- resetForProject(rules?:QuantRule[]){this.rules=structuredClone(rules??catalog);this.overrides.clear();for(const s of this.hooks.reviews()){const natural=classifyElement(s.measure.elementRef,this.rules);if(natural.rule?.id!==s.measure.ruleId)this.overrides.set(JSON.stringify([s.measure.elementRef.modelId,s.measure.elementRef.globalId]),{ruleId:s.measure.ruleId,author:s.reviewer,reason:s.method});}this.render();}
+ resetForProject(rules?:QuantRule[]){this.rules=structuredClone(rules??catalog);this.overrides.clear();for(const s of this.hooks.reviews()){const original=s.measure.classificationOverride;if(original)this.overrides.set(JSON.stringify([s.measure.elementRef.modelId,s.measure.elementRef.globalId]),{ruleId:s.measure.ruleId,...original});}this.render();}
  addReport(text:string){const report=parseReport(text);this.reports.set(report.sourceHash,report);this.render();}
  measures():MeasureResult[]{return this.hooks.selection().flatMap(({element,volume})=>{
   const classification=classifyElement(element,this.rules,this.overrides.get(JSON.stringify([element.modelId,element.globalId])));const r=this.reports.get(element.modelHash)?.elements.find(r=>r.globalId===element.globalId);
   const rule=classification.rule??{...this.rules[0],id:'pending',label:'Classificação pendente',steelRate:null,formMethod:null};
-  const measures=calculateMeasures({element,volume,geometry:r?.geometry?{candidateArea:r.geometry.candidateArea,lowerArea:r.geometry.lowerArea,deductedArea:r.contacts?.deductedArea??null,contactsResolved:r.contacts?.contactsResolved===true&&!r.volumeDivergence,source:`IfcOpenShell · revisão ${element.modelHash.slice(0,8)}`,method:r.contacts?.method??rule.formMethod??''}:undefined},rule);
+  const measures=calculateMeasures({element,volume,classificationOverride:classification.override,volumeDivergence:r?.volumeDivergence===true,geometry:r?.geometry?{candidateArea:r.geometry.candidateArea,lowerArea:r.geometry.lowerArea,deductedArea:r.contacts?.deductedArea??null,contactsResolved:r.contacts?.contactsResolved===true&&!r.volumeDivergence,source:`IfcOpenShell · revisão ${element.modelHash.slice(0,8)}`,method:r.contacts?.method??rule.formMethod??''}:undefined},rule);
   if(classification.status==='pending')for(const m of measures){m.pendingReasons.push(classification.reason);m.status='pending';m.amount=null;}
   return measures;
  });}
@@ -57,8 +57,7 @@ export class QuantificationPanel{
   this.element.append(el('p','Conferência para planejamento. Defina evidências e método. Medida manual substitui explicitamente o cálculo, sem apagar a origem.'));
   const reviewer=input('Conferente da quantificação'),evidence=input('Evidência da quantificação'),method=input('Método conferido');this.element.append(reviewer.l,evidence.l,method.l);
   for(const service of ['concrete','reinforcement','formwork'] as const){const values=rows.filter(r=>r.serviceCode===service),unit=values[0].unit;const manual=input(`Medida manual total — ${names[service]} (${unit})`,'','number');const card=el('article','','quant-result');card.append(el('h3',names[service]),manual.l,button(`Conferir ${names[service].toLowerCase()}`,()=>this.run(()=>{
-   let snaps:MeasureSnapshot[];if(manual.i.value!==''){const total=Number(manual.i.value);if(values.length>1&&values.some(r=>!r.inputs.candidateArea)&&service==='formwork')throw new Error('Selecione um elemento por vez para medição manual sem pesos geométricos.');const weight=(r:MeasureResult)=>Number(service==='formwork'?r.inputs.candidateArea??1:r.inputs.volume??1),sum=values.reduce((n,r)=>n+weight(r),0);if(sum<=0)throw new Error('Pesos indisponíveis. Selecione um elemento.');snaps=values.map(r=>approveMeasure(r,{reviewer:reviewer.i.value,evidence:evidence.i.value+' · rateio explícito proporcional da medida total '+total+' '+unit,method:method.i.value,manualAmount:total*weight(r)/sum}));}
-   else snaps=values.map(r=>approveMeasure(r,{reviewer:reviewer.i.value,evidence:evidence.i.value,method:method.i.value}));
+   const snaps=reviewSelection(values,{reviewer:reviewer.i.value,evidence:evidence.i.value,method:method.i.value},manual.i.value===''?undefined:Number(manual.i.value));
    this.hooks.saveReviews([...this.hooks.reviews().filter(x=>!snaps.some(s=>s.measure.id===x.measure.id)),...snaps]);
   })));const current=this.hooks.reviews().filter(s=>values.some(r=>r.id===s.measure.id&&isReviewCurrent(s,r)));card.append(el('p',`${current.length}/${values.length} conferências vigentes`));this.element.append(card);}
   this.element.append(button('Pré-visualizar pacotes de produção',()=>this.run(()=>{const valid=this.hooks.reviews().filter(s=>rows.some(r=>r.id===s.measure.id&&isReviewCurrent(s,r)));if(!valid.length)throw new Error('Confira pelo menos um serviço.');this.hooks.generate?.(valid);})),button('Exportar conferências',()=>downloadJSON('IFC-Coral-conferencias.json',this.hooks.reviews())));
