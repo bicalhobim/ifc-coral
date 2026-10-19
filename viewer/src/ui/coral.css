@@ -246,6 +246,8 @@ dialog p { font-size: 13px; line-height: 1.65; color: #97869f; }
 .viewer-tool[aria-pressed=true] { background: #f1e0fc; color: #7500c0; }
 .viewer-toolbar .viewer-tool:hover::after,.viewer-toolbar .viewer-tool:focus-visible::after { content: attr(aria-label); position: absolute; top: 37px; left: 0; padding: 6px 9px; white-space: nowrap; font-size: 11px; border-radius: 6px; background: #302637; color: #fff; z-index: 30; pointer-events: none; }
 .viewer-toolbar-hint { margin-left: auto; font-size: 10px; color: #9c91a5; padding-right: 5px; }
+.viewer-selection-count { font-size: 10px; color: #7500c0; white-space: nowrap; padding: 0 4px; }
+.viewer-tool:disabled { opacity: .35; cursor: default; }
 .viewer-separator { width: 1px; height: 20px; background: #ece7f2; margin: 0 5px; }
 .viewer-views { display: flex; position: absolute; top: 9px; right: 9px; gap: 1px; padding: 2px; border: 1px solid #e7e0ee; border-radius: 8px; background: #fffffff0; z-index: 4; }
 .view-direction { margin: 0; padding: 5px 7px; border-radius: 5px; font-size: 10px; background: transparent; }

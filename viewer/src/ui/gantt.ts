@@ -62,7 +62,7 @@ export class Gantt {
   private domainEnd = 1;
   private mode: "gantt" | "table" = "gantt";
   private _container!: HTMLElement;
-  private _tasks!: ElementTask[];
+  private _tasks: ElementTask[]=[];
   private _hooks!: GanttHooks;
   private _tree!: TreeNode[];
   private _flat: TreeNode[] = [];
@@ -491,6 +491,13 @@ export class Gantt {
   private scopeTasks(){return this.scope==='selection'&&this.selection.length?this.selection:this._tasks;}
   private updateDomain(){if(this.dates.length){this.domainStart=this.dates[0];this.domainEnd=this.dates.at(-1)!;}}
   pause(){this.playing=false;this.run++;if(this.timer)clearTimeout(this.timer);this.timer=undefined;this.syncControls();}
+  /** Viewport/tree selection also defines the available playback selection. */
+  setSelection(tasks:ElementTask[]){
+    this.pause();this.selection=[...tasks];this._selected=null;
+    this.scope=tasks.length?'selection':'all';this.dates=simulationDates(this.scopeTasks());
+    this.index=Math.max(0,this.dates.length-1);this.updateDomain();
+    if(this._container)this._renderView();
+  }
   private async applyFrame(){
     const tasks=this.scopeTasks(),at=this.dates[this.index];if(at===undefined)return;
     const {visible,active}=simulationFrame(tasks,at),keys=new Set(visible.map(t=>JSON.stringify([t.modelKey,t.globalId??t.localId])));

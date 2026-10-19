@@ -1,7 +1,7 @@
 import type { SpatialTreeItem } from "@thatopen/fragments";
 
 export interface TreeHooks {
-  onSelect: (localId: number) => void;
+  onSelect: (localId: number, event: MouseEvent) => void;
   labelMap?: Map<number, string>;
 }
 
@@ -103,9 +103,7 @@ function node(item: SpatialTreeItem, hooks: TreeHooks): HTMLElement {
     row.dataset.localId = String(item.localId);
     row.addEventListener("click", (e) => {
       e.stopPropagation();
-      container_selectedClear(row);
-      row.classList.add("selected");
-      hooks.onSelect(item.localId!);
+      hooks.onSelect(item.localId!, e);
     });
   }
   wrap.appendChild(row);
@@ -126,18 +124,23 @@ function node(item: SpatialTreeItem, hooks: TreeHooks): HTMLElement {
   return wrap;
 }
 
-function container_selectedClear(row: HTMLElement) {
-  const tree = row.closest(".tree");
-  tree?.querySelectorAll(".tree-node.selected").forEach((n) => n.classList.remove("selected"));
-}
-
 /** Seleciona um nó da árvore por localId (para sync viewport → tree). */
 export function selectNodeById(container: HTMLElement, localId: number): void {
-  container.querySelectorAll(".tree-node.selected").forEach((n) => n.classList.remove("selected"));
-  const row = container.querySelector<HTMLElement>(`.tree-node[data-local-id="${localId}"]`);
+  selectNodesByIds(container,[localId],localId);
+}
+
+/** Synchronize all selected rows; expand/scroll only the last selected object. */
+export function selectNodesByIds(container:HTMLElement,localIds:readonly number[],focusId?:number):void {
+  const ids=new Set(localIds);
+  for(const row of container.querySelectorAll<HTMLElement>('.tree-node[data-local-id]')){
+    const selected=ids.has(Number(row.dataset.localId));
+    row.classList.toggle('selected',selected);
+    row.setAttribute('aria-selected',String(selected));
+  }
+  if(focusId===undefined||!ids.has(focusId))return;
+  const row = container.querySelector<HTMLElement>(`.tree-node[data-local-id="${focusId}"]`);
   if (!row) return;
   let parent:HTMLElement|null=row.parentElement;
   while(parent&&parent!==container){if(parent.classList.contains('tree-children')){parent.hidden=false;const caret=parent.previousElementSibling?.querySelector('.tree-caret');if(caret)caret.textContent='▾';}parent=parent.parentElement;}
-  row.classList.add("selected");
   row.scrollIntoView({ block: "nearest", behavior: "smooth" });
 }

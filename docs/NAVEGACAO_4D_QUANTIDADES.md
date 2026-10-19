@@ -11,6 +11,15 @@ Interface v03 · laboratório local · Professor Lucas Bicalho
 5. Use **3D**, **Topo**, **Frente** ou **Lado** para orientar a câmera. O botão de enquadramento da barra ajusta a seleção; sem seleção, ajusta o modelo ativo.
 6. A divisória acima do 4D pode ser arrastada. Com foco nela, as setas para cima/baixo também alteram a altura.
 
+## Selecionar vários objetos
+
+- **Ctrl + clique** ou **Shift + clique** adiciona um objeto à seleção. No macOS, **⌘ + clique** também funciona. Repetir o clique com o modificador remove aquele objeto.
+- Para selecionar sem segurar uma tecla, ative **Seleção múltipla** na barra do visualizador (ícone de dois quadrados). Cada clique adiciona ou remove um objeto, tanto no modelo quanto na árvore **Modelo IFC**. Clique no botão novamente para voltar à seleção simples.
+- A barra informa quantos objetos estão selecionados. **Esc** ou **Limpar seleção** (× na barra) limpa o conjunto. Na seleção simples, clicar no fundo vazio também limpa; com seleção múltipla ativa ou modificador pressionado, o fundo preserva o conjunto.
+- A árvore permanece aberta enquanto você seleciona. Abra **Propriedades** para navegar pelos itens e consultar o volume do conjunto. Abra **Quantificação** para calcular os serviços desse mesmo conjunto; as fases 4D não multiplicam o volume físico.
+- A seleção feita no modelo ou na árvore também fica disponível no escopo **Seleção** do 4D. Selecionar uma atividade no cronograma substitui o conjunto pelos elementos daquela atividade. Arrastar para movimentar a câmera não altera a seleção.
+- A seleção é temporária. Os vínculos salvos nos pacotes continuam identificados pelo modelo e pelo GlobalId; não pelos números internos do visualizador.
+
 ## 2. Reproduzir a concretagem
 
 1. Abra **Planejamento 4D**. No campo de busca, digite `Concretagem de laje - PAV 01`.

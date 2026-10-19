@@ -93,3 +93,11 @@ O diagnóstico anterior foi evoluído para o catálogo do aplicativo. Plano exec
 - Evidência: `artifacts/quantification-v1/browser`, incluindo backup antes do ensaio, screenshots e `three-services-completed.json`. Roteiro atual: `docs/QUANTIFICACAO.md`; PPTX/PDF v02 permanece histórico.
 - Verificação antes da revisão independente: **57 testes Node + 10 testes Python**, typecheck, três selfchecks e build passaram. Aviso de tamanho do bundle BIM permanece. Nenhuma chamada real de IA, contato, cotação externa, compra, envio ao financeiro, publicação ou pagamento.
 
+## Seleção múltipla · 19/10/2026
+
+- Causa confirmada no código: viewport e árvore substituíam a seleção a cada clique e ignoravam Ctrl/Shift/Command. A árvore também limpava suas marcações antes de comunicar a seleção.
+- Corrigido o conjunto transitório por instância de modelo + localId. Ctrl/Shift/Command + clique adiciona/remove; botão Seleção múltipla permite o mesmo sem teclado. Clique simples substitui; fundo vazio limpa apenas no modo simples. Esc e botão Limpar seleção disponíveis.
+- Contador, realces, árvore, propriedades, quantificação e tarefas para pacotes usam o mesmo conjunto. Fases de um elemento não multiplicam seu volume. Árvore continua aberta durante a escolha; enquadramento explícito mantém a câmera estável entre cliques. Arrasto de câmera não seleciona. Cliques assíncronos são processados em ordem e invalidados ao trocar de projeto/seleção por outra ferramenta.
+- Seleção externa sincroniza o escopo disponível do 4D. Selecionar uma atividade continua substituindo o conjunto pelos seus elementos, com suas tarefas específicas. Abrir um pacote também sincroniza o conjunto, em vez de apenas realçar uma seleção diferente.
+- Verificação: 71 testes Node (8 novos), typecheck, três selfchecks e build aprovados. Log local em .cache/selection-verify-2026-10-19.log. Aviso já existente de tamanho do bundle permanece. Servidor 5178 respondeu HTTP 200.
+- Conferência visual desta alteração PENDENTE: as guias acessíveis estavam numa página de erro e a política do navegador bloqueou sua aquisição. Solicitada atualização manual da guia; não houve contorno da restrição nem declaração de teste visual. Roteiro em docs/NAVEGACAO_4D_QUANTIDADES.md.
