@@ -37,6 +37,7 @@ export class Viewer {
     world.scene.setup();
     world.scene.three.background = new THREE.Color("#f4f2f8");
     world.renderer = new OBC.SimpleRenderer(this.components, viewport);
+    world.renderer.showLogo = false;
     world.camera = new OBC.SimpleCamera(this.components);
     await world.camera.controls.setLookAt(30,20,30,0,0,0,false);
     this.world = world;
