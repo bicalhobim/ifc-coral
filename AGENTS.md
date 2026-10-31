@@ -1,5 +1,6 @@
 # IFC Coral — instruções do projeto
 
+- Antes de criar qualquer commit, apresentar ao Lucas as alterações e verificações, perguntar se autoriza o commit e aguardar resposta explícita. Não realizar commits automáticos; essa regra vale para todos os agentes que trabalham neste repositório. Uma autorização anterior não aprova commits futuros.
 - Trabalhar nesta base independente. Não modificar C:/dev/ifc4all, suas dependências compartilhadas ou alterações locais.
 - Nome IFC Coral provisório; não criar remoto, publicar ou enviar mensagens a fornecedores sem pedido específico do autor.
 - Fonte funcional: docs/superpowers/specs/2026-10-17-ifc-coral-design.md; progresso em docs/PROGRESSO.md. Os RF/CA completos no Academic OS continuam sendo a meta; recorte implementado e limites em docs/ACEITE.md.
