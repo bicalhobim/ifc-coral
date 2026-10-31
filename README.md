@@ -47,6 +47,8 @@ O IFC Coral parte do [IFC4ALL](https://github.com/bicalhobim/ifc4all) e de sua e
 
 A licença geral de distribuição do projeto ainda precisa ser definida; a autorização específica de uso não estabelece uma licença aberta para todo o código nem altera as licenças das dependências.
 
+Os arquivos incorporados de terceiros e os textos de licença consultados estão em [third_party](third_party/README.md).
+
 ## Desenvolvimento
 
 ```powershell
