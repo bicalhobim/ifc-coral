@@ -1,3 +1,4 @@
+import {mountWindows} from './windows.ts';
 export type ViewerPanel='model'|'properties'|'timeline'|'quantification';
 export interface ShellHandles {
  viewportEl:HTMLElement;ganttEl:HTMLElement;treeEl:HTMLElement;propsEl:HTMLElement;quantEl:HTMLElement;fileInput:HTMLInputElement;
@@ -17,13 +18,8 @@ export function buildShell(root:HTMLElement,onPanelChange?:(name:ViewerPanel,ope
  const treeEl=node('div','tree'),propsEl=node('div','props'),ganttEl=node('section','gantt');
  const fileInput=document.createElement('input');Object.assign(fileInput,{type:'file',accept:'.ifc',multiple:true,hidden:true});
  const panes={} as Record<ViewerPanel,HTMLElement>,buttons={} as Record<ViewerPanel,HTMLButtonElement>;
- const setPanel=(name:ViewerPanel,open:boolean)=>{
-  if(name!=='timeline'&&open)for(const other of ['model','properties','quantification'] as const){panes[other].hidden=true;buttons[other].setAttribute('aria-pressed','false');}
-  panes[name].hidden=!open;buttons[name].setAttribute('aria-pressed',String(open));
-  root.classList.toggle('has-dock',!panes.model.hidden||!panes.properties.hidden||!panes.quantification.hidden);root.classList.toggle('has-quant',!panes.quantification.hidden);root.classList.toggle('timeline-open',!panes.timeline.hidden);
-  dock.hidden=panes.model.hidden&&panes.properties.hidden&&panes.quantification.hidden;
-  onPanelChange?.(name,open);
- };
+ let windows:ReturnType<typeof mountWindows>;
+ const setPanel=(name:ViewerPanel,open:boolean)=>windows.setPanel(name,open);
  const panel=(name:ViewerPanel,title:string,cls:string)=>{
   const p=node('aside',`panel ${cls}`);p.hidden=true;p.id=`viewer-${name}`;p.setAttribute('aria-label',title);
   const head=node('div','panel-head'),label=node('span','panel-title');label.textContent=title;
@@ -42,14 +38,11 @@ export function buildShell(root:HTMLElement,onPanelChange?:(name:ViewerPanel,ope
  const clearSelectionButton=tool('Limpar seleção','<path d="m8 8 8 8M16 8l-8 8"/>',()=>{});clearSelectionButton.title='Limpar seleção (Esc)';clearSelectionButton.disabled=true;
  const selectionCountEl=node('span','viewer-selection-count');selectionCountEl.textContent='0 selecionados';selectionCountEl.setAttribute('aria-live','polite');selectionCountEl.setAttribute('role','status');
  toolbar.append(multiSelectButton,clearSelectionButton,selectionCountEl);
- const hint=node('span','viewer-toolbar-hint');hint.textContent='Ctrl/Shift + clique para selecionar vários';toolbar.append(hint);
+ const hint=node('span','viewer-toolbar-hint');hint.textContent='Ctrl: adicionar · Shift: intervalo na árvore';toolbar.append(hint);
  const views=node('div','viewer-views');views.setAttribute('role','group');views.setAttribute('aria-label','Orientação do modelo');
  const viewButtons:Record<string,HTMLButtonElement>={};for(const [key,label]of [['iso','Vista isométrica'],['top','Vista superior'],['front','Vista frontal'],['side','Vista lateral']]){const b=document.createElement('button');b.type='button';b.className='view-direction';b.textContent=key==='iso'?'3D':key==='top'?'Topo':key==='front'?'Frente':'Lado';b.setAttribute('aria-label',label);b.title=label;viewButtons[key]=b;views.append(b);}
  const overlay=node('div','simulation-overlay');overlay.hidden=true;overlay.setAttribute('aria-label','Estado da simulação');viewportEl.append(views,overlay);
- const resize=node('div','timeline-resize');resize.setAttribute('role','separator');resize.setAttribute('aria-label','Altura do cronograma');resize.setAttribute('aria-orientation','horizontal');resize.tabIndex=0;
- const height=(value:number)=>root.style.setProperty('--timeline-height',`${Math.max(170,Math.min(root.clientHeight*.55,value))}px`);
- resize.onpointerdown=e=>{resize.setPointerCapture(e.pointerId);const start=e.clientY,initial=bottom.p.getBoundingClientRect().height;const move=(m:PointerEvent)=>height(initial+start-m.clientY);const up=()=>{resize.removeEventListener('pointermove',move);resize.removeEventListener('pointerup',up);};resize.addEventListener('pointermove',move);resize.addEventListener('pointerup',up);};
- resize.onkeydown=e=>{if(e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();height(bottom.p.getBoundingClientRect().height+(e.key==='ArrowUp'?20:-20));}};
- bottom.p.prepend(resize);root.append(toolbar,dock,viewportEl,bottom.p,fileInput);
- return {viewportEl,ganttEl,treeEl,propsEl,quantEl:quant.body,fileInput,fitButton,allButton,viewButtons,multiSelectButton,clearSelectionButton,selectionCountEl,setPanel,isPanelOpen:name=>!panes[name].hidden};
+ root.append(toolbar,fileInput);windows=mountWindows(root,viewportEl,panes,buttons,onPanelChange);
+
+ return {viewportEl,ganttEl,treeEl,propsEl,quantEl:quant.body,fileInput,fitButton,allButton,viewButtons,multiSelectButton,clearSelectionButton,selectionCountEl,setPanel,isPanelOpen:windows.isPanelOpen};
 }

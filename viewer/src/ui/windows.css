@@ -1,0 +1,55 @@
+/* A workspace reserves separate columns for docked windows. */
+.model-host.shell.window-shell {display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.window-shell .viewer-toolbar {flex:0 0 43px;min-width:0;flex-wrap:wrap;height:auto}
+.viewer-workspace {position:relative;display:grid;flex:1;min-height:0;min-width:0;grid-template-columns:var(--dock-left,0px) minmax(0,1fr) var(--dock-right,0px);grid-template-rows:minmax(100px,1fr) var(--dock-bottom,0px);grid-template-areas:'left viewport right' 'bottom bottom bottom';overflow:hidden}
+.window-shell .viewport {grid-area:viewport}
+.window-dock {position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;background:white}
+.window-dock[hidden] {display:none}
+.window-dock-left {grid-area:left;border-right:1px solid #e6ddec}
+.window-dock-right {grid-area:right;border-left:1px solid #e6ddec}
+.window-dock-bottom {grid-area:bottom;border-top:1px solid #e6ddec;flex-direction:row}
+.model-host .window-dock .panel.window-docked {position:relative;inset:auto;width:100%;height:auto;flex:1;min-width:0;min-height:0;border:0;border-radius:0;box-shadow:none;overflow:hidden}
+.window-dock .panel + .panel {border-top:3px solid #e9e0f2}
+.model-host .window-dock-bottom .panel {height:100%;width:0}
+.window-floats {position:absolute;inset:0;pointer-events:none;z-index:20}
+.model-host .panel.window-floating {position:absolute;inset:auto;min-width:0;min-height:0;pointer-events:auto;border:1px solid #dac8e9;border-radius:10px;overflow:hidden;box-shadow:0 12px 36px #37224e38;background:white}
+.model-host .panel-head {gap:4px;height:34px;min-height:34px;cursor:grab;touch-action:none}
+.model-host .panel-title {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;margin-right:auto}
+.window-controls {display:flex;align-items:center;gap:2px;flex-shrink:0}
+.model-host .window-place,.window-presets {font-size:10px;border:1px solid #e6ddec;border-radius:5px;background:#faf7fd;color:#665175;padding:3px;width:auto;max-width:91px;min-width:0;min-height:24px;margin:0}
+.window-presets {margin-left:auto;max-width:150px;flex-shrink:1}
+.model-host .window-control {width:24px;height:24px;padding:2px;margin:0;font-size:12px;background:transparent;border-radius:5px;color:#8c36b7}
+.window-control:hover {background:#f0e2fa}
+.window-size {display:none;position:absolute;right:0;bottom:0;width:17px;height:17px;cursor:nwse-resize;touch-action:none;background:linear-gradient(135deg,transparent 48%,#ba91d1 50%,transparent 57%,transparent 68%,#ba91d1 70%,transparent 78%)}
+.window-floating .window-size {display:block}
+.window-stack-size {position:absolute;bottom:0;left:0;right:0;height:6px;z-index:16;cursor:row-resize;touch-action:none}
+.window-stack-size:hover,.window-stack-size:focus-visible {background:#b96dec88;outline:0}
+.window-floating .window-stack-size,.window-stack-size[hidden] {display:none}
+.window-dock-bottom .window-stack-size {top:0;bottom:0;left:auto;right:0;width:6px;height:auto;cursor:col-resize}
+.dock-divider {position:absolute;z-index:15;touch-action:none;background:transparent}
+.dock-divider:hover,.dock-divider:focus-visible {background:#b96dec88;outline:0}
+.dock-divider-left {right:0;top:0;bottom:0;width:6px;cursor:col-resize}
+.dock-divider-right {left:0;top:0;bottom:0;width:6px;cursor:col-resize}
+.dock-divider-bottom {left:0;right:0;top:0;height:6px;cursor:row-resize}
+.window-rail {position:absolute;left:6px;bottom:6px;display:flex;gap:4px;z-index:40;max-width:calc(100% - 12px);overflow:auto;padding:3px;border-radius:8px;background:#ffffffed;box-shadow:0 3px 12px #39234c22}
+.window-rail[hidden] {display:none}
+.window-rail .window-tab {width:auto;white-space:nowrap;height:28px;font-size:10px;padding:4px 8px;background:#f0e3fb}
+.tree-node.partial {background:#f4eafa;border-left:3px solid #bc7cda}
+.tree-node {user-select:none}
+.tree-node:focus-visible {outline:2px solid #a100ff;outline-offset:-2px}
+.package-actions {display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
+.package-actions button {font-size:11px;padding:7px 9px;margin:0;background:#f3eaf9}
+.package-actions .danger {color:#a32c45;background:#fff0f3}
+.package-new {border:1px solid #e2d3ee;border-radius:10px;padding:12px;margin:10px 0}
+.package-new > summary {cursor:pointer;font-weight:600;color:#7500c0}
+.package-undo {display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px;border:1px solid #d3e5d7;border-radius:8px;background:#f2fbf4;font-size:11px;margin:8px 0}
+@media(max-width:740px){.window-shell .viewer-toolbar {flex-basis:76px}.window-presets {max-width:100px}.model-host .window-place {max-width:70px}.model-host .panel-title {font-size:9px}}
+.model-host .window-dock .panel {container-type:inline-size}
+@container (max-width:220px){
+ .model-host .panel-head {display:grid;grid-template-columns:minmax(0,1fr) 20px;grid-template-rows:18px 24px;height:48px;min-height:48px;gap:0 2px;padding:2px 4px}
+ .model-host .panel-title {grid-column:1/-1;font-size:10px}
+ .window-controls {grid-column:1}
+ .model-host .window-place {max-width:60px;width:60px}
+ .model-host .window-control,.model-host .panel-min {width:20px;height:22px;padding:2px}
+}
+@container (max-width:150px){.model-host .window-place {max-width:40px;width:40px}}

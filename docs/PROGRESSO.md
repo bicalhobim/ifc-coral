@@ -101,3 +101,61 @@ O diagnóstico anterior foi evoluído para o catálogo do aplicativo. Plano exec
 - Seleção externa sincroniza o escopo disponível do 4D. Selecionar uma atividade continua substituindo o conjunto pelos seus elementos, com suas tarefas específicas. Abrir um pacote também sincroniza o conjunto, em vez de apenas realçar uma seleção diferente.
 - Verificação: 71 testes Node (8 novos), typecheck, três selfchecks e build aprovados. Log local em .cache/selection-verify-2026-10-19.log. Aviso já existente de tamanho do bundle permanece. Servidor 5178 respondeu HTTP 200.
 - Conferência visual desta alteração PENDENTE: as guias acessíveis estavam numa página de erro e a política do navegador bloqueou sua aquisição. Solicitada atualização manual da guia; não houve contorno da restrição nem declaração de teste visual. Roteiro em docs/NAVEGACAO_4D_QUANTIDADES.md.
+
+## Projetos locais e portal demonstrativo · 31/10/2026 · alterações locais sem commit
+
+- Login demonstrativo aceita quaisquer campos não vazios e descarta os dados. Home com criação por nome/pasta pai, abertura de pasta, recentes por handle nativo e recuperação do cache legado.
+- Arquivo portátil autoritativo por pasta, cópias IFC por hash, relatórios geométricos e exportações vinculadas à pasta escolhida. Salvar/Ctrl+S e Salvar como/Ctrl+Shift+S; cópia com identidade própria. Indicador de alterações, confirmação ao voltar à home, bloqueio durante gravação, proteção contra versão obsoleta e retomada de falha inicial com marcador específico.
+- Menu da raiz de cada modelo por clique direito ou reticências: metadados, substituição, exportação e remoção. Remoção de modelo vinculado a pacotes bloqueada; arquivos originais preservados.
+- Exportações CSV/JSON/IFC encaminhadas à pasta ativa, com destino capturado durante a operação. Relatórios geométricos reabertos junto do projeto. Dados de login/chaves não são incluídos no armazenamento.
+- Revisão independente encontrou e corrigiu corrida na inicialização do motor, cancelamento de Salvar como durante escrita, identidade antiga no portátil e troca de destino durante exportação.
+- Testes: 87 testes Node, tipos, três selfchecks e build aprovados. Testes de arquivos usam doubles estruturais da API, não comprovam seletores e permissões reais do Windows.
+- Navegador: login e home operados com valores fictícios; sessão anterior recuperada, menu de clique direito e metadados abertos, Ctrl+Shift+S abriu Salvar como, retorno à home pediu decisão e permitiu descarte do estado transitório. Não foram editados/salvos os dados da sessão original. Capturas em .cache/workspace-ui.
+- Limite de verificação: o seletor de pastas não ficou disponível à automação nativa; criação/salvamento/reabertura em pasta real e persistência real de handles ainda precisam de ensaio pelo usuário. Não declarar essa etapa visualmente aprovada. Guia em docs/PROJETOS_LOCAIS.md.
+- Nenhum commit ou push desta implementação: requer autorização específica do autor conforme AGENTS.md.
+
+## Correção da criação de pastas · 31/10/2026 · alterações locais sem commit
+
+- A mensagem de cancelamento apenas expunha a interrupção do seletor do navegador; não resolvia a criação. A versão local Windows agora usa um seletor interno de pastas, servido pelo próprio processo local do IFC Coral, sem depender da janela externa do navegador.
+- Home simplificada: **Novo projeto → nome e local → Escolher pasta → Usar esta pasta → Criar projeto**. O caminho final aparece antes da confirmação. Cancelar a seleção é um resultado neutro e não cria arquivos. **Salvar como** usa o mesmo diálogo.
+- Serviço de arquivos com origem de loopback e sessão verificadas, referências apenas a diretórios selecionados, rejeição de travessia e links/junctions, gravação atômica e registro de destinos em `%LOCALAPPDATA%/IFC Coral/folders.json`. Sem novas dependências. Hospedagem somente estática mantém o fallback da API do navegador.
+- Ensaio real pelo navegador integrado: criado `QA Pasta 31out` em `.cache/workspace-qa`, importada TORRE02, salvo pacote de 8.291.711 bytes e cópia IFC de 5.497.170 bytes, reaberto por Recentes após recarga/reinício do servidor de desenvolvimento, com modelo e 4D. **Salvar como** criou `QA Pasta 31out - copia` com outra identidade e preservou o original. Cancelamento de `QA Cancelado` voltou à home sem erro e sem criar pasta. Dados dos projetos originais do usuário preservados.
+- Testes: **94 aprovados**, typecheck, selfchecks schedule/gantt/tree e build aprovados; aviso conhecido de tamanho do bundle. Log `.cache/folder-flow-verify.log`. Captura `.cache/workspace-ui/seletor-pastas-funcional.png`.
+- Esta seção substitui a pendência de teste de pastas reais da seção anterior para esta máquina. Instalação em outro computador e arquivos grandes continuam sem ensaio. Nenhum commit ou push autorizado nesta rodada.
+
+## Seleção nativa do Windows · 31/10/2026 · alterações locais sem commit
+
+- Por solicitação do Lucas, removidos o explorador de pastas em HTML e as rotas web de navegação/seleção por caminho. **Escolher pasta** agora abre o Common Item Dialog nativo do Windows, via auxiliar PowerShell STA e `IFileOpenDialog` com seleção de diretórios. Nome/destino do projeto e restante do salvamento preservados.
+- Cancelamento nativo retorna resultado próprio; uma única janela fica pendente por vez, com expiração de cinco minutos. Ajustada a visibilidade do processo auxiliar e removido o proprietário Forms invisível da tentativa anterior. Caminhos não são inseridos em comandos shell; o serviço recebe somente o resultado confirmado no diálogo.
+- Teste integrado: a janela retornou o destino `Academic OS - 03-Ouro/02_Docente/EBPOS_IA_BIM/M08_Obras_IA/99_Projeto_Teste_IFC_Coral`; o projeto `QA Windows nativo` foi criado pela interface nesse destino, com arquivo principal gravado. A janela não ficou acessível ao controle nativo automatizado; a escolha retornou durante o ensaio com o usuário. Não declarar cliques automatizados dentro da janela do Windows. O cancelamento foi coberto pelo teste de protocolo, sem novo ensaio manual.
+- O serviço local caiu antes da confirmação; foi restabelecido em processo de fundo, e a repetição da gravação funcionou com renovação da sessão. Logs `.cache/native-server.stdout.log` e `.cache/native-server.stderr.log`.
+- Verificação: **95 testes**, typecheck, três selfchecks e build aprovados; aviso conhecido de tamanho do bundle. Log `.cache/native-folder-verify.log`. Sem commit ou push.
+
+## Separação de projeto comum e template · 31/10/2026 · alterações locais sem commit
+
+- Removido **Abrir TORRE02** do editor; **Importar IFC** é a ação principal. Projeto em branco tem instruções neutras, sem caso de concretagem, notas TORRE02 ou geração de cotações de exemplo.
+- O cartão da home cria o exercício com origem didática explícita, validada e persistente. Cópias e arquivos portáteis preservam a identificação. Nome/hash de IFC importado não ativam o template. Projetos anteriores sem marca continuam comuns; seus dados não são removidos nem convertidos.
+- Caso sintético e relatório geométrico incluído ficam restritos ao exercício. Linguagem de navegação e orientação da IA para projetos comuns foi neutralizada.
+- Verificação: **97 testes**, typecheck, selfchecks e build aprovados. Log `.cache/project-context-verify.log`. Conferidos no navegador: projeto vazio comum, template pelo cartão e retorno a projeto comum com IFC importado, sem botão/nota TORRE02 nem criação de caso didático. Arquivos de dados originais preservados. Capturas `.cache/workspace-ui/projeto-vazio-sem-template.png` e `.cache/workspace-ui/projeto-com-ifc-sem-template.png`.
+- Sem commit ou push.
+
+## Pacote por seleção e avisos legíveis · 31/10/2026 · alterações locais sem commit
+
+- Reproduzido na sessão aberta: clique para criar com zero selecionados. A validação era esperada, mas `.welcome` centralizado colocava o erro acima do corpo, oculto pelo restante da interface. Dados do professor preservados.
+- Pré-requisito visível, botão liberado apenas com seleção compatível, estado atualizado após clique 3D/4D sem reiniciar os campos. Criação extraída para domínio testável, sem triplicar volume por fases. Avisos em área própria entre navegação e corpo; alinhamento inicial ao topo.
+- Ensaio no navegador interno com cópia de QA: criação pelo 3D, seleção múltipla, duplicidade, propriedades, vistas, reprodução 4D, definição, quatro restrições, mapa e três propostas, reservas elegíveis/não elegíveis, recebimento, congelamento, PPC tardio/no prazo, quantificação e catálogo, guardas de IA sem chave, metadados, salvamento, exportação e reabertura com PPC preservado.
+- Encontrada e corrigida a ausência de caminho para a primeira proposta em pacotes comuns de concreto: uso de composição de recursos e cadastro, preservando comparação/coberturas históricas. Registros comuns não ganham marca de exemplo automaticamente.
+- Aviso conferido em 916×704 e 465×704, abaixo das abas com 12 px de intervalo. Sem aprovação de taxas de aço/fôrma, chamadas autenticadas de IA ou operações externas.
+- **102 testes**, tipos, três selfchecks e build aprovados. Relatório: [QA de fluxo de pacotes](QA_FLUXO_PACOTES_2026-10-31.md); evidências em `artifacts/qa-package-flow-2026-10-31`.
+- Nenhum commit ou push. A sessão original tem alterações pendentes; salvar antes de recarregar para receber o JavaScript novo.
+
+
+## Seleção hierárquica, gestão de pacotes e janelas · 31/10/2026 · alterações locais sem commit
+
+- Árvore seleciona descendentes físicos por pavimento/modelo. Shift seleciona intervalo inclusivo de linhas visíveis; Ctrl/⌘ alterna grupos e Ctrl+Shift une intervalos. Contêineres espaciais não são contados como objetos físicos. Seleção total/parcial sincronizada com 3D e quantificação.
+- Pacote da seleção usa o pavimento espacial para nome/local, evitando herdar localização divergente da classificação 4D. Datas e identidades de atividades permanecem rastreáveis.
+- Pacote manual com unidade, definição editável, confirmação de exclusão e desfazer da última exclusão na sessão. Compromissos/realizados/reservas/mapas confirmados protegidos; IFC, medições e propostas preservados.
+- Janelas independentes à esquerda/direita/abaixo ou flutuantes dentro do visualizador; arrastar título, redimensionar canto/divisores, repartir painéis empilhados, fixar/recolher, presets e restauração de disposição. Campos preservados ao mover. Referências visuais e help oficiais Navisworks consultadas.
+- **112 testes**, tipos, três selfchecks e build aprovados. QA real: pavimento 31 elementos, três pavimentos 93, Ctrl remove 31, intervalo de cinco vigas; CRUD de rascunho; pacote congelado protegido; janelas simultâneas/movimento/redimensionamento/fixação/restauração. Sem erros no console observado.
+- [Guia dos controles](SELECAO_PACOTES_JANELAS.md), [relatório de QA](QA_SELECAO_JANELAS_2026-10-31.md); capturas e log em `artifacts/qa-selection-windows-2026-10-31`.
+- Não houve commit/push. Salvar alterações antes de atualizar sessões antigas no navegador. Em janela estreita, usar Ampliar modelo ou recolher painéis para leitura confortável.

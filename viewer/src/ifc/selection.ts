@@ -25,3 +25,10 @@ export function selectionTasks<Model,Task extends SelectionItem<Model>>(items:re
 export function isAdditiveSelection(event:{ctrlKey:boolean;shiftKey:boolean;metaKey:boolean},enabled=false):boolean {
  return enabled||event.ctrlKey||event.shiftKey||event.metaKey;
 }
+
+export function updateGroupSelection<Model>(current:readonly SelectionItem<Model>[],group:readonly SelectionItem<Model>[],mode:'replace'|'toggle'|'union'):SelectionItem<Model>[] {
+ const next=uniqueSelection(group);if(mode==='replace')return next;
+ const includes=(a:SelectionItem<Model>,b:SelectionItem<Model>)=>a.model===b.model&&a.localId===b.localId;
+ if(mode==='toggle'&&next.length&&next.every(item=>current.some(c=>includes(c,item))))return current.filter(c=>!next.some(item=>includes(c,item)));
+ return uniqueSelection([...current,...next]);
+}

@@ -1,3 +1,4 @@
+import {downloadBlob} from '../workspace/downloads.ts';
 import type {Project,WorkPackage} from './types.ts';
 import {uid,log} from './project.ts';
 import {assessReadiness,packageBalance,resolveConstraint,allocate,freezeWeek,recordActual,calculatePPC,supplyWindow,quoteTotal,recordDelivery} from './planning.ts';
@@ -7,7 +8,11 @@ import {helpButton,simplifyExplanations} from '../ui/help.ts';
 import type {VolumeSummary} from '../ifc/quantities.ts';
 import {composeResource,reserveResource,resourceCoverage,compatible,quantificationNeedsReview,refreshPackageMeasures} from './resources.ts';
 import {buildSupplyMap,confirmSupplyMap} from './supply-map.ts';
-type Hooks={getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;loadDemo:()=>void;quantity:(refs:WorkPackage['elements'])=>VolumeSummary};
+import {isTeachingProject} from '../workspace/context.ts';
+import {createSelectionPackage,selectionPackageStatus} from './selection-package.ts';
+import {createManualPackage,deletePackage,restorePackage,packageDeletionBlock,type RemovedPackage} from './package-management.ts';
+import {usesResourceSupply} from './supply-mode.ts';
+type Hooks={getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];selectionContext?:()=>{locations:string[]};select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;importModel:()=>void;quantity:(refs:WorkPackage['elements'])=>VolumeSummary};
 export function el<K extends keyof HTMLElementTagNameMap>(tag:K,text='',cls=''){const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;return n;}
 function btn(text:string,action:()=>void,cls=''){const b=el('button',text,cls);b.type='button';b.onclick=action;return b;}
 function field(label:string,value:string,type='text'){
@@ -34,29 +39,51 @@ const volume=(v:number)=>`${v.toLocaleString('pt-BR',{maximumFractionDigits:6})}
 export class ProductionPanel{
  readonly element=el('section','','workshop');private tab='Produção';private selected='';private reviewer='';
  private hooks:Hooks;private error='';private lastTab='';private expandedSupplies=new Set<string>();private projectId='';
+ private removed:RemovedPackage|undefined;
+ private feedback=el('p','','work-feedback notice error');
  constructor(hooks:Hooks){this.hooks=hooks;this.render();}
  private action(fn:(p:Project)=>void){
  try{this.hooks.change(fn);this.error='';this.render();}
- catch(e){this.error=e instanceof Error?e.message:String(e);const body=this.element.querySelector('.work-body');body?.querySelector('[role=alert]')?.remove();const error=el('p',this.error,'notice error');error.setAttribute('role','alert');body?.prepend(error);error.scrollIntoView({block:'nearest'});}
+ catch(e){this.error=e instanceof Error?e.message:String(e);this.renderFeedback();this.feedback.focus({preventScroll:true});const rect=this.feedback.getBoundingClientRect();if(rect.top<0||rect.bottom>window.innerHeight)this.feedback.scrollIntoView({block:'center'});}
+ }
+ private renderFeedback(){this.feedback.textContent=this.error;this.feedback.hidden=!this.error;this.feedback.tabIndex=-1;this.feedback.setAttribute('role','alert');}
+ private selectionButton(text='Criar pacote da seleção'){
+  const group=el('div','','selection-create'),help=el('p','','selection-help'),button=btn(text,()=>this.createFromSelection(),'primary');
+  help.dataset.selectionHelp='';button.dataset.createSelection='';button.setAttribute('aria-describedby',help.id=`selection-help-${uid()}`);group.append(help,button);return group;
+ }
+ updateSelectionState(){
+  const state=selectionPackageStatus(this.hooks.getProject(),this.hooks.selection());
+  for(const help of this.element.querySelectorAll<HTMLElement>('[data-selection-help]'))help.textContent=state.message;
+  for(const button of this.element.querySelectorAll<HTMLButtonElement>('[data-create-selection]')){button.disabled=!state.ready;button.title=state.message;}
  }
  render(){
- const p=this.hooks.getProject();if(p.id!==this.projectId){this.projectId=p.id;this.tab='Produção';this.selected='';this.reviewer='';this.lastTab='';this.error='';this.expandedSupplies.clear();}const previousScroll=this.lastTab===this.tab?(this.element.querySelector('.work-body')?.scrollTop??0):0;this.lastTab=this.tab;this.element.replaceChildren();
- const nav=el('nav','','work-nav');nav.setAttribute('aria-label','Ciclo da oficina');
+ const p=this.hooks.getProject();if(p.id!==this.projectId){this.projectId=p.id;this.tab='Produção';this.selected='';this.reviewer='';this.lastTab='';this.error='';this.expandedSupplies.clear();this.removed=undefined;}const previousScroll=this.lastTab===this.tab?(this.element.querySelector('.work-body')?.scrollTop??0):0;this.lastTab=this.tab;this.element.replaceChildren();
+ const teaching=isTeachingProject(p);
+ const nav=el('nav','','work-nav');nav.setAttribute('aria-label','Planejamento e controle');
  for(const [index,tab] of ['Produção','Suprimentos','Semana / PPC','IA'].entries()){const item=btn(tab,()=>{this.tab=tab;this.render();},tab===this.tab?'active':'');item.setAttribute('aria-current',tab===this.tab?'step':'false');item.setAttribute('aria-label',tab);item.dataset.step=String(index+1).padStart(2,'0');nav.append(item);}
- this.element.append(nav);const body=el('div','','work-body');this.element.append(body);
- if(this.error){const error=el('p',this.error,'notice error');error.setAttribute('role','alert');body.append(error);}
+ this.element.append(nav,this.feedback);this.renderFeedback();const body=el('div','','work-body');this.element.append(body);
+ if(this.removed)body.append(this.undoControl());
  if(!p.packages.length){
+ body.append(this.newPackageControl());
  body.classList.add('welcome');
- body.append(el('p','OFICINA DE PLANEJAMENTO','eyebrow'),el('h1','Sua próxima concretagem, sob controle.'),el('p','Prepare a frente, confirme o fornecimento e assuma compromissos com evidências.','welcome-copy'));
+ body.append(el('p',teaching?'OFICINA DE PLANEJAMENTO':'PLANEJAMENTO DO PROJETO','eyebrow'),el('h1',teaching?'Sua próxima concretagem, sob controle.':'Organize a produção do seu projeto.'),el('p',teaching?'Prepare a frente, confirme o fornecimento e assuma compromissos com evidências.':!p.models.length?'Importe os arquivos IFC deste projeto para visualizar os modelos e preparar seus pacotes de trabalho.':'Use os modelos e atividades deste projeto para preparar pacotes, restrições, suprimentos e compromissos.','welcome-copy'));
  const journey=el('ol','','journey');for(const title of ['Escolher o local e o serviço','Conferir as restrições','Preparar o fornecimento','Comparar promessa e resultado'])journey.append(el('li',title));body.append(journey);
- if(!p.tasks.length)body.append(btn('Abrir modelo de exemplo',()=>this.hooks.loadDemo(),'primary'));
- else body.append(btn('Criar caso de concretagem',()=>this.action(x=>{addConcreteCase(x,x.tasks);const pkg=x.packages[0],q=this.hooks.quantity(pkg.elements);pkg.quantity=q.totalM3===null?null:Math.round(q.totalM3*1e6)/1e6;pkg.quantitySource=q.source;x.supplies.forEach(s=>s.quantity=pkg.quantity);log(x,'Quantidade IFC conferida',q.source);}),'primary'),btn('Criar pacote da seleção 4D',()=>this.createFromSelection()));
- body.append(el('p','Exercício com TORRE02. Volume declarado no IFC quando disponível; datas e cotações do cenário são simuladas.','simulation-note'));return;}
+ if(!p.models.length)body.append(btn('Importar IFC',()=>this.hooks.importModel(),'primary'));
+ else {
+  if(teaching&&p.tasks.length)body.append(btn('Criar caso de concretagem',()=>this.action(x=>{if(!isTeachingProject(x))throw new Error('Este comando pertence ao exercício didático.');addConcreteCase(x,x.tasks);const pkg=x.packages[0],q=this.hooks.quantity(pkg.elements);pkg.quantity=q.totalM3===null?null:Math.round(q.totalM3*1e6)/1e6;pkg.quantitySource=q.source;x.supplies.forEach(s=>s.quantity=pkg.quantity);log(x,'Quantidade IFC conferida',q.source);}),'primary'));
+  if(p.tasks.length)body.append(this.selectionButton());
+  else body.append(el('p','Este modelo não possui atividades 4D disponíveis. Use Quantificação para conferir os quantitativos e preparar pacotes.','notice'));
+ }
+ if(teaching)body.append(el('p','Exercício com TORRE02. Volume declarado no IFC quando disponível; datas e cotações do cenário são simuladas.','simulation-note'));this.updateSelectionState();return;}
  const select=el('select');select.setAttribute('aria-label','Pacote de trabalho');
  for(const pkg of p.packages){const op=el('option',pkg.name);op.value=pkg.id;select.append(op);}
  if(!p.packages.some(x=>x.id===this.selected))this.selected=p.packages[0].id;
  select.value=this.selected;select.onchange=()=>{this.selected=select.value;this.render();};
- const top=el('div','','package-picker');top.append(select,btn('+ Pacote da seleção',()=>this.createFromSelection()));body.append(top);
+ const top=el('div','','package-picker');top.append(select);body.append(top);
+ const pkgActions=el('div','','package-actions');const current=p.packages.find(x=>x.id===this.selected)!;
+ pkgActions.append(btn('Editar pacote',()=>{this.tab='Produção';this.render();this.element.querySelector<HTMLInputElement>('.form-grid input')?.focus();}),btn('Realçar no modelo',()=>this.hooks.select(current)));
+ const remove=btn('Excluir pacote',()=>{const dialog=el('dialog','','project-destination');dialog.setAttribute('aria-label','Excluir pacote');dialog.append(el('h2','Excluir pacote?'),el('p',`Excluir “${current.name}” e seus recursos sem reserva. O IFC, as medições e as propostas serão preservados. Você poderá desfazer a última exclusão nesta sessão.`),btn('Cancelar',()=>{dialog.close();dialog.remove();}),btn('Confirmar exclusão',()=>{this.action(x=>{const removed=deletePackage(x,current.id);this.removed=removed;this.selected='';});dialog.close();dialog.remove();}));dialog.oncancel=()=>dialog.remove();document.body.append(dialog);dialog.showModal();},'danger');
+ const block=packageDeletionBlock(p,current.id);remove.disabled=!!block;remove.title=block||'Excluir rascunho com opção de desfazer';pkgActions.append(remove);body.append(pkgActions,this.newPackageControl(),this.selectionButton('+ Pacote da seleção'));this.updateSelectionState();
  const pkg=p.packages.find(x=>x.id===this.selected)!;const readiness=assessReadiness(p,pkg);
  body.append(el('p',`${pkg.location} · ${pkg.service}`,'eyebrow'),el('h2',pkg.name),el('p',p.week?.commitments.some(c=>c.packageId===pkg.id)?(readiness.ready?'COMPROMISSO REGISTRADO · CONDIÇÕES ATUAIS ATENDIDAS':'COMPROMISSO REGISTRADO · REVISAR CONDIÇÕES ATUAIS'):(readiness.ready?'PRONTO PARA COMPROMISSO':'PREPARAR ANTES DE PROMETER'),readiness.ready?'badge good':'badge warn'));
  if(this.tab==='Produção')this.production(body,pkg,p);
@@ -65,14 +92,17 @@ export class ProductionPanel{
  if(this.tab==='IA')mountAI(body,()=>this.hooks.getProject());
  simplifyExplanations(body);body.scrollTop=previousScroll;
  }
+ private undoControl(){
+  const box=el('div','','package-undo');box.append(el('span',`Pacote “${this.removed!.package.name}” excluído.`),btn('Desfazer exclusão',()=>this.action(p=>{restorePackage(p,this.removed!);this.selected=this.removed!.package.id;this.removed=undefined;})));return box;
+ }
+ private newPackageControl(){
+  const details=el('details','','package-new');details.append(el('summary','+ Novo pacote'));
+  const name=field('Nome do novo pacote',''),location=field('Local do novo pacote',''),service=field('Serviço do novo pacote','');
+  const unit=el('select');unit.setAttribute('aria-label','Unidade do novo pacote');for(const u of ['m³','kg','m²']){const option=el('option',u);option.value=u;unit.append(option);}
+  details.append(el('p','Crie um rascunho ou use a seleção do modelo abaixo para trazer os vínculos IFC. Datas iniciais são sugestões; confira-as antes de assumir compromissos.','fine'),name.label,location.label,service.label,unit,btn('Criar rascunho',()=>this.action(p=>{this.selected=createManualPackage(p,{name:name.input.value,location:location.input.value,service:service.input.value,unit:unit.value as WorkPackage['unit']}).id;this.tab='Produção';}),'primary'));return details;
+ }
  private createFromSelection(){this.action(p=>{
- const ids=this.hooks.selection();let tasks=p.tasks.filter(t=>ids.includes(t.id));if(!tasks.length)throw new Error('Abra o 4D e selecione uma atividade, ou clique em um elemento do modelo.');
- const concrete=tasks.filter(t=>/concretagem|concrete/i.test(t.name));if(concrete.length)tasks=concrete;
- if(!concrete.length)throw new Error('Para armação ou fôrmas, use Quantificação → Conferir → Pré-visualizar pacotes. Cada serviço exige sua unidade.');
- const first=tasks[0];const elements=Array.from(new Map(tasks.map(t=>[JSON.stringify([t.modelId,t.globalId]),{modelId:t.modelId,globalId:t.globalId}])).values());
- if(p.packages.some(old=>old.unit==='m³'&&old.elements.some(a=>elements.some(b=>a.modelId===b.modelId&&a.globalId===b.globalId))))throw new Error('Já existe pacote de concretagem para estes elementos.');
- const q=this.hooks.quantity(elements),amount=concrete.length?q.totalM3:null;
- const pkg:WorkPackage={id:uid(),name:first.name,location:first.location,service:concrete.length?'Concretagem':first.service,elements,taskIds:tasks.map(t=>t.id),quantity:amount===null?null:Math.round(amount*1e6)/1e6,unit:'m³',coverageKnown:false,quantitySource:concrete.length?q.source:'Seleção sem atividade de concretagem identificada. Confira serviço e quantitativo antes de definir demanda.',needDate:first.start,finishDate:first.finish,criterion:'',responsible:'',capacityConfirmed:false,reviewRequired:false,constraints:['Projeto','Frente e predecessoras','Equipe e equipamento','Suprimento'].map(description=>({id:uid(),category:description,description,resolved:false,evidence:'',reviewer:''}))};p.packages.push(pkg);this.selected=pkg.id;log(p,'Pacote criado',pkg.name);
+ this.selected=createSelectionPackage(p,this.hooks.selection(),this.hooks.quantity,this.hooks.selectionContext?.()).id;
  });}
  private production(body:HTMLElement,pkg:WorkPackage,p:Project){
  const q=this.hooks.quantity(pkg.elements),callout=el('div','','quantity-callout');callout.append(el('strong',q.totalM3===null?'Volume IFC a conferir':`${q.totalM3.toLocaleString('pt-BR',{maximumFractionDigits:3})} m³ no IFC`),helpButton('Origem do volume IFC',q.source));
@@ -94,7 +124,7 @@ export class ProductionPanel{
  }
  private supply(body:HTMLElement,pkg:WorkPackage,p:Project){
  this.supplyMap(body,p);
- if(pkg.measureLinks?.length||pkg.unit!=='m³'){this.resourceSupply(body,pkg,p);return;}
+ if(usesResourceSupply(p,pkg)){this.resourceSupply(body,pkg,p);return;}
  const balance=packageBalance(p,pkg),dates=supplyWindow(pkg.needDate,2,1);
  const known=check('Conferi estoque e pedidos existentes (concreto fresco não tem estoque antecipado)',pkg.coverageKnown);
  known.input.onchange=()=>this.action(x=>{x.packages.find(q=>q.id===pkg.id)!.coverageKnown=known.input.checked;log(x,'Cobertura conferida',pkg.name);});body.append(known.label);
@@ -120,14 +150,14 @@ export class ProductionPanel{
  private metric(label:string,value:string){const card=el('div','','metric');card.append(el('small',label),el('strong',value));return card;}
  private supplyMap(body:HTMLElement,p:Project){
   const rows=buildSupplyMap(p),box=el('details','','map-preview');box.append(el('summary',`Mapa de suprimentos — ${rows.length} pacote(s) de fornecimento`));
-  if(!rows.length)box.append(el('p','Defina a composição de recursos nos pacotes para gerar o mapa. O caso A/B/C original permanece no fluxo anterior.'));
+  if(!rows.length)box.append(el('p','Defina a composição de recursos nos pacotes para gerar o mapa.'));
   for(const row of rows){const card=el('article','','quant-result');card.append(el('h3',row.specification),el('p',`${row.location} · ${row.packageIds.length} pacote(s) consumidor(es)`),el('strong',`${row.quantity.toLocaleString('pt-BR',{maximumFractionDigits:3})} ${row.unit}${row.reusable?' de capacidade simultânea':''}`),el('p',`Saldo a cobrir: ${row.balance===null?'A conferir':row.balance.toLocaleString('pt-BR',{maximumFractionDigits:3})+' '+row.unit}`),el('p',`Preparar: ${row.startDate}\nPedido previsto: ${row.orderDate}\nReceber até: ${row.receiptDate}\nNecessidade: ${row.needDate}${row.reusable?'\nOcupação até: '+row.occupiedUntil:''}`));
    for(const reason of row.blockers)card.append(el('p',reason,'notice warn'));if(row.promisedDates.length)card.append(el('p','Promessas registradas: '+row.promisedDates.join(', ')));for(const c of row.frozenCommitments)card.append(el('p',`Compromisso preservado: ${c.quantity} ${c.unit} até ${c.deadline}.`));box.append(card);
   }
   const missing=p.packages.filter(pkg=>pkg.measureLinks?.length&&!p.resources.some(r=>r.packageId===pkg.id));if(missing.length)box.append(el('p',`${missing.length} pacote(s) de produção ainda sem composição de recurso.`,'notice warn'));
   const reviewer=field('Conferente do mapa',''),evidence=field('Evidência da conferência do mapa','');box.append(reviewer.label,evidence.label,btn('Confirmar esta versão do mapa',()=>this.action(x=>confirmSupplyMap(x,rows,reviewer.input.value,evidence.input.value))));
   const latest=p.supplyPlans?.at(-1);if(latest)box.append(el('p',`Última versão: ${new Date(latest.at).toLocaleString('pt-BR')} · ${latest.reviewer} · ${latest.fingerprint===JSON.stringify(rows)?'Vigente':'Há mudanças; revisar nova prévia'}`,'notice'));
-  box.append(btn('Exportar prévia do mapa (JSON)',()=>{const a=el('a'),url=URL.createObjectURL(new Blob([JSON.stringify({status:'preview',entries:rows,approvedVersions:p.supplyPlans??[]},null,2)],{type:'application/json'}));a.href=url;a.download='IFC-Coral-mapa-suprimentos.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}),el('p','Datas em dias corridos, sem feriados. Planejamento conferido não é requisição, pedido, compra aprovada ou recebimento.','fine'));body.append(box);
+  box.append(btn('Exportar prévia do mapa (JSON)',()=>{downloadBlob('IFC-Coral-mapa-suprimentos.json',new Blob([JSON.stringify({status:'preview',entries:rows,approvedVersions:p.supplyPlans??[]},null,2)],{type:'application/json'}));}),el('p','Datas em dias corridos, sem feriados. Planejamento conferido não é requisição, pedido, compra aprovada ou recebimento.','fine'));body.append(box);
  }
  private resourceSupply(body:HTMLElement,pkg:WorkPackage,p:Project){
   const resource=p.resources.find(r=>r.packageId===pkg.id),code=pkg.unit==='kg'?'steel':pkg.unit==='m²'?'panels':'concrete';
@@ -140,10 +170,10 @@ export class ProductionPanel{
   const metrics=el('div','','metrics');metrics.append(this.metric('Recurso necessário',`${resource.quantity.toLocaleString('pt-BR')} ${resource.unit}`),this.metric('Cobertura elegível',`${balance.covered.toLocaleString('pt-BR')} ${resource.unit}`),this.metric('Saldo',pkg.coverageKnown?`${balance.balance.toLocaleString('pt-BR')} ${resource.unit}`:'A conferir'));body.append(metrics);
   const timeline=el('div','','timeline');for(const [label,date]of [['Iniciar compra',dates.start],['Emitir pedido',dates.order],['Receber até',dates.delivery],['Necessidade',dates.need]])timeline.append(this.metric(label,date));body.append(timeline);for(const reason of resource.procurementBlockers)body.append(el('p',reason,'notice warn'));
   const add=el('details');add.append(el('summary','Registrar proposta / capacidade disponível'));const supplier=field('Fornecedor / origem do recurso',''),quantity=field(`Quantidade disponível (${resource.unit})`,'','number'),date=field('Entrega / disponibilidade inicial',resource.needDate,'date'),until=field('Disponível até',resource.to,'date'),price=field('Preço unitário proposto','0','number'),freight=field('Frete proposto','0','number'),proof=field('Evidência da proposta','');const technical=check('Especificação técnica conferida',false),promise=check('Quantidade e janela confirmadas',false);
-  add.append(supplier.label,quantity.label,date.label);if(resource.reusable)add.append(until.label);add.append(price.label,freight.label,proof.label,technical.label,promise.label,btn('Adicionar proposta deste recurso',()=>this.action(x=>{if(!supplier.input.value.trim())throw new Error('Informe o fornecedor ou origem.');x.supplies.push({id:uid(),name:supplier.input.value,quantity:quantity.input.value===''?null:Number(quantity.input.value),unit:resource.unit,confirmed:promise.input.checked,delivery:date.input.value,unitPrice:Number(price.input.value),freight:Number(freight.input.value),technical:technical.input.checked,evidence:proof.input.value,kind:resource.reusable?'stock':'order',synthetic:true,resourceCode:resource.resourceCode,specification:resource.specification,reusable:resource.reusable,...(resource.reusable?{availableUntil:until.input.value}:{})});log(x,'Proposta de recurso registrada',supplier.input.value);})));body.append(add);
+  add.append(supplier.label,quantity.label,date.label);if(resource.reusable)add.append(until.label);add.append(price.label,freight.label,proof.label,technical.label,promise.label,btn('Adicionar proposta deste recurso',()=>this.action(x=>{if(!supplier.input.value.trim())throw new Error('Informe o fornecedor ou origem.');x.supplies.push({id:uid(),name:supplier.input.value,quantity:quantity.input.value===''?null:Number(quantity.input.value),unit:resource.unit,confirmed:promise.input.checked,delivery:date.input.value,unitPrice:Number(price.input.value),freight:Number(freight.input.value),technical:technical.input.checked,evidence:proof.input.value,kind:resource.reusable?'stock':'order',synthetic:isTeachingProject(x),resourceCode:resource.resourceCode,specification:resource.specification,reusable:resource.reusable,...(resource.reusable?{availableUntil:until.input.value}:{})});log(x,'Proposta de recurso registrada',supplier.input.value);})));body.append(add);
   for(const s of p.supplies.filter(s=>compatible(resource,s))){const card=el('details','','supply-card');card.append(el('summary',`${s.name} · ${s.quantity??'?'} ${s.unit} · ${s.confirmed?'Confirmado':'A confirmar'}`),el('p',`Entrega: ${s.delivery}${s.availableUntil?' até '+s.availableUntil:''} · ${s.quantity===null?'':money(quoteTotal(s.quantity,s.unitPrice,s.freight))}`));const qty=field(`Reservar ${s.unit} — ${s.name}`,String(balance.balance),'number');card.append(qty.label,btn('Reservar recurso para este pacote',()=>this.action(x=>reserveResource(x,resource.id,s.id,Number(qty.input.value)))));body.append(card);}
   for(const a of p.resourceAllocations.filter(a=>a.requirementId===resource.id)){body.append(el('p',`${a.quantity} ${resource.unit} reservados · ${p.supplies.find(s=>s.id===a.supplyId)?.name}`),btn('Liberar reserva do recurso',()=>this.action(x=>{if(x.deliveries.some(d=>d.allocationId===a.id))throw new Error('Reserva com recebimento preserva histórico.');x.resourceAllocations=x.resourceAllocations.filter(q=>q.id!==a.id);log(x,'Reserva de recurso liberada',a.id);})));this.delivery(body,pkg,p,a.id);}
-  body.append(el('p','Simulação didática: nenhuma consulta, pedido, mensagem ou pagamento é enviado.','notice'));
+  body.append(el('p',isTeachingProject(p)?'Simulação didática: nenhuma consulta, pedido, mensagem ou pagamento é enviado.':'Os registros ficam neste projeto. O aplicativo não envia consultas, pedidos, mensagens ou pagamentos.','notice'));
  }
  private week(body:HTMLElement,pkg:WorkPackage,p:Project){
  const result=calculatePPC(p),ready=assessReadiness(p,pkg);body.append(el('h3','Compromissos e resultado'));

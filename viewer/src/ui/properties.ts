@@ -1,3 +1,4 @@
+import {downloadBlob} from '../workspace/downloads.ts';
 // Atributos escalares mostrados no topo, na ordem do mockup.
 const ATTRS: [string, string][] = [
   ["Name", "Name"],
@@ -120,12 +121,7 @@ function exportAllCSV(items: any[]) {
     .map((r) => r.map(csvCell).join(";"))
     .join("\n");
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `propriedades_${items.length}_elementos.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(`propriedades_${items.length}_elementos.csv`,blob);
 }
 
 /** Extrai PSets do IsDefinedBy: cada relação com HasProperties vira um grupo. */

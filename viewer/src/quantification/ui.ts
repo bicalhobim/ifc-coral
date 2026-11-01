@@ -1,4 +1,5 @@
 import {el} from '../production/ui.ts';
+import {downloadBlob} from '../workspace/downloads.ts';
 import {catalog} from './catalog.ts';
 import {classifyElement} from './classify.ts';
 import {calculateMeasures,summarizeMeasures} from './calculate.ts';
@@ -6,7 +7,7 @@ import {reviewSelection,isReviewCurrent,type MeasureSnapshot} from './review.ts'
 import type {ElementMetadata,MeasureInput,MeasureResult,ServiceCode,QuantRule} from './types.ts';
 
 export type QuantSelection={element:ElementMetadata;volume?:MeasureInput['volume']};
-type Hooks={selection:()=>QuantSelection[];reviews:()=>MeasureSnapshot[];saveReviews:(rows:MeasureSnapshot[])=>void;saveRules?:(rules:QuantRule[])=>void;generate?:(rows:MeasureSnapshot[])=>void};
+type Hooks={reportChanged?:()=>void;selection:()=>QuantSelection[];reviews:()=>MeasureSnapshot[];saveReviews:(rows:MeasureSnapshot[])=>void;saveRules?:(rules:QuantRule[])=>void;generate?:(rows:MeasureSnapshot[])=>void};
 type GeometryRow={globalId:string;geometry?:{candidateArea:number|null;lowerArea:number;sideArea:number};contacts?:{deductedArea:number;contactsResolved:boolean;method:string;pendingReasons:string[]};volumeDivergence?:boolean};
 export type QuantReport={schema:'quantification-1';sourceHash:string;elements:GeometryRow[]};
 export function parseReport(text:string):QuantReport{
@@ -15,7 +16,7 @@ export function parseReport(text:string):QuantReport{
  for(const e of data.elements){if(typeof e.globalId!=='string')throw new Error('Elemento sem GlobalId.');for(const n of [e.geometry?.candidateArea,e.geometry?.lowerArea,e.geometry?.sideArea,e.contacts?.deductedArea])if(n!==null&&n!==undefined&&(typeof n!=='number'||!Number.isFinite(n)||n<0))throw new Error('Área inválida no relatório.');if(e.contacts&&typeof e.contacts.contactsResolved!=='boolean')throw new Error('Conferência de contatos inválida.');}
  return data;
 }
-export function downloadJSON(name:string,data:unknown){const a=el('a'),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+export function downloadJSON(name:string,data:unknown){downloadBlob(name,new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));}
 const names:Record<ServiceCode,string>={concrete:'Concretagem',reinforcement:'Armação estimada',formwork:'Fôrmas'};
 const fmt=(n:number|null)=>n===null?'Pendente':n.toLocaleString('pt-BR',{maximumFractionDigits:3});
 function button(label:string,fn:()=>void){const b=el('button',label);b.type='button';b.onclick=fn;return b;}
@@ -23,6 +24,8 @@ function input(label:string,value='',type='text'){const l=el('label',label,'quan
 export class QuantificationPanel{
  readonly element=el('div','','quant-tool');private tab='Medir';private hooks:Hooks;private rules=structuredClone(catalog);private reports=new Map<string,QuantReport>();private overrides=new Map<string,{ruleId:string;author:string;reason:string}>();private error='';
  constructor(hooks:Hooks){this.hooks=hooks;this.render();}
+ getReports(){return [...this.reports.values()].map(r=>structuredClone(r));}
+ clearReports(){this.reports.clear();}
  resetForProject(rules?:QuantRule[]){this.rules=structuredClone(rules??catalog);this.overrides.clear();for(const s of this.hooks.reviews()){const original=s.measure.classificationOverride;if(original)this.overrides.set(JSON.stringify([s.measure.elementRef.modelId,s.measure.elementRef.globalId]),{ruleId:s.measure.ruleId,...original});}this.render();}
  addReport(text:string){const report=parseReport(text);this.reports.set(report.sourceHash,report);this.render();}
  measures():MeasureResult[]{return this.hooks.selection().flatMap(({element,volume})=>{
@@ -45,7 +48,7 @@ export class QuantificationPanel{
    if(service==='formwork'){const available=values.filter(r=>r.inputs.candidateArea!==null),gross=available.reduce((n,r)=>n+Number(r.inputs.candidateArea),0),lower=values.filter(r=>r.inputs.lowerArea!==null);card.append(el('p',available.length?`Área candidata antes de descontos: ${fmt(gross)} m² (${available.length}/${values.length}). Exige método e contatos conferidos.`:'Área geométrica pendente: importe o relatório.'));if(lower.length)card.append(el('p',`Área inferior geométrica: ${fmt(lower.reduce((n,r)=>n+Number(r.inputs.lowerArea),0))} m² (${lower.length}/${values.length}).`));}
    const d=el('details');d.append(el('summary','Origem, fórmula e pendências'));for(const r of values)d.append(el('p',`${r.elementRef.globalId} · ${r.ruleSnapshot.label} · ${fmt(r.amount)} ${r.unit}\n${JSON.stringify(r.inputs)}\n${r.evidence.join('; ')}\n${r.pendingReasons.join('; ')}`,'fine'));card.append(d);this.element.append(card);
   }
-  const file=el('input');file.type='file';file.accept='.json';file.hidden=true;file.setAttribute('aria-label','Relatório geométrico IfcOpenShell');file.onchange=async()=>{const f=file.files?.[0];if(f)this.run(()=>{});try{if(f)this.addReport(await f.text());}catch(e){this.error=String(e);this.render();}};
+  const file=el('input');file.type='file';file.accept='.json';file.hidden=true;file.setAttribute('aria-label','Relatório geométrico IfcOpenShell');file.onchange=async()=>{const f=file.files?.[0];if(f)this.run(()=>{});try{if(f){this.addReport(await f.text());this.hooks.reportChanged?.();}}catch(e){this.error=String(e);this.render();}};
   this.element.append(button('Importar relatório geométrico',()=>file.click()),file,button('Exportar medições',()=>downloadJSON('IFC-Coral-medicoes.json',{measures:rows,reviews:this.hooks.reviews()})),el('p','Rascunhos não autorizam compra, execução ou dimensionamento.','notice'));
  }
  private renderCatalog(){

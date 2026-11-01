@@ -1,7 +1,12 @@
 import type { SpatialTreeItem } from "@thatopen/fragments";
 
+import {descendantIds,rangeIds} from './tree-selection.ts';
+const rowIds=new WeakMap<HTMLElement,number[]>();
+
 export interface TreeHooks {
   onSelect: (localId: number, event: MouseEvent) => void;
+  onSelectGroup?: (ids:number[],event:MouseEvent,range:boolean)=>void;
+  onContextMenu?: (event:MouseEvent)=>void;
   labelMap?: Map<number, string>;
 }
 
@@ -57,6 +62,21 @@ export function renderTree(
   hooks: TreeHooks,
 ): void {
   container.innerHTML = "";
+  let anchor:number|undefined;
+  let sequence=0;
+  const bind=(row:HTMLElement,ids:number[])=>{
+   const key=sequence++;row.dataset.treeKey=String(key);rowIds.set(row,ids);row.tabIndex=0;
+   row.setAttribute('role','treeitem');row.setAttribute('aria-selected','false');
+   row.title=ids.length>1?`${ids.length} elementos · Ctrl adiciona/remove · Shift seleciona intervalo`:'Ctrl adiciona/remove · Shift seleciona intervalo';
+   const choose=(e:MouseEvent)=>{
+    e.stopPropagation();const rows=[...container.querySelectorAll<HTMLElement>('.tree-node')].filter(r=>!r.closest('[hidden]')).map(r=>({key:Number(r.dataset.treeKey),ids:rowIds.get(r)??[]}));
+    const selected=e.shiftKey?rangeIds(rows,anchor,key):ids;
+    if(hooks.onSelectGroup)hooks.onSelectGroup(selected,e,e.shiftKey);else if(ids.length)hooks.onSelect(ids[0],e);
+    if(!e.shiftKey)anchor=key;
+   };
+   row.addEventListener('click',choose);
+   row.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose(new MouseEvent('click',{ctrlKey:e.ctrlKey,metaKey:e.metaKey,shiftKey:e.shiftKey}));}});
+  };
 
   // Root node: filename with caret
   const wrap = document.createElement("div");
@@ -68,11 +88,17 @@ export function renderTree(
   const label = document.createElement("span");
   label.textContent = filename;
   row.append(caret, label);
+  bind(row,descendantIds(root));
+  if(hooks.onContextMenu){
+    row.addEventListener('contextmenu',e=>{e.preventDefault();hooks.onContextMenu!(e);});
+    const options=document.createElement('button');options.type='button';options.textContent='⋯';options.className='tree-file-options';options.setAttribute('aria-label',`Opções do modelo ${filename}`);
+    options.onclick=e=>{e.stopPropagation();hooks.onContextMenu!(e);};row.append(options);
+  }
   wrap.appendChild(row);
 
   const childBox = document.createElement("div");
   childBox.className = "tree-children";
-  for (const item of flatten(root)) childBox.appendChild(node(item, hooks));
+  for (const item of flatten(root)) childBox.appendChild(node(item, hooks,bind));
   wrap.appendChild(childBox);
 
   caret.addEventListener("click", (e) => {
@@ -85,7 +111,7 @@ export function renderTree(
   container.appendChild(wrap);
 }
 
-function node(item: SpatialTreeItem, hooks: TreeHooks): HTMLElement {
+function node(item: SpatialTreeItem, hooks: TreeHooks,bind:(row:HTMLElement,ids:number[])=>void): HTMLElement {
   const wrap = document.createElement("div");
   const row = document.createElement("div");
   row.className = "tree-node";
@@ -101,10 +127,7 @@ function node(item: SpatialTreeItem, hooks: TreeHooks): HTMLElement {
 
   if (item.localId != null) {
     row.dataset.localId = String(item.localId);
-    row.addEventListener("click", (e) => {
-      e.stopPropagation();
-      hooks.onSelect(item.localId!, e);
-    });
+    bind(row,descendantIds(item));
   }
   wrap.appendChild(row);
 
@@ -112,7 +135,7 @@ function node(item: SpatialTreeItem, hooks: TreeHooks): HTMLElement {
     const childBox = document.createElement("div");
     childBox.className = "tree-children";
     childBox.hidden=initiallyClosed;
-    for (const c of kids) childBox.appendChild(node(c, hooks));
+    for (const c of kids) childBox.appendChild(node(c, hooks,bind));
     caret.addEventListener("click", (e) => {
       e.stopPropagation();
       const hidden = childBox.hidden;
@@ -132,8 +155,10 @@ export function selectNodeById(container: HTMLElement, localId: number): void {
 /** Synchronize all selected rows; expand/scroll only the last selected object. */
 export function selectNodesByIds(container:HTMLElement,localIds:readonly number[],focusId?:number):void {
   const ids=new Set(localIds);
-  for(const row of container.querySelectorAll<HTMLElement>('.tree-node[data-local-id]')){
-    const selected=ids.has(Number(row.dataset.localId));
+  for(const row of container.querySelectorAll<HTMLElement>('.tree-node')){
+    const targets=rowIds.get(row)??[];const count=targets.filter(id=>ids.has(id)).length;
+    const selected=targets.length>0&&count===targets.length;
+    row.classList.toggle('partial',count>0&&!selected);
     row.classList.toggle('selected',selected);
     row.setAttribute('aria-selected',String(selected));
   }

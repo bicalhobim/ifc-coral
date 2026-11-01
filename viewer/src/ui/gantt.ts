@@ -1,6 +1,7 @@
 import type { ElementTask } from "../ifc/schedule";
 import { groupTasks, taskGroupKey } from '../ifc/identity.ts';
 import {csvCell} from './csv.ts';
+import {downloadBlob} from '../workspace/downloads.ts';
 import {simulationDates,simulationFrame} from '../ifc/simulation.ts';
 import {summarizeVolumes} from '../ifc/quantities.ts';
 
@@ -275,12 +276,7 @@ export class Gantt {
     });
     const csv = rows.map((r) => r.map(csvCell).join(";")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "cronograma.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob('cronograma.csv',blob);
   }
 
   // ── painel combinado (info + barras) ──────────────────────────

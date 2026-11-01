@@ -23,7 +23,7 @@ npm ci
 npm run dev -- --host 127.0.0.1 --port 5178 --strictPort
 ```
 
-Abra [IFC Coral no navegador](http://127.0.0.1:5178/) e clique em **Abrir TORRE02**. Mantenha o terminal aberto. A instalação em outro computador ainda precisa ser ensaiada em ambiente limpo.
+Abra [IFC Coral no navegador](http://127.0.0.1:5178/), preencha os campos de entrada e clique em **Novo projeto**. Informe o nome, clique em **Escolher pasta…**, selecione o destino na janela nativa do Windows e confirme **Criar projeto**. Para começar com o IFC da aula já carregado, use **Iniciar exercício com TORRE02**. A entrada atual não autentica contas; os campos são descartados. Mantenha o terminal aberto. A instalação em outro computador ainda precisa ser ensaiada em ambiente limpo.
 
 > Na cópia de desenvolvimento em `C:\dev\ifc4all-2`, `viewer\node_modules` é compartilhado com outro projeto. Não execute `npm ci` nessa cópia sem antes preparar uma instalação independente.
 
@@ -39,7 +39,7 @@ Abra [IFC Coral no navegador](http://127.0.0.1:5178/) e clique em **Abrir TORRE0
 
 ## Dados e IA
 
-Os dados do projeto ficam no navegador e podem ser exportados para um arquivo portátil. Antes de enviar informações a um provedor de IA, confira o conteúdo e as regras aplicáveis. As chaves são usadas em memória e não integram o arquivo exportado. Os adaptadores foram testados com transporte simulado; chamadas reais e acesso aos modelos de cada conta ainda precisam de verificação.
+Os dados e modelos são gravados por **Salvar** na pasta local escolhida para o projeto; **Salvar como** cria uma cópia em outra pasta. Exportações ficam na subpasta Exportacoes. Veja o [guia de projetos locais](docs/PROJETOS_LOCAIS.md). O navegador mantém a lista de pastas recentes e o cache de compatibilidade de sessões anteriores. Antes de enviar informações a um provedor de IA, confira o conteúdo e as regras aplicáveis. As chaves são usadas em memória e não integram o arquivo exportado. Os adaptadores foram testados com transporte simulado; chamadas reais e acesso aos modelos de cada conta ainda precisam de verificação.
 
 ## Origem e créditos
 

@@ -4,7 +4,7 @@ import {isReviewCurrent} from '../quantification/review.ts';
 import {checkResourceGraph,packageMeasureBindingValid} from './resources.ts';
 export const uid=()=>crypto.randomUUID();
 export function log(p:Project,action:string,detail:string){p.audit.push({at:new Date().toISOString(),action,detail});}
-export function createProject():Project{return {schema:2,id:uid(),name:'Oficina de produção e suprimentos',models:[],tasks:[],packages:[],supplies:[],allocations:[],deliveries:[],week:null,actuals:[],audit:[],measures:[],resources:[],resourceAllocations:[]};}
+export function createProject():Project{return {schema:2,id:uid(),name:'Novo projeto',models:[],tasks:[],packages:[],supplies:[],allocations:[],deliveries:[],week:null,actuals:[],audit:[],measures:[],resources:[],resourceAllocations:[]};}
 export function registerModel(p:Project,m:ModelRevision):'new'|'same'|'revision'{
  const old=p.models.find(x=>x.id===m.id);
  if(old?.hash===m.hash)return 'same';
@@ -45,7 +45,7 @@ const schemaFor=(version:1|2)=>obj({schema:literal(version),id:txt,name:txt,mode
  allocations:list(obj({id:txt,packageId:txt,supplyId:txt,quantity:pos})),deliveries:list(obj({id:txt,allocationId:txt,date:date,received:pos,rejected:pos,evidence:txt,reviewer:txt})),
  week:nullable(obj({frozenAt:txt,reviewer:txt,commitments:list(obj({packageId:txt,name:txt,location:txt,quantity:pos,unit:version===1?literal('m³'):unit,deadline:date,criterion:txt,responsible:txt}))})),actuals:list(obj({packageId:txt,date:date,complete:bool,evidence:txt,reason:txt})),audit:list(obj({at:txt,action:txt,detail:txt})),
  ...(version===2?{measures:list(snapshotRule),resources:list(obj({id:txt,packageId:txt,resourceCode:txt,specification:txt,specificationConfirmed:bool,quantity:pos,unit,needDate:date,from:date,to:date,factor:pos,lossPercent:pos,leadDays:pos,preparationDays:pos,reusable:bool,cycleDays:pos,evidence:txt,procurementBlockers:list(txt)})),resourceAllocations:list(obj({id:txt,requirementId:txt,supplyId:txt,quantity:pos}))}:{})
-},version===2?{quantificationCatalog:list(quantRule),supplyPlans:list(supplyPlanRule),measureHistory:list(snapshotRule)}:{});
+},version===2?{templateId:literal('torre02'),quantificationCatalog:list(quantRule),supplyPlans:list(supplyPlanRule),measureHistory:list(snapshotRule)}:{});
 const schema=schemaFor(2),legacySchema=schemaFor(1);
 export function validateProject(p:Project):void{
  schema(p);
