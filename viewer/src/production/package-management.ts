@@ -1,9 +1,10 @@
+import {defaultConstraints} from './constraints.ts';
 import type {Project,WorkPackage,ResourceRequirement} from './types.ts';
 import {uid,log,validateProject} from './project.ts';
 export function createManualPackage(p:Project,input:{name:string;location:string;service:string;unit?:WorkPackage['unit']}):WorkPackage {
  if(!input.name.trim()||!input.location.trim()||!input.service.trim())throw new Error('Informe nome, local e serviço do pacote.');
  const now=new Date(),today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
- const pkg:WorkPackage={id:uid(),name:input.name.trim(),location:input.location.trim(),service:input.service.trim(),elements:[],taskIds:[],quantity:null,unit:input.unit??'m³',quantitySource:'Quantidade a conferir',coverageKnown:false,needDate:today,finishDate:today,criterion:'',responsible:'',capacityConfirmed:false,constraints:['Projeto','Frente e predecessoras','Equipe e equipamento','Suprimento'].map(description=>({id:uid(),category:description,description,resolved:false,evidence:'',reviewer:''})),reviewRequired:false};
+ const pkg:WorkPackage={id:uid(),name:input.name.trim(),location:input.location.trim(),service:input.service.trim(),elements:[],taskIds:[],quantity:null,unit:input.unit??'m³',quantitySource:'Quantidade a conferir',coverageKnown:false,needDate:today,finishDate:today,criterion:'',responsible:'',capacityConfirmed:false,constraints:defaultConstraints(),reviewRequired:false};
  p.packages.push(pkg);log(p,'Pacote criado',pkg.name);return pkg;
 }
 export type RemovedPackage={package:WorkPackage;resources:ResourceRequirement[];index:number};

@@ -1,0 +1,42 @@
+import type {Project,WorkPackage,ElementRef} from './types.ts';
+import {constraintElements,constraintCategories,sameRef,addConstraint,saveConstraint} from './constraints.ts';
+import {resolveConstraint} from './planning.ts';
+import {log} from './project.ts';
+import {evidenceImages} from './evidence-images-ui.ts';
+const node=<K extends keyof HTMLElementTagNameMap>(tag:K,text='',cls='')=>{const n=document.createElement(tag);n.textContent=text;n.className=cls;return n;};
+const button=(text:string,action:()=>void,cls='')=>{const b=node('button',text,cls);b.type='button';b.onclick=action;return b;};
+function field(title:string,value='',type='text'){const label=node('label',title,'restriction-field');const input=type==='textarea'?node('textarea'):node('input');if(input instanceof HTMLInputElement)input.type=type;else input.rows=2;input.value=value;label.append(input);return {label,input};}
+type Hooks={change:(fn:(p:Project)=>void)=>void;selection:()=>ElementRef[];show:(refs:ElementRef[])=>void;name:(ref:ElementRef)=>string;back:()=>void;openId:string;open:(id:string)=>void};
+export function restrictionChecklist(body:HTMLElement,pkg:WorkPackage,hooks:Hooks){
+ const board=node('section','','restriction-board'),done=pkg.constraints.filter(c=>c.resolved).length;
+ board.append(button('← Voltar à produção',hooks.back,'restriction-back'),node('p',pkg.location,'eyebrow'),node('h2','Checklist de restrições'),node('p','O que precisa estar liberado para esta frente trabalhar? Cada condição se aplica ao pacote inteiro ou aos elementos indicados.','restriction-intro'));
+ const progress=node('div','','restriction-progress');progress.append(node('strong',`${done} de ${pkg.constraints.length} liberadas`),node('span',`${pkg.elements.length} elementos no pacote`));board.append(progress);
+ const meter=node('progress');meter.max=Math.max(1,pkg.constraints.length);meter.value=done;meter.setAttribute('aria-label','Restrições liberadas');board.append(meter,node('p','Abra uma condição para apontar responsável, prazo e evidência. Marcar o checklist solicita a conferência; liberar exige confirmar os dados.','fine'));
+ const filter=node('select');filter.setAttribute('aria-label','Filtrar restrições');for(const [v,t]of [['all','Todas as condições'],['pending','Somente pendentes'],['done','Somente liberadas']]){const o=node('option',t);o.value=v;filter.append(o);}board.append(filter);
+ for(const c of pkg.constraints){
+  const detail=node('details','','restriction-row');detail.dataset.resolved=String(c.resolved);detail.open=hooks.openId===c.id;
+  detail.ontoggle=()=>{if(detail.open)hooks.open(c.id);};
+  const summary=node('summary'),status=node('input');status.type='checkbox';status.checked=c.resolved;status.setAttribute('aria-label',`Liberar restrição: ${c.description}`);
+  const title=node('span','','restriction-title');title.append(node('strong',c.description),node('small',`${c.resolved?'Liberada':'Pendente'} · ${c.scope==='elements'?`${constraintElements(pkg,c).length} elemento${constraintElements(pkg,c).length===1?'':'s'} específico${constraintElements(pkg,c).length===1?'':'s'}`:'Todo o pacote'}${c.owner?` · ${c.owner}`:''}${c.dueDate?` · até ${c.dueDate.split('-').reverse().join('/')}`:''}`));summary.append(status,title,node('span','⌄','restriction-arrow'));detail.append(summary);
+  status.onclick=e=>e.stopPropagation();status.onchange=()=>{
+   if(c.resolved)hooks.change(p=>{const target=p.packages.find(x=>x.id===pkg.id)!.constraints.find(x=>x.id===c.id)!;target.resolved=false;log(p,'Restrição reaberta',target.description);});
+   else{status.checked=false;detail.open=true;hooks.open(c.id);detail.querySelector<HTMLTextAreaElement>('[data-restriction-evidence]')?.focus();}
+  };
+  const content=node('div','','restriction-content'),scope=node('select');scope.setAttribute('aria-label',`Alcance — ${c.description}`);
+  for(const [v,t]of [['package','Todo o pacote'],['elements','Elementos específicos do pacote']]){const o=node('option',t);o.value=v;scope.append(o);}scope.value=c.scope??'package';let refs=structuredClone(c.elements??[]);
+  const scopeLine=node('p','','restriction-scope'),elements=node('details','','restriction-elements'),list=node('ol');elements.append(node('summary','Ver elementos vinculados'),list);
+  const refreshScope=()=>{const targets=scope.value==='package'?pkg.elements:refs;scopeLine.textContent=targets.length?`${targets.length} elemento${targets.length===1?' vinculado':'s vinculados'} a esta condição.`:'Nenhum elemento vinculado. Selecione no modelo e use o botão abaixo.';list.replaceChildren(...targets.map((e,i)=>node('li',`${i+1}. ${hooks.name(e)}`)));};scope.onchange=refreshScope;refreshScope();
+  const use=button('Usar seleção do modelo',()=>{const chosen=hooks.selection().filter(e=>pkg.elements.some(p=>sameRef(e,p)));if(!chosen.length){scopeLine.textContent='Selecione no modelo ao menos um elemento que pertença a este pacote.';scopeLine.setAttribute('role','status');return;}refs=[...new Map(chosen.map(e=>[JSON.stringify([e.modelId,e.globalId]),e])).values()];scope.value='elements';refreshScope();});
+  const selected=node('span','','restriction-selection');selected.dataset.constraintSelection=pkg.id;
+  const actions=node('div','','restriction-scope-actions');actions.append(use,button('Realçar alcance no 3D',()=>{const targets=scope.value==='package'?pkg.elements:refs;if(targets.length)hooks.show(targets);else scopeLine.textContent='Vincule os elementos deste alcance antes de realçar.';}),selected);
+  const owner=field('Responsável pela remoção',c.owner??''),date=field('Prazo para remover',c.dueDate??pkg.needDate,'date'),action=field('Ação para liberar',c.action??'','textarea'),evidence=field('Evidência da liberação',c.evidence,'textarea'),reviewer=field('Conferido por',c.reviewer);evidence.input.dataset.restrictionEvidence='';
+  const imageContainer=node('div'),prints=evidenceImages(imageContainer,c.attachments??[],c.description);evidence.input.addEventListener('paste',event=>prints.paste(event as ClipboardEvent));
+  const save=(release:boolean)=>hooks.change(p=>{if(prints.isBusy())throw new Error('Aguarde a leitura do print antes de salvar.');saveConstraint(p,pkg.id,c.id,{scope:scope.value as 'package'|'elements',elements:refs,owner:owner.input.value.trim(),dueDate:date.input.value,action:action.input.value.trim(),attachments:prints.images(),...(!c.resolved?{evidence:evidence.input.value.trim(),reviewer:reviewer.input.value.trim()}:{})});if(release)resolveConstraint(p,pkg.id,c.id,evidence.input.value,reviewer.input.value);});
+  content.append(node('label','Onde esta condição se aplica?','restriction-caption'),scope,scopeLine,actions,elements,owner.label,date.label,action.label);
+  if(c.resolved){content.append(node('div',`Evidência: ${c.evidence||'Print anexado'}\nConferido por: ${c.reviewer}`,'restriction-proof'),imageContainer,button('Salvar alcance e acompanhamento',()=>save(false)),button('Salvar evidências e confirmar liberação',()=>save(true),'primary'));}
+  else content.append(evidence.label,imageContainer,reviewer.label,node('p','Use texto ou print como evidência. O conferente continua obrigatório.','fine'),button('Salvar apontamento',()=>save(false)),button('Confirmar e liberar',()=>save(true),'primary'));
+  detail.append(content);board.append(detail);
+ }
+ filter.onchange=()=>{for(const row of board.querySelectorAll<HTMLElement>('.restriction-row'))row.hidden=filter.value==='pending'?row.dataset.resolved==='true':filter.value==='done'?row.dataset.resolved!=='true':false;};
+ const add=node('details','','restriction-add');add.append(node('summary','+ Adicionar condição ao checklist'));const description=field('Condição a liberar'),category=node('select');category.setAttribute('aria-label','Categoria da nova restrição');for(const name of constraintCategories){const o=node('option',name);category.append(o);}add.append(description.label,category,button('Adicionar restrição',()=>hooks.change(p=>{const added=addConstraint(p,pkg.id,{description:description.input.value,category:category.value});hooks.open(added.id);})));board.append(add);body.append(board);
+}

@@ -2,6 +2,7 @@ import type {Project,ModelRevision} from './types.ts';
 import {migrateV1} from './migrations.ts';
 import {isReviewCurrent} from '../quantification/review.ts';
 import {checkResourceGraph,packageMeasureBindingValid} from './resources.ts';
+import {validateEvidenceImages,hasConstraintEvidence,MAX_PROJECT_IMAGE_BYTES} from './evidence-images.ts';
 export const uid=()=>crypto.randomUUID();
 export function log(p:Project,action:string,detail:string){p.audit.push({at:new Date().toISOString(),action,detail});}
 export function createProject():Project{return {schema:2,id:uid(),name:'Novo projeto',models:[],tasks:[],packages:[],supplies:[],allocations:[],deliveries:[],week:null,actuals:[],audit:[],measures:[],resources:[],resourceAllocations:[]};}
@@ -27,7 +28,7 @@ const nullable=(r:Rule):Rule=>v=>{if(v!==null)r(v);};
 const list=(r:Rule):Rule=>v=>{if(!Array.isArray(v)||v.length>100000)fail();(v as unknown[]).forEach(r);};
 const obj=(rules:Record<string,Rule>,optional:Record<string,Rule>={}):Rule=>v=>{if(!v||typeof v!=='object'||Array.isArray(v))fail();const o=v as Record<string,unknown>,all={...rules,...optional};if(Object.keys(o).some(k=>!Object.hasOwn(all,k))||Object.keys(rules).some(k=>!Object.hasOwn(o,k)))fail();for(const [key,rule]of Object.entries(all))if(Object.hasOwn(o,key))rule(o[key]);};
 const ref=obj({modelId:txt,globalId:txt});
-const constraint=obj({id:txt,category:txt,description:txt,resolved:bool,evidence:txt,reviewer:txt});
+const constraint=obj({id:txt,category:txt,description:txt,resolved:bool,evidence:txt,reviewer:txt},{scope:literal('package','elements'),elements:list(ref),owner:txt,dueDate:date,action:txt,attachments:validateEvidenceImages});
 const unit=literal('m³','kg','m²'),service=literal('concrete','reinforcement','formwork');
 const jsonData:Rule=v=>{if(JSON.stringify(v).length>50000)fail();};
 const quantRule=obj({id:txt,version:txt,label:txt,ifcClass:txt,priority:pos,steelRate:nullable(pos),formMethod:nullable(txt),source:txt,status:literal('draft')},{predefinedType:txt,typePattern:txt});
@@ -49,6 +50,7 @@ const schemaFor=(version:1|2)=>obj({schema:literal(version),id:txt,name:txt,mode
 const schema=schemaFor(2),legacySchema=schemaFor(1);
 export function validateProject(p:Project):void{
  schema(p);
+ if(p.packages.flatMap(pkg=>pkg.constraints).flatMap(c=>c.attachments??[]).reduce((n,a)=>n+a.size,0)>MAX_PROJECT_IMAGE_BYTES)throw new Error('O projeto atingiu o limite de 12 MB de prints. Use imagens menores.');
  if(new Set(p.measures.map(s=>s.measure.id)).size!==p.measures.length)fail();
  for(const plan of p.supplyPlans??[])if(!plan.reviewer.trim()||!plan.evidence.trim()||plan.fingerprint!==JSON.stringify(plan.entries))fail();
  for(const s of [...p.measures,...p.measureHistory??[]]){if(!s.reviewer.trim()||!s.evidence.trim()||!s.method.trim()||!isReviewCurrent(s,s.measure)||s.reviewOrigin==='calculated'&&(s.measure.status==='pending'||s.amount!==s.measure.amount))fail();const expected={concrete:'m³',reinforcement:'kg',formwork:'m²'}[s.measure.serviceCode];if(s.measure.unit!==expected)fail();if(s.measure.classificationOverride&&(!s.measure.classificationOverride.author.trim()||!s.measure.classificationOverride.reason.trim()))fail();}
@@ -58,7 +60,8 @@ export function validateProject(p:Project):void{
  const packages=new Set(p.packages.map(x=>x.id)),models=new Set(p.models.map(x=>x.id)),tasks=new Set(p.tasks.map(x=>x.id));
  if(p.models.some(m=>!(/^[a-f0-9]{64}$/.test(m.hash))))fail();
  if(p.tasks.some(t=>!models.has(t.modelId)||!t.globalId||t.finish<t.start))fail();
- for(const pkg of p.packages){unique(pkg.constraints);if(pkg.finishDate<pkg.needDate||pkg.elements.some(e=>!models.has(e.modelId)||!e.globalId)||(!pkg.reviewRequired&&pkg.taskIds.some(id=>!tasks.has(id))))fail();if(pkg.constraints.some(c=>c.resolved&&(!c.evidence.trim()||!c.reviewer.trim())))fail();}
+ for(const pkg of p.packages){unique(pkg.constraints);if(pkg.finishDate<pkg.needDate||pkg.elements.some(e=>!models.has(e.modelId)||!e.globalId)||(!pkg.reviewRequired&&pkg.taskIds.some(id=>!tasks.has(id))))fail();if(pkg.constraints.some(c=>c.resolved&&(!hasConstraintEvidence(c)||!c.reviewer.trim())))fail();}
+ for(const pkg of p.packages)for(const c of pkg.constraints){if(c.scope==='elements'&&(!c.elements?.length||c.elements.some(e=>!pkg.elements.some(x=>x.modelId===e.modelId&&x.globalId===e.globalId))||new Set(c.elements.map(e=>JSON.stringify([e.modelId,e.globalId]))).size!==c.elements.length))fail();if(c.scope!=='elements'&&c.elements?.length)fail();}
  for(const pkg of p.packages)if(!packageMeasureBindingValid(p,pkg))fail();
  for(const pkg of p.packages)if(pkg.measureLinks?.length&&!pkg.reviewRequired&&pkg.measureLinks.some(l=>!p.measures.some(s=>s.measure.id===l.id&&s.fingerprint===l.fingerprint)))fail();
  for(const a of p.allocations){if(!packages.has(a.packageId)||!p.supplies.some(s=>s.id===a.supplyId&&s.unit===p.packages.find(q=>q.id===a.packageId)!.unit)||a.quantity<=0)fail();}
@@ -70,5 +73,5 @@ export function validateProject(p:Project):void{
  if(new Set(p.actuals.map(a=>a.packageId)).size!==p.actuals.length)fail();
  for(const a of p.actuals)if(!p.week?.commitments.some(c=>c.packageId===a.packageId)||!a.evidence.trim())fail();
 }
-export function serializeProject(p:Project):string{validateProject(p);return JSON.stringify(p,null,2);}
+export function serializeProject(p:Project):string{validateProject(p);const text=JSON.stringify(p,null,2);if(text.length>30_000_000)throw new Error('Projeto excede 30 MB.');return text;}
 export function parseProject(text:string):Project{if(text.length>30_000_000)throw new Error('Projeto excede 30 MB.');let raw=JSON.parse(text);if(raw?.schema===1){legacySchema(raw);raw=migrateV1(raw);}const p=raw as Project;validateProject(p);return p;}

@@ -1,7 +1,8 @@
+import {restrictionChecklist} from './constraints-ui.ts';
 import {downloadBlob} from '../workspace/downloads.ts';
-import type {Project,WorkPackage} from './types.ts';
+import type {Project,WorkPackage,ElementRef} from './types.ts';
 import {uid,log} from './project.ts';
-import {assessReadiness,packageBalance,resolveConstraint,allocate,freezeWeek,recordActual,calculatePPC,supplyWindow,quoteTotal,recordDelivery} from './planning.ts';
+import {assessReadiness,packageBalance,allocate,freezeWeek,recordActual,calculatePPC,supplyWindow,quoteTotal,recordDelivery} from './planning.ts';
 import {addConcreteCase} from './case.ts';
 import {mountAI} from './ai-ui.ts';
 import {helpButton,simplifyExplanations} from '../ui/help.ts';
@@ -12,7 +13,7 @@ import {isTeachingProject} from '../workspace/context.ts';
 import {createSelectionPackage,selectionPackageStatus} from './selection-package.ts';
 import {createManualPackage,deletePackage,restorePackage,packageDeletionBlock,type RemovedPackage} from './package-management.ts';
 import {usesResourceSupply} from './supply-mode.ts';
-type Hooks={getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];selectionContext?:()=>{locations:string[]};select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;importModel:()=>void;quantity:(refs:WorkPackage['elements'])=>VolumeSummary};
+type Hooks={getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];showElements?:(refs:ElementRef[])=>void;elementName?:(ref:ElementRef)=>string;selectionContext?:()=>{locations:string[]};select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;importModel:()=>void;quantity:(refs:WorkPackage['elements'])=>VolumeSummary};
 export function el<K extends keyof HTMLElementTagNameMap>(tag:K,text='',cls=''){const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;return n;}
 function btn(text:string,action:()=>void,cls=''){const b=el('button',text,cls);b.type='button';b.onclick=action;return b;}
 function field(label:string,value:string,type='text'){
@@ -37,7 +38,7 @@ function check(label:string,checked:boolean){const l=el('label','','check');cons
 const money=(v:number)=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const volume=(v:number)=>`${v.toLocaleString('pt-BR',{maximumFractionDigits:6})} m³`;
 export class ProductionPanel{
- readonly element=el('section','','workshop');private tab='Produção';private selected='';private reviewer='';
+ readonly element=el('section','','workshop');private tab='Produção';private selected='';private reviewer='';private restrictionsOpen=false;private openConstraint='';
  private hooks:Hooks;private error='';private lastTab='';private expandedSupplies=new Set<string>();private projectId='';
  private removed:RemovedPackage|undefined;
  private feedback=el('p','','work-feedback notice error');
@@ -52,12 +53,13 @@ export class ProductionPanel{
   help.dataset.selectionHelp='';button.dataset.createSelection='';button.setAttribute('aria-describedby',help.id=`selection-help-${uid()}`);group.append(help,button);return group;
  }
  updateSelectionState(){
+  for(const node of this.element.querySelectorAll<HTMLElement>('[data-constraint-selection]')){const pkg=this.hooks.getProject().packages.find(p=>p.id===node.dataset.constraintSelection);const count=this.selectionRefs().filter(e=>pkg?.elements.some(p=>p.modelId===e.modelId&&p.globalId===e.globalId)).length;node.textContent=`${count} selecionado${count===1?'':'s'} deste pacote`;}
   const state=selectionPackageStatus(this.hooks.getProject(),this.hooks.selection());
   for(const help of this.element.querySelectorAll<HTMLElement>('[data-selection-help]'))help.textContent=state.message;
   for(const button of this.element.querySelectorAll<HTMLButtonElement>('[data-create-selection]')){button.disabled=!state.ready;button.title=state.message;}
  }
  render(){
- const p=this.hooks.getProject();if(p.id!==this.projectId){this.projectId=p.id;this.tab='Produção';this.selected='';this.reviewer='';this.lastTab='';this.error='';this.expandedSupplies.clear();this.removed=undefined;}const previousScroll=this.lastTab===this.tab?(this.element.querySelector('.work-body')?.scrollTop??0):0;this.lastTab=this.tab;this.element.replaceChildren();
+ const p=this.hooks.getProject();if(p.id!==this.projectId){this.projectId=p.id;this.tab='Produção';this.selected='';this.reviewer='';this.lastTab='';this.error='';this.expandedSupplies.clear();this.removed=undefined;this.restrictionsOpen=false;this.openConstraint='';}const previousScroll=this.lastTab===this.tab?(this.element.querySelector('.work-body')?.scrollTop??0):0;this.lastTab=this.tab;this.element.replaceChildren();
  const teaching=isTeachingProject(p);
  const nav=el('nav','','work-nav');nav.setAttribute('aria-label','Planejamento e controle');
  for(const [index,tab] of ['Produção','Suprimentos','Semana / PPC','IA'].entries()){const item=btn(tab,()=>{this.tab=tab;this.render();},tab===this.tab?'active':'');item.setAttribute('aria-current',tab===this.tab?'step':'false');item.setAttribute('aria-label',tab);item.dataset.step=String(index+1).padStart(2,'0');nav.append(item);}
@@ -78,20 +80,21 @@ export class ProductionPanel{
  const select=el('select');select.setAttribute('aria-label','Pacote de trabalho');
  for(const pkg of p.packages){const op=el('option',pkg.name);op.value=pkg.id;select.append(op);}
  if(!p.packages.some(x=>x.id===this.selected))this.selected=p.packages[0].id;
- select.value=this.selected;select.onchange=()=>{this.selected=select.value;this.render();};
+ select.value=this.selected;select.onchange=()=>{this.selected=select.value;this.openConstraint='';this.render();};
  const top=el('div','','package-picker');top.append(select);body.append(top);
  const pkgActions=el('div','','package-actions');const current=p.packages.find(x=>x.id===this.selected)!;
- pkgActions.append(btn('Editar pacote',()=>{this.tab='Produção';this.render();this.element.querySelector<HTMLInputElement>('.form-grid input')?.focus();}),btn('Realçar no modelo',()=>this.hooks.select(current)));
+ pkgActions.append(btn('Editar pacote',()=>{this.tab='Produção';this.restrictionsOpen=false;this.render();this.element.querySelector<HTMLInputElement>('.form-grid input')?.focus();}),btn('Realçar no modelo',()=>this.hooks.select(current)));
  const remove=btn('Excluir pacote',()=>{const dialog=el('dialog','','project-destination');dialog.setAttribute('aria-label','Excluir pacote');dialog.append(el('h2','Excluir pacote?'),el('p',`Excluir “${current.name}” e seus recursos sem reserva. O IFC, as medições e as propostas serão preservados. Você poderá desfazer a última exclusão nesta sessão.`),btn('Cancelar',()=>{dialog.close();dialog.remove();}),btn('Confirmar exclusão',()=>{this.action(x=>{const removed=deletePackage(x,current.id);this.removed=removed;this.selected='';});dialog.close();dialog.remove();}));dialog.oncancel=()=>dialog.remove();document.body.append(dialog);dialog.showModal();},'danger');
- const block=packageDeletionBlock(p,current.id);remove.disabled=!!block;remove.title=block||'Excluir rascunho com opção de desfazer';pkgActions.append(remove);body.append(pkgActions,this.newPackageControl(),this.selectionButton('+ Pacote da seleção'));this.updateSelectionState();
+ const block=packageDeletionBlock(p,current.id);remove.disabled=!!block;remove.title=block||'Excluir rascunho com opção de desfazer';pkgActions.append(remove);if(!(this.tab==='Produção'&&this.restrictionsOpen))body.append(pkgActions,this.newPackageControl(),this.selectionButton('+ Pacote da seleção'));this.updateSelectionState();
  const pkg=p.packages.find(x=>x.id===this.selected)!;const readiness=assessReadiness(p,pkg);
- body.append(el('p',`${pkg.location} · ${pkg.service}`,'eyebrow'),el('h2',pkg.name),el('p',p.week?.commitments.some(c=>c.packageId===pkg.id)?(readiness.ready?'COMPROMISSO REGISTRADO · CONDIÇÕES ATUAIS ATENDIDAS':'COMPROMISSO REGISTRADO · REVISAR CONDIÇÕES ATUAIS'):(readiness.ready?'PRONTO PARA COMPROMISSO':'PREPARAR ANTES DE PROMETER'),readiness.ready?'badge good':'badge warn'));
- if(this.tab==='Produção')this.production(body,pkg,p);
+ if(!(this.tab==='Produção'&&this.restrictionsOpen))body.append(el('p',`${pkg.location} · ${pkg.service}`,'eyebrow'),el('h2',pkg.name),el('p',p.week?.commitments.some(c=>c.packageId===pkg.id)?(readiness.ready?'COMPROMISSO REGISTRADO · CONDIÇÕES ATUAIS ATENDIDAS':'COMPROMISSO REGISTRADO · REVISAR CONDIÇÕES ATUAIS'):(readiness.ready?'PRONTO PARA COMPROMISSO':'PREPARAR ANTES DE PROMETER'),readiness.ready?'badge good':'badge warn'));
+ if(this.tab==='Produção'){if(this.restrictionsOpen)restrictionChecklist(body,pkg,{change:fn=>this.action(fn),selection:()=>this.selectionRefs(),show:refs=>this.hooks.showElements?.(refs),name:ref=>this.hooks.elementName?.(ref)??'Elemento IFC do pacote',back:()=>{this.restrictionsOpen=false;this.render();},openId:this.openConstraint,open:id=>{this.openConstraint=id;}});else this.production(body,pkg,p);}
  if(this.tab==='Suprimentos')this.supply(body,pkg,p);
  if(this.tab==='Semana / PPC')this.week(body,pkg,p);
  if(this.tab==='IA')mountAI(body,()=>this.hooks.getProject());
- simplifyExplanations(body);body.scrollTop=previousScroll;
+ simplifyExplanations(body);this.updateSelectionState();body.scrollTop=previousScroll;
  }
+ private selectionRefs(){const wanted=new Set(this.hooks.selection());return [...new Map(this.hooks.getProject().tasks.filter(t=>wanted.has(t.id)).map(t=>[JSON.stringify([t.modelId,t.globalId]),{modelId:t.modelId,globalId:t.globalId}])).values()];}
  private undoControl(){
   const box=el('div','','package-undo');box.append(el('span',`Pacote “${this.removed!.package.name}” excluído.`),btn('Desfazer exclusão',()=>this.action(p=>{restorePackage(p,this.removed!);this.selected=this.removed!.package.id;this.removed=undefined;})));return box;
  }
@@ -105,6 +108,7 @@ export class ProductionPanel{
  this.selected=createSelectionPackage(p,this.hooks.selection(),this.hooks.quantity,this.hooks.selectionContext?.()).id;
  });}
  private production(body:HTMLElement,pkg:WorkPackage,p:Project){
+ const checklist=el('div','','restriction-overview'),released=pkg.constraints.filter(c=>c.resolved).length;checklist.append(el('div',`${released}/${pkg.constraints.length} condições liberadas`),btn('Abrir checklist de restrições',()=>{this.restrictionsOpen=true;this.render();this.element.querySelector('.work-body')?.scrollTo({top:0});},'primary'));body.append(checklist);
  const q=this.hooks.quantity(pkg.elements),callout=el('div','','quantity-callout');callout.append(el('strong',q.totalM3===null?'Volume IFC a conferir':`${q.totalM3.toLocaleString('pt-BR',{maximumFractionDigits:3})} m³ no IFC`),helpButton('Origem do volume IFC',q.source));
  const frozen=p.week?.commitments.some(c=>c.packageId===pkg.id),concrete=/concretagem|concrete/i.test(pkg.name+' '+pkg.service);
  const apply=btn('Usar volume IFC neste pacote',()=>this.action(x=>{if(frozen)throw new Error('O compromisso já foi congelado. Preserve o quantitativo assumido.');if(q.totalM3===null||!concrete)throw new Error('Confira o serviço de concretagem e o quantitativo completo.');const target=x.packages.find(t=>t.id===pkg.id)!;target.quantity=Math.round(q.totalM3*1e6)/1e6;target.quantitySource=q.source;log(x,'Quantidade IFC aplicada',q.source);}));apply.disabled=q.totalM3===null||!!frozen||!concrete;callout.append(apply);if(frozen)callout.append(el('p','Compromisso congelado: o volume assumido permanece preservado.'));body.append(callout);
@@ -117,10 +121,7 @@ export class ProductionPanel{
  body.append(btn(`Realçar ${pkg.elements.length} elementos no modelo`,()=>this.hooks.select(pkg)),el('p','Local inicial do pacote: hierarquia de planejamento Summary3, quando disponível. Confira-o contra a geometria e a árvore espacial; classificações do IFC podem divergir da divisão de produção.','fine'));
  if(pkg.measureLinks?.length&&!frozen)body.append(btn('Atualizar com conferências vigentes',()=>this.action(x=>{if(!this.hooks.review(pkg))throw new Error('Conferir vínculos IFC.');refreshPackageMeasures(x,pkg.id);})));
  if(pkg.reviewRequired)body.append(btn('Conferir vínculos da revisão',()=>this.action(x=>{if(!this.hooks.review(pkg)||quantificationNeedsReview(x,pkg))throw new Error('Há vínculos ou quantitativos a conferir; use Quantificação e atualize as conferências.');x.packages.find(q=>q.id===pkg.id)!.reviewRequired=false;log(x,'Vínculos conferidos',pkg.name);}),'warning'));
- body.append(el('h3','Restrições da frente'),el('p','Remover uma restrição exige uma evidência e quem a conferiu. Ex.: liberação de armação assinada; reserva da bomba; confirmação da janela de concreto.'));
- const reviewer=field('Conferente das evidências',this.reviewer);reviewer.input.oninput=()=>this.reviewer=reviewer.input.value;body.append(reviewer.label);
- for(const c of pkg.constraints){const card=el('article','','constraint');card.append(el('strong',c.description),el('span',c.resolved?'Removida com evidência':'Pendente',c.resolved?'badge good':'badge warn'));
- if(c.resolved)card.append(el('p',`${c.evidence} · Conferido por ${c.reviewer}`),btn('Reabrir restrição',()=>this.action(x=>{const q=x.packages.find(q=>q.id===pkg.id)!.constraints.find(q=>q.id===c.id)!;q.resolved=false;log(x,'Restrição reaberta',q.description);})));else{const evidence=field(`Evidência — ${c.description}`,c.evidence);card.append(evidence.label,btn('Conferir e remover',()=>this.action(x=>resolveConstraint(x,pkg.id,c.id,evidence.input.value,this.reviewer))));}body.append(card);}
+
  }
  private supply(body:HTMLElement,pkg:WorkPackage,p:Project){
  this.supplyMap(body,p);

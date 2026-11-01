@@ -5,7 +5,7 @@ function encode(bytes:Uint8Array){let str='';for(let i=0;i<bytes.length;i+=8192)
 export async function packProject(project:Project,bytes:Map<string,Uint8Array>){
  serializeProject(project);const models=[];
  for(const m of project.models){const data=bytes.get(m.id);if(!data)throw new Error(`IFC ${m.name} indisponível. Reimporte antes de exportar.`);if(await sha256(data)!==m.hash)throw new Error('Integridade do IFC divergente.');models.push({id:m.id,base64:encode(data)});}
- return JSON.stringify({format:'ifc-coral',version:1,project,models});
+ const text=JSON.stringify({format:'ifc-coral',version:1,project,models});if(text.length>50_000_000)throw new Error('Arquivo excede 50 MB. Use prints ou modelos menores antes de salvar.');return text;
 }
 export async function unpackProject(text:string){
  if(text.length>50_000_000)throw new Error('Arquivo excede 50 MB.');

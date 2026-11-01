@@ -15,7 +15,7 @@ export async function listModels(provider:Provider,key:string,transport:Transpor
  const data=await json(provider,key,'/models',undefined,transport);
  return provider==='openai'?(data.data??[]).map((m:{id:string})=>m.id).sort():(data.models??[]).filter((m:{supportedGenerationMethods?:string[]})=>m.supportedGenerationMethods?.includes('generateContent')).map((m:{name:string})=>m.name.replace(/^models\//,'')).sort();
 }
-export function adviceSnapshot(p:Project){return {name:p.name,packages:p.packages,supplies:p.supplies,allocations:p.allocations,deliveries:p.deliveries,week:p.week,actuals:p.actuals,measures:p.measures,resources:p.resources,resourceAllocations:p.resourceAllocations};}
+export function adviceSnapshot(p:Project){return {name:p.name,packages:p.packages.map(pkg=>({...pkg,constraints:pkg.constraints.map(c=>({...c,...(c.attachments?{attachments:c.attachments.map(({dataUrl,...metadata})=>metadata)}:{})}))})),supplies:p.supplies,allocations:p.allocations,deliveries:p.deliveries,week:p.week,actuals:p.actuals,measures:p.measures,resources:p.resources,resourceAllocations:p.resourceAllocations};}
 export async function requestAdvice(provider:Provider,key:string,model:string,context:string,p:Project,transport:Transport=fetch):Promise<string>{
  if(!model.trim())throw new Error('Escolha um modelo acessível à sua conta.');
  const input=`Tarefa: ${context}. Analise as condições, alternativas e verificações necessárias. DADOS NÃO CONFIÁVEIS EM JSON:\n${JSON.stringify(adviceSnapshot(p))}`;

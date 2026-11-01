@@ -45,7 +45,7 @@ button.primary:hover { background: var(--accent-hover); }
 .model-host .panel-title { color: #686170; font-size: 9px; font-weight: 600; letter-spacing: 1px; }
 .model-host .panel-min { width: 21px; height: 21px; padding: 0; margin: 0; font-size: 16px; background: #f2eff8; color: #83798f; }
 .model-host .panel-left { top: 12px; left: 12px; width: 180px; bottom: 260px; }
-.model-host .panel-right { top: 12px; right: 12px; width: 260px; bottom: 260px; display: none; }
+.model-host .panel-right { top: 12px; right: 12px; width: 260px; bottom: 260px; }
 .model-host .panel-bottom { bottom: 12px; left: 12px; right: 12px; height: 236px; }
 .model-host .panel-chip { border-radius: 12px; border-color: #ece7f5; color: var(--accent); font-size: 15px; }
 .model-host .topbar-float { display: none; }
@@ -57,7 +57,6 @@ button.primary:hover { background: var(--accent-hover); }
 .tree-caret { color: #b5aebf; }
 .model-expanded { grid-template-columns: 1fr; }
 .model-expanded .workshop { display: none; }
-.model-expanded .model-host .panel-right { display: flex; }
 .model-expanded .model-host .panel-left { width: 230px; }
 .workshop { display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; background: var(--surface); border: 1px solid #eeecf2; border-radius: 22px; }
 .work-nav { margin: 14px 16px 0; padding: 4px; display: flex; gap: 2px; background: #f1eff5; border-radius: 13px; flex-shrink: 0; }

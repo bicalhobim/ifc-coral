@@ -1,3 +1,4 @@
+import {hasConstraintEvidence,validateEvidenceImages} from './evidence-images.ts';
 import type {Project,WorkPackage,Actual,Delivery} from './types.ts';
 import {day,log,uid} from './project.ts';
 import {resourceCoverage,quantificationNeedsReview,resourceWindowCurrent} from './resources.ts';
@@ -40,15 +41,15 @@ export function assessReadiness(p:Project,pkg:WorkPackage){
  if(!pkg.responsible.trim())reasons.push('Definir responsável.');
  if(!pkg.capacityConfirmed)reasons.push('Confirmar capacidade da equipe e equipamentos.');
  if(!pkg.criterion.trim())reasons.push('Definir critério de conclusão.');
- if(!pkg.constraints.length||pkg.constraints.some(c=>!c.resolved||!c.evidence.trim()||!c.reviewer.trim()))reasons.push('Remover restrições com evidência e conferente.');
+ if(!pkg.constraints.length||pkg.constraints.some(c=>!c.resolved||!hasConstraintEvidence(c)||!c.reviewer.trim()))reasons.push('Remover restrições com evidência e conferente.');
  if(pkg.quantity===null||pkg.quantity<=0)reasons.push('Quantidade precisa ser informada e positiva.');
  if(!pkg.quantitySource.trim())reasons.push('Registrar origem do quantitativo.');
  if(balance.balance===null)reasons.push('Quantidade ou cobertura existente ainda não conferida.');else if(balance.balance>1e-8)reasons.push(`Faltam ${balance.balance} ${pkg.unit} confirmados na janela.`);
  return {ready:reasons.length===0,reasons,balance};
 }
 export function resolveConstraint(p:Project,packageId:string,id:string,evidence:string,reviewer:string){
- if(!evidence.trim()||!reviewer.trim())throw new Error('Informe evidência e conferente.');
  const c=p.packages.find(x=>x.id===packageId)?.constraints.find(x=>x.id===id);if(!c)throw new Error('Restrição não encontrada.');
+ if(c.attachments)validateEvidenceImages(c.attachments);if(!hasConstraintEvidence({...c,evidence})||!reviewer.trim())throw new Error('Informe evidência (texto ou print) e conferente.');
  Object.assign(c,{resolved:true,evidence:evidence.trim(),reviewer:reviewer.trim()});log(p,'Restrição removida',`${c.description} — ${reviewer}: ${evidence}`);
 }
 export function freezeWeek(p:Project,packageIds:string[],reviewer:string){

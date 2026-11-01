@@ -1,3 +1,4 @@
+import {defaultConstraints} from './constraints.ts';
 import type {Project,WorkPackage} from './types.ts';
 import {uid,log} from './project.ts';
 
@@ -14,7 +15,7 @@ export function createSelectionPackage(p:Project,ids:string[],quantity:(refs:Wor
  const elements=Array.from(new Map(tasks.map(t=>[JSON.stringify([t.modelId,t.globalId]),{modelId:t.modelId,globalId:t.globalId}])).values());
  if(p.packages.some(old=>old.unit==='m³'&&old.elements.some(a=>elements.some(b=>a.modelId===b.modelId&&a.globalId===b.globalId))))throw new Error('Já existe pacote de concretagem para estes elementos. Selecione outros elementos ou edite o pacote existente.');
  const q=quantity(elements);
- const pkg:WorkPackage={id:uid(),name:first.name,location:first.location,service:'Concretagem',elements,taskIds:tasks.map(t=>t.id),quantity:q.totalM3===null?null:Math.round(q.totalM3*1e6)/1e6,unit:'m³',coverageKnown:false,quantitySource:q.source,needDate:first.start,finishDate:first.finish,criterion:'',responsible:'',capacityConfirmed:false,reviewRequired:false,constraints:['Projeto','Frente e predecessoras','Equipe e equipamento','Suprimento'].map(description=>({id:uid(),category:description,description,resolved:false,evidence:'',reviewer:''}))};
+ const pkg:WorkPackage={id:uid(),name:first.name,location:first.location,service:'Concretagem',elements,taskIds:tasks.map(t=>t.id),quantity:q.totalM3===null?null:Math.round(q.totalM3*1e6)/1e6,unit:'m³',coverageKnown:false,quantitySource:q.source,needDate:first.start,finishDate:first.finish,criterion:'',responsible:'',capacityConfirmed:false,reviewRequired:false,constraints:defaultConstraints()};
  const locations=[...new Set(context?.locations.filter(Boolean)??[])];
  if(locations.length){pkg.location=locations.join(' + ');pkg.name=`Concretagem — ${locations.length<=2?pkg.location:`${locations.length} pavimentos / frentes`}`;}
  else if(new Set(tasks.map(t=>t.location)).size>1){pkg.location='Múltiplas frentes — conferir';pkg.name=`Concretagem — ${elements.length} elementos`;}

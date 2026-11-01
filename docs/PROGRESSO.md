@@ -159,3 +159,30 @@ O diagnóstico anterior foi evoluído para o catálogo do aplicativo. Plano exec
 - **112 testes**, tipos, três selfchecks e build aprovados. QA real: pavimento 31 elementos, três pavimentos 93, Ctrl remove 31, intervalo de cinco vigas; CRUD de rascunho; pacote congelado protegido; janelas simultâneas/movimento/redimensionamento/fixação/restauração. Sem erros no console observado.
 - [Guia dos controles](SELECAO_PACOTES_JANELAS.md), [relatório de QA](QA_SELECAO_JANELAS_2026-10-31.md); capturas e log em `artifacts/qa-selection-windows-2026-10-31`.
 - Não houve commit/push. Salvar alterações antes de atualizar sessões antigas no navegador. Em janela estreita, usar Ampliar modelo ou recolher painéis para leitura confortável.
+
+
+## UX de restrições, catálogo e memória · 01/11/2026 · revisão local
+
+- Checkpoint autorizado publicado antes da revisão: `79626c1` em `origin/main`, com os 112 testes da versão anterior aprovados. Novo trabalho permanece sem commit.
+- Checklist próprio em Produção: visão de liberadas/total, filtros, responsável/prazo/ação, evidência/conferente e alcance todo o pacote ou elementos específicos. Referências persistentes modelo + GlobalId; guardar apontamento não libera; alterar alcance reabre. Novos pacotes separam mão de obra e equipamentos. Projetos anteriores preservados.
+- Memória legível e paginada, com entradas/unidades/fórmula/ações e localização no 3D. Nome e pavimento substituem os identificadores na leitura principal; rastreabilidade recolhida.
+- Catálogo prioriza tipos selecionados, apresenta métodos de superfícies suportados, fonte/premissa editável e prévia antes de salvar. A taxa recalcula aço; método exige relatório compatível ou conferência manual, sem gerar geometria automaticamente.
+- **118 testes**, tipos, selfchecks e build aprovados. Ensaio visual e persistência real em cópia de QA, incluindo restrição de uma viga, taxa 90 kg/m³, cancelamento de prévia, gravação/reabertura e paginação/localização.
+- [Guia de operação](GUIA_RESTRICOES_QUANTIFICACAO.md), [relatório de QA](QA_UX_RESTRICOES_QUANTIFICACAO.md); evidências em `artifacts/qa-restrictions-quantification`.
+
+
+## Propriedades e prints de evidência · 01/11/2026 · revisão local
+
+- Corrigida regra CSS antiga que mantinha Propriedades com display:none no modo normal, apesar dos dados carregados. Conferido encaixado e flutuante no navegador.
+- Evidência aceita anexos PNG/JPEG/WebP com miniatura e visualização ampliada; arquivo, arrastar e colar implementados. Imagens incorporadas ao projeto, preservadas em JSON/portátil/Salvar como. Limites explícitos e validação de formato; sem envio automático de bytes de imagem à IA.
+- Conferente continua obrigatório; texto ou imagem podem sustentar a evidência. Alterar prints reabre a condição até nova confirmação.
+- **121 testes**, tipos, selfchecks e build aprovados. Upload JPEG, liberação só com print, gravação e reabertura real na cópia de QA confirmados. Dados do professor não foram salvos/recarregados pelo agente.
+- [QA e limites](QA_PROPRIEDADES_PRINTS.md), [guia atualizado](GUIA_RESTRICOES_QUANTIFICACAO.md). Capturas/log em `artifacts/qa-properties-prints`. Nenhum novo commit ou push.
+
+
+## Fechamento da rodada · commit autorizado por Lucas
+
+- Consolidar checklist de restrições por elementos IFC, memória de cálculo legível, catálogo com métodos/fonte/prévia, propriedades visíveis e prints locais de evidência.
+- Validação funcional anterior: 121 testes, tipos, selfchecks e build, com ensaio visual e reabertura em pasta de QA. Relatórios e guia acompanham o código; arquivos de QA e imagens locais ficam fora do Git.
+- Publicação deste estado expressamente autorizada ao encerrar a sessão. O fechamento desta rodada não significa conclusão do produto; as demais funcionalidades e o ensaio continuado ficam para a próxima retomada.
+- Não executar novas funcionalidades nem alterar os projetos de trabalho do professor nesta rodada de commit.
