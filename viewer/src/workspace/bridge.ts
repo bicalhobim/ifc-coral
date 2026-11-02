@@ -9,15 +9,16 @@ function getSession(refresh=false):Promise<Session|null>{
 }
 // Resolve support in the background, before the user needs a folder picker.
 void getSession();
-async function request<T>(action:string,body:unknown):Promise<T>{
+export async function requestLocal<T>(action:string,body:unknown,signal?:AbortSignal):Promise<T>{
  let auth=await getSession();if(!auth?.available)throw new Error('Serviço de pastas locais indisponível. Inicie o aplicativo pelo servidor local.');
- const send=()=>fetch(`/__coral_local/${action}`,{method:'POST',headers:{'Content-Type':'application/json','X-IFC-Coral-Session':auth!.token},body:JSON.stringify(body)});
+ const send=()=>fetch(`/__coral_local/${action}`,{method:'POST',headers:{'Content-Type':'application/json','X-IFC-Coral-Session':auth!.token},body:JSON.stringify(body),signal});
  let response=await send();
  if(response.status===403){auth=await getSession(true);if(auth?.available)response=await send();}
  const value=await response.json();
  if(!response.ok){const error=new Error(value.error??'Falha no acesso à pasta.');error.name=value.name??'Error';throw error;}
  return value as T;
 }
+const request=requestLocal;
 function encode(bytes:Uint8Array):string{let raw='';for(let i=0;i<bytes.length;i+=32768)raw+=String.fromCharCode(...bytes.subarray(i,i+32768));return btoa(raw);}
 function decode(value:string):Uint8Array{return Uint8Array.from(atob(value),c=>c.charCodeAt(0));}
 

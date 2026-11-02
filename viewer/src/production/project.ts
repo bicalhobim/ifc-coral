@@ -28,7 +28,7 @@ const nullable=(r:Rule):Rule=>v=>{if(v!==null)r(v);};
 const list=(r:Rule):Rule=>v=>{if(!Array.isArray(v)||v.length>100000)fail();(v as unknown[]).forEach(r);};
 const obj=(rules:Record<string,Rule>,optional:Record<string,Rule>={}):Rule=>v=>{if(!v||typeof v!=='object'||Array.isArray(v))fail();const o=v as Record<string,unknown>,all={...rules,...optional};if(Object.keys(o).some(k=>!Object.hasOwn(all,k))||Object.keys(rules).some(k=>!Object.hasOwn(o,k)))fail();for(const [key,rule]of Object.entries(all))if(Object.hasOwn(o,key))rule(o[key]);};
 const ref=obj({modelId:txt,globalId:txt});
-const constraint=obj({id:txt,category:txt,description:txt,resolved:bool,evidence:txt,reviewer:txt},{scope:literal('package','elements'),elements:list(ref),owner:txt,dueDate:date,action:txt,attachments:validateEvidenceImages});
+const constraint=obj({id:txt,category:txt,description:txt,resolved:bool,evidence:txt,reviewer:txt},{scope:literal('package','elements'),elements:list(ref),owner:txt,dueDate:date,action:txt,attachments:validateEvidenceImages,aiOrigin:obj({provider:literal('codex','openai','gemini'),model:txt,generatedAt:txt,reviewedAt:txt,reviewer:txt,reason:txt,basis:list(txt)})});
 const unit=literal('m³','kg','m²'),service=literal('concrete','reinforcement','formwork');
 const jsonData:Rule=v=>{if(JSON.stringify(v).length>50000)fail();};
 const quantRule=obj({id:txt,version:txt,label:txt,ifcClass:txt,priority:pos,steelRate:nullable(pos),formMethod:nullable(txt),source:txt,status:literal('draft')},{predefinedType:txt,typePattern:txt});

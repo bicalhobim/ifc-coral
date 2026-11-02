@@ -2,7 +2,7 @@ export type ElementRef={modelId:string;globalId:string};
 export type ModelRevision={id:string;hash:string;name:string;projectGlobalId:string};
 export type TaskRecord={id:string;modelId:string;globalId:string;slot:string;name:string;location:string;service:string;start:string;finish:string};
 import type {EvidenceImage} from './evidence-images.ts';
-export type Constraint={id:string;category:string;description:string;resolved:boolean;evidence:string;reviewer:string;scope?:'package'|'elements';elements?:ElementRef[];owner?:string;dueDate?:string;action?:string;attachments?:EvidenceImage[]};
+export type Constraint={id:string;category:string;description:string;resolved:boolean;evidence:string;reviewer:string;scope?:'package'|'elements';elements?:ElementRef[];owner?:string;dueDate?:string;action?:string;attachments?:EvidenceImage[];aiOrigin?:{provider:'codex'|'openai'|'gemini';model:string;generatedAt:string;reviewedAt:string;reviewer:string;reason:string;basis:string[]}};
 import type {MeasureUnit,ServiceCode,QuantRule} from '../quantification/types.ts';
 import type {MeasureSnapshot} from '../quantification/review.ts';
 import type {SupplyPlanSnapshot} from './supply-map.ts';

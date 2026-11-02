@@ -28,6 +28,7 @@ import {readIfcVolumes,summarizeVolumes,readIfcMetadata} from './ifc/quantities.
 import {QuantificationPanel} from './quantification/ui.ts';
 import type {ElementMetadata} from './quantification/types.ts';
 import {previewPackages,createPackages} from './production/resources.ts';
+import {openPackageMeasurements,type PackageMeasureRequest} from './production/package-quantities-ui.ts';
 const root=document.getElementById('app')!;
 const header=el('header','','coral-header'),wordmark=el('div','','wordmark'),actions=el('div','','header-actions');
 wordmark.append(el('strong','IFC Coral'),el('span','Planejamento de produção'));header.append(wordmark,actions);
@@ -41,7 +42,7 @@ let runtime=new Map<string,{model:FragmentsModel;tasks:ElementTask[]}>(),modelBy
 const selectionNames=new Map<FragmentsModel,Map<number,string>>();
 const selectionLocations=new Map<FragmentsModel,Map<number,string>>();
 const metadataCache=new Map<string,Map<string,ElementMetadata>>();
-const quantTool=new QuantificationPanel({showElement:ref=>showElementRefs([ref]),elementName:elementLabel,reportChanged:()=>persist(),selection:()=>{
+const quantTool=new QuantificationPanel({useInPackage:service=>openQuantifiedPackage({service}),showElement:ref=>showElementRefs([ref]),elementName:elementLabel,reportChanged:()=>persist(),selection:()=>{
  const refs=new Map(selected.filter(t=>t.globalId&&t.modelKey).map(t=>[JSON.stringify([t.modelKey,t.globalId]),t]));return [...refs.values()].flatMap(t=>{const model=project.models.find(m=>m.id===t.modelKey);if(!model)return [];let data=metadataCache.get(model.hash);if(!data){data=readIfcMetadata(new TextDecoder().decode(modelBytes.get(model.id)),model.id,model.hash);metadataCache.set(model.hash,data);}const element=data.get(t.globalId!);return element?[{element,volume:{amount:t.volume?.m3??null,unit:'m³',source:t.volume?.source??''}}]:[];});
 },reviews:()=>project.measures,saveReviews:rows=>{const next=structuredClone(project);const replaced=next.measures.filter(old=>rows.some(s=>s.measure.id===old.measure.id&&s.fingerprint!==old.fingerprint));next.measureHistory=[...next.measureHistory??[],...replaced.filter(old=>!next.measureHistory?.some(h=>h.measure.id===old.measure.id&&h.fingerprint===old.fingerprint))];next.measures=structuredClone(rows);for(const pkg of next.packages)if(pkg.measureLinks?.some(l=>!rows.some(s=>s.measure.id===l.id&&s.fingerprint===l.fingerprint)))pkg.reviewRequired=true;validateProject(next);project=next;persist();panel.render();},saveRules:rules=>{const next=structuredClone(project);next.quantificationCatalog=structuredClone(rules);for(const pkg of next.packages)if(pkg.measureLinks?.some(l=>{const s=next.measures.find(s=>s.measure.id===l.id);return s&&rules.find(r=>r.id===s.measure.ruleId)?.version!==s.measure.ruleVersion;}))pkg.reviewRequired=true;validateProject(next);project=next;persist();panel.render();},generate:rows=>{
  const preview=previewPackages(project,rows),modal=el('dialog');modal.append(el('h2','Conferir os pacotes antes de criar'),el('p','Cada serviço terá unidade própria. Recursos e especificações de compra serão definidos depois.'));
@@ -54,7 +55,10 @@ function persist(){dirty=true;updateDocumentTitle();message('Alterações não s
 function updateDocumentTitle(){document.title=`${dirty?'● ':''}${project.name} · IFC Coral`;documentLabel.textContent=`${project.name}${dirty?' •':''} · ${activeDirectory?.name??'Escolha uma pasta para salvar'}`;}
 
 const quantityFor=(refs:WorkPackage['elements'])=>summarizeVolumes(refs.map(e=>({modelKey:e.modelId,globalId:e.globalId,volume:runtime.get(e.modelId)?.tasks.find(t=>t.globalId===e.globalId)?.volume})));
-const panel=new ProductionPanel({getProject:()=>project,showElements:showElementRefs,elementName:elementLabel,change:fn=>{const next=structuredClone(project);fn(next);validateProject(next);project=next;persist();},selectionContext:()=>({locations:[...new Set(selectedObjects.flatMap(item=>{const name=selectionLocations.get(item.model)?.get(item.localId);return name?[name]:[];}))]}),selection:()=>selected.filter(t=>t.globalId).map(taskIdentity),select:pkg=>void showPackage(pkg),importModel:openIfcInput,quantity:quantityFor,review:pkg=>pkg.elements.every(e=>runtime.get(e.modelId)?.tasks.some(t=>t.globalId===e.globalId))&&pkg.taskIds.every(id=>Array.from(runtime.values()).some(r=>r.tasks.some(t=>t.globalId&&taskIdentity(t)===id)))});layout.append(panel.element);
+const panel=new ProductionPanel({quantification:request=>openQuantifiedPackage(request),getProject:()=>project,showElements:showElementRefs,elementName:elementLabel,change:fn=>{const next=structuredClone(project);fn(next);validateProject(next);project=next;persist();},selectionContext:()=>({locations:[...new Set(selectedObjects.flatMap(item=>{const name=selectionLocations.get(item.model)?.get(item.localId);return name?[name]:[];}))]}),selection:()=>selected.filter(t=>t.globalId).map(taskIdentity),select:pkg=>void showPackage(pkg),importModel:openIfcInput,quantity:quantityFor,review:pkg=>pkg.elements.every(e=>runtime.get(e.modelId)?.tasks.some(t=>t.globalId===e.globalId))&&pkg.taskIds.every(id=>Array.from(runtime.values()).some(r=>r.tasks.some(t=>t.globalId&&taskIdentity(t)===id)))});layout.append(panel.element);
+function openQuantifiedPackage(request:PackageMeasureRequest={}){
+ openPackageMeasurements({getProject:()=>project,measures:()=>quantTool.measures(),change:fn=>{const next=structuredClone(project);fn(next);validateProject(next);project=next;persist();},complete:id=>{quantTool.render();panel.focusPackage(id);}},request);
+}
 let visualQueue:Promise<void>=Promise.resolve();
 let selectionRevision=0;
 let selectionEpoch=0,pickQueue:Promise<void>=Promise.resolve();

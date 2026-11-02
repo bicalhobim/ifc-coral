@@ -9,7 +9,7 @@
 - Examinar volumes declarados no IFC e estimativas de aço e fôrmas por regras e métodos explícitos.
 - Relacionar necessidades a recursos, fornecimentos, reservas e mapa de suprimentos.
 - Congelar compromissos semanais, registrar resultados e analisar o PPC.
-- Usar Gemini ou OpenAI como apoio à análise, com chave individual e validação humana. A operação básica dispensa IA.
+- Pré-escrever restrições do pacote com Codex local autenticado ou Gemini/OpenAI com chave individual; revisar e adicionar as propostas ao checklist. A operação básica dispensa IA.
 
 O aplicativo é um **protótipo didático local**, não um sistema de produção validado para obras. Dados de propostas e ocorrências dos exemplos são fictícios. Estimativas de aço não substituem projeto estrutural; áreas de fôrma podem permanecer pendentes. O mapa de suprimentos não efetua compras nem envia mensagens.
 
@@ -37,9 +37,13 @@ Abra [IFC Coral no navegador](http://127.0.0.1:5178/), preencha os campos de ent
 
 [Guia de quantificação e suprimentos](docs/QUANTIFICACAO.md) · [Navegação e planejamento 4D](docs/NAVEGACAO_4D_QUANTIDADES.md) · [Estado das validações e limites](docs/ACEITE.md) · [Progresso do projeto](docs/PROGRESSO.md)
 
+[Gerar e revisar restrições com IA — Codex, OpenAI ou Gemini](docs/IA_RESTRICOES.md). O servidor local usa o Codex instalado e autenticado; não é necessário editar o projeto no VS Code para escrever as condições. As propostas só entram após seleção e revisão e permanecem pendentes até a conferência de liberação.
+
+[Herdar quantificação na criação ou atualização do pacote](docs/QUANTIFICACAO_PARA_PACOTES.md): concreto em m³, aço estimado em kg e fôrmas em m², com seleção, conferente e memória de cálculo. [QA e limites desta integração](docs/QA_QUANTIFICACAO_PACOTES.md).
+
 ## Dados e IA
 
-Os dados e modelos são gravados por **Salvar** na pasta local escolhida para o projeto; **Salvar como** cria uma cópia em outra pasta. Exportações ficam na subpasta Exportacoes. Veja o [guia de projetos locais](docs/PROJETOS_LOCAIS.md). O navegador mantém a lista de pastas recentes e o cache de compatibilidade de sessões anteriores. Antes de enviar informações a um provedor de IA, confira o conteúdo e as regras aplicáveis. As chaves são usadas em memória e não integram o arquivo exportado. Os adaptadores foram testados com transporte simulado; chamadas reais e acesso aos modelos de cada conta ainda precisam de verificação.
+Os dados e modelos são gravados por **Salvar** na pasta local escolhida para o projeto; **Salvar como** cria uma cópia em outra pasta. Exportações ficam na subpasta Exportacoes. Veja o [guia de projetos locais](docs/PROJETOS_LOCAIS.md). O navegador mantém a lista de pastas recentes e o cache de compatibilidade de sessões anteriores. Antes de enviar informações a um provedor de IA, confira o conteúdo e as regras aplicáveis. As chaves são usadas em memória e não integram o arquivo exportado. O Codex local teve chamadas reais de QA; OpenAI/Gemini foram testados com transporte controlado, sem chave real. Acesso aos modelos e instalação em outra máquina ainda exigem ensaio por conta/ambiente; detalhes no [relatório de IA](docs/QA_IA_RESTRICOES.md).
 
 ## Origem e créditos
 

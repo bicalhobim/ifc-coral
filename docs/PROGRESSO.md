@@ -186,3 +186,35 @@ O diagnóstico anterior foi evoluído para o catálogo do aplicativo. Plano exec
 - Validação funcional anterior: 121 testes, tipos, selfchecks e build, com ensaio visual e reabertura em pasta de QA. Relatórios e guia acompanham o código; arquivos de QA e imagens locais ficam fora do Git.
 - Publicação deste estado expressamente autorizada ao encerrar a sessão. O fechamento desta rodada não significa conclusão do produto; as demais funcionalidades e o ensaio continuado ficam para a próxima retomada.
 - Não executar novas funcionalidades nem alterar os projetos de trabalho do professor nesta rodada de commit.
+
+## Restrições propostas por IA · 01/11/2026 · nova rodada autorizada, sem commit
+
+- Assistente no checklist e na aba IA: contexto do pacote selecionado, resumo/fatos/lacunas e propostas editáveis, com seleção e conferente antes da incorporação.
+- Codex local pelo servidor e executável oficial autenticado; priorização do Codex Desktop evita o CLI antigo encontrado no PATH desta máquina. Alternativas OpenAI/Gemini com chave individual somente em memória e modelo explícito.
+- Saída estruturada validada, alcance por modelo/GlobalId, contexto desatualizado recusado, condições anteriores preservadas e origem registrada. Condições novas entram pendentes; compromisso congelado não é alterado por esse fluxo.
+- **134 testes**, tipos, três selfchecks e build aprovados. Chamadas reais ao Codex e ensaio no navegador, incluindo edição, gravação e reabertura da cópia própria de QA. OpenAI/Gemini com transporte controlado e validação de ausência de chave; chamadas reais dessas APIs continuam pendentes.
+- [Operação e instalação](IA_RESTRICOES.md) · [QA, provas e limites](QA_IA_RESTRICOES.md) · [Arquitetura escolhida](PLANO_IA_RESTRICOES.md).
+- Nenhum novo commit/push. Alterações prontas para revisão do autor; kit institucional e projeto aberto do professor preservados.
+
+## Refinamento das propostas · abrangência e síntese
+
+- Análise orientada às seis áreas de preparação: projeto, frente/predecessoras, mão de obra, equipamentos, materiais e ambiente/segurança (incluindo iluminação e acesso conforme o serviço).
+- Categorias pendentes exigem cobertura; condições genéricas não suprimem o detalhamento. Atendimento integral por evidência, inclusive print, é preservado; atendimento parcial não libera o conjunto.
+- Cartões curtos com condição, como preparar e evidência; edição/fatos/fontes recolhidos. Limites de texto no schema e na revisão.
+- Ensaio real: oito propostas em seis categorias na TORRE02, edição e incorporação de uma condição de iluminação/acesso como pendente. Testes e evidências em `QA_IA_RESTRICOES.md` e `.cache/constraint-coverage-verify.log`.
+- Alterações locais sem commit; nenhuma publicação nesta revisão.
+
+## Quantificação herdada nos pacotes · 01/11/2026 · revisão local
+
+- Medir oferece uso direto por serviço; o pacote oferece **Trazer quantificação da seleção**, inclusive para rascunhos manuais sem vínculos. Quantidade conferida, elementos e memória passam juntos, sem redigitação do volume IFC.
+- Concreto em m³, armação em kg e fôrmas em m² mantêm pacotes próprios. Conferências vigentes podem ser reutilizadas; medições manuais justificadas são aceitas mesmo sem QTO. Revisões, escopo incompatível, reservas e compromissos congelados têm proteção explícita.
+- Ensaio visual com dez elementos reais da TORRE02: concreto 40,585 m³ e aço estimado 3.516,826 kg com taxas sintéticas 100/80 kg/m³. Pacote manual atualizado e pacote de armação criado; fôrmas pendentes preservadas.
+- **147 testes**, tipos, três selfchecks e build. Serialização/reabertura testada no domínio; gravação em pasta real não repetida pela UI nesta rodada. Dados do professor preservados.
+- [Guia de operação](QUANTIFICACAO_PARA_PACOTES.md) e [QA, capturas e limites](QA_QUANTIFICACAO_PACOTES.md). Alterações locais sem commit/push.
+
+## Checkpoint autorizado antes do catálogo de serviços · 01/11/2026
+
+- Lucas autorizou expressamente o commit do estado atual antes de qualquer alteração no novo fluxo de serviços/suprimentos. Este checkpoint reúne restrições generativas via Codex/OpenAI/Gemini, propostas sintéticas por categoria e herança da quantificação nos pacotes, com os respectivos testes e relatórios.
+- Verificação desta rodada: 147 testes, tipos, três selfchecks e build; log local `.cache/checkpoint-2026-11-01-verify.log`. Permanece o aviso de bundle grande. QA visual anterior registrado nos relatórios específicos; não foram feitas novas chamadas de IA ou operações em projetos do professor nesta rodada.
+- Catálogo editável de serviços, composições com vários insumos e unificação da criação de pacotes ainda são proposta para a próxima atualização. O mapa atual mantém os três serviços e suas regras existentes; não emite compras.
+- Registros anteriores de “sem commit” descrevem o estado de cada rodada na data em que foram escritos; este fechamento consolida essas alterações.

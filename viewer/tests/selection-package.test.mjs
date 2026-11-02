@@ -36,3 +36,8 @@ test('spatial selection context names the package without changing task dates or
  const p=fixture(),pkg=createSelectionPackage(p,['concrete-a'],()=>({totalM3:2,source:'IFC'}),{locations:['Pavimento 03']});
  assert.equal(pkg.location,'Pavimento 03');assert.equal(pkg.name,'Concretagem — Pavimento 03');assert.equal(pkg.needDate,'2026-11-06');assert.deepEqual(pkg.taskIds,['concrete-a']);validateProject(p);
 });
+test('quick creation prefers complete reviewed concrete quantities over a fresh IFC-only value',async()=>{
+ const {createSelectionPackage}=await import('../src/production/selection-package.ts');const {calculateMeasures}=await import('../src/quantification/calculate.ts');const {catalog}=await import('../src/quantification/catalog.ts');const {approveMeasure}=await import('../src/quantification/review.ts');
+ const p=fixture();p.measures=['a','b'].map(globalId=>approveMeasure(calculateMeasures({element:{modelId:'m',modelHash:'a'.repeat(64),globalId,ifcClass:'IfcSlab',predefinedType:'FLOOR',typeName:'Laje',properties:{}},volume:{amount:2,unit:'m³',source:'QTO'}},catalog[1])[0],{reviewer:'QA',evidence:'Medição manual conferida',method:'Manual',manualAmount:3}));
+ const pkg=createSelectionPackage(p,['concrete-a','concrete-b'],()=>({totalM3:4,source:'Só IFC'}));assert.equal(pkg.quantity,6);assert.equal(pkg.measureLinks.length,2);assert.match(pkg.quantitySource,/Conferência/);validateProject(p);
+});

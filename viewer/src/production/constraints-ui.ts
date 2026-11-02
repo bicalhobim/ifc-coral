@@ -6,12 +6,13 @@ import {evidenceImages} from './evidence-images-ui.ts';
 const node=<K extends keyof HTMLElementTagNameMap>(tag:K,text='',cls='')=>{const n=document.createElement(tag);n.textContent=text;n.className=cls;return n;};
 const button=(text:string,action:()=>void,cls='')=>{const b=node('button',text,cls);b.type='button';b.onclick=action;return b;};
 function field(title:string,value='',type='text'){const label=node('label',title,'restriction-field');const input=type==='textarea'?node('textarea'):node('input');if(input instanceof HTMLInputElement)input.type=type;else input.rows=2;input.value=value;label.append(input);return {label,input};}
-type Hooks={change:(fn:(p:Project)=>void)=>void;selection:()=>ElementRef[];show:(refs:ElementRef[])=>void;name:(ref:ElementRef)=>string;back:()=>void;openId:string;open:(id:string)=>void};
+type Hooks={change:(fn:(p:Project)=>void)=>void;selection:()=>ElementRef[];show:(refs:ElementRef[])=>void;name:(ref:ElementRef)=>string;back:()=>void;openId:string;open:(id:string)=>void;suggest:()=>void};
 export function restrictionChecklist(body:HTMLElement,pkg:WorkPackage,hooks:Hooks){
  const board=node('section','','restriction-board'),done=pkg.constraints.filter(c=>c.resolved).length;
  board.append(button('← Voltar à produção',hooks.back,'restriction-back'),node('p',pkg.location,'eyebrow'),node('h2','Checklist de restrições'),node('p','O que precisa estar liberado para esta frente trabalhar? Cada condição se aplica ao pacote inteiro ou aos elementos indicados.','restriction-intro'));
  const progress=node('div','','restriction-progress');progress.append(node('strong',`${done} de ${pkg.constraints.length} liberadas`),node('span',`${pkg.elements.length} elementos no pacote`));board.append(progress);
  const meter=node('progress');meter.max=Math.max(1,pkg.constraints.length);meter.value=done;meter.setAttribute('aria-label','Restrições liberadas');board.append(meter,node('p','Abra uma condição para apontar responsável, prazo e evidência. Marcar o checklist solicita a conferência; liberar exige confirmar os dados.','fine'));
+ board.append(button('Sugerir restrições com IA',hooks.suggest,'primary'),node('p','Codex deste computador ou API individual: propostas específicas do pacote, revisadas antes de entrar no checklist.','fine'));
  const filter=node('select');filter.setAttribute('aria-label','Filtrar restrições');for(const [v,t]of [['all','Todas as condições'],['pending','Somente pendentes'],['done','Somente liberadas']]){const o=node('option',t);o.value=v;filter.append(o);}board.append(filter);
  for(const c of pkg.constraints){
   const detail=node('details','','restriction-row');detail.dataset.resolved=String(c.resolved);detail.open=hooks.openId===c.id;
@@ -23,6 +24,7 @@ export function restrictionChecklist(body:HTMLElement,pkg:WorkPackage,hooks:Hook
    else{status.checked=false;detail.open=true;hooks.open(c.id);detail.querySelector<HTMLTextAreaElement>('[data-restriction-evidence]')?.focus();}
   };
   const content=node('div','','restriction-content'),scope=node('select');scope.setAttribute('aria-label',`Alcance — ${c.description}`);
+  if(c.aiOrigin)content.append(node('p',`Proposta de ${c.aiOrigin.provider} · ${c.aiOrigin.model} · revisada por ${c.aiOrigin.reviewer}. Continua dependendo de evidência real para liberação.`,'notice'),node('p',c.aiOrigin.reason,'fine'));
   for(const [v,t]of [['package','Todo o pacote'],['elements','Elementos específicos do pacote']]){const o=node('option',t);o.value=v;scope.append(o);}scope.value=c.scope??'package';let refs=structuredClone(c.elements??[]);
   const scopeLine=node('p','','restriction-scope'),elements=node('details','','restriction-elements'),list=node('ol');elements.append(node('summary','Ver elementos vinculados'),list);
   const refreshScope=()=>{const targets=scope.value==='package'?pkg.elements:refs;scopeLine.textContent=targets.length?`${targets.length} elemento${targets.length===1?' vinculado':'s vinculados'} a esta condição.`:'Nenhum elemento vinculado. Selecione no modelo e use o botão abaixo.';list.replaceChildren(...targets.map((e,i)=>node('li',`${i+1}. ${hooks.name(e)}`)));};scope.onchange=refreshScope;refreshScope();

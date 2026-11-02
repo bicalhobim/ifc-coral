@@ -1,6 +1,7 @@
 import {defaultConstraints} from './constraints.ts';
 import type {Project,WorkPackage} from './types.ts';
 import {uid,log} from './project.ts';
+import {applyPackageMeasurements} from './package-quantities.ts';
 
 export function selectionPackageStatus(p:Project,ids:string[]){
  const wanted=new Set(ids),tasks=p.tasks.filter(t=>wanted.has(t.id));
@@ -19,5 +20,7 @@ export function createSelectionPackage(p:Project,ids:string[],quantity:(refs:Wor
  const locations=[...new Set(context?.locations.filter(Boolean)??[])];
  if(locations.length){pkg.location=locations.join(' + ');pkg.name=`Concretagem — ${locations.length<=2?pkg.location:`${locations.length} pavimentos / frentes`}`;}
  else if(new Set(tasks.map(t=>t.location)).size>1){pkg.location='Múltiplas frentes — conferir';pkg.name=`Concretagem — ${elements.length} elementos`;}
+ const reviewed=p.measures.filter(s=>s.measure.serviceCode==='concrete'&&elements.some(e=>e.modelId===s.measure.elementRef.modelId&&e.globalId===s.measure.elementRef.globalId));
+ if(reviewed.length===elements.length){const candidate=structuredClone(p);candidate.packages.push(pkg);applyPackageMeasurements(candidate,reviewed,{packageId:pkg.id});Object.assign(p,candidate);return p.packages.find(x=>x.id===pkg.id)!;}
  p.packages.push(pkg);log(p,'Pacote criado',pkg.name);return pkg;
 }

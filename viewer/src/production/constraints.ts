@@ -1,7 +1,7 @@
 import type {Project,WorkPackage,Constraint,ElementRef} from './types.ts';
 import {uid,log,day} from './project.ts';
 import {validateEvidenceImages,type EvidenceImage} from './evidence-images.ts';
-export const constraintCategories=['Projeto e informação','Frente e predecessoras','Mão de obra','Equipamentos','Materiais e suprimentos','Outros'];
+export const constraintCategories=['Projeto e informação','Frente e predecessoras','Mão de obra','Equipamentos','Materiais e suprimentos','Ambiente e segurança','Outros'];
 export function defaultConstraints():Constraint[]{
  return ['Projeto e informações liberados','Frente e predecessoras liberadas','Mão de obra disponível','Equipamentos disponíveis','Materiais e entrega confirmados'].map((description,i)=>({id:uid(),category:constraintCategories[i],description,resolved:false,evidence:'',reviewer:'',scope:'package'}));
 }

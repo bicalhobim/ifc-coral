@@ -3,6 +3,7 @@ import path from 'node:path';
 import os from 'node:os';
 import {randomUUID} from 'node:crypto';
 import {createFolderPicker} from './native-picker.mjs';
+import {CodexAnalyzer} from './codex-analysis.mjs';
 
 const fail=(message,name='Error')=>Object.assign(new Error(message),{name});
 function segment(value){
@@ -83,6 +84,7 @@ export function isTrustedRequest(req,token){
 }
 
 export function localWorkspacePlugin(){
+ const codex=new CodexAnalyzer();
  const pickFolder=createFolderPicker();
  const service=new LocalWorkspace(path.join(process.env.LOCALAPPDATA??path.join(os.homedir(),'.local'),'IFC Coral','folders.json'));
  const token=randomUUID();
@@ -96,9 +98,14 @@ export function localWorkspacePlugin(){
   if(req.method!=='POST'||!isTrustedRequest(req,token))return send(403,{error:'Sessão local não autorizada.'});
   try{
    let size=0;const chunks=[];
-   for await(const chunk of req){size+=chunk.length;if(size>128*1024*1024)throw fail('Arquivo excede o limite de 128 MB da versão local.');chunks.push(chunk);}
+   for await(const chunk of req){size+=chunk.length;if(size>(req.url.includes('/ai-')?256*1024:128*1024*1024))throw fail('Pedido excede o limite da versão local.');chunks.push(chunk);}
    const body=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');let value;
    switch(req.url){
+    case '/__coral_local/ai-status':value=codex.status();break;
+    case '/__coral_local/ai-restrictions':{
+     const controller=new AbortController();const cancel=()=>{if(!res.writableEnded)controller.abort();};res.on('close',cancel);
+     try{value=await codex.analyze(body,{signal:controller.signal});}finally{res.off('close',cancel);}break;
+    }
     case '/__coral_local/choose':{const selected=await pickFolder();value=selected?await service.select(selected):null;break;}
     case '/__coral_local/entry':value=await service.entry(body.id,body.parts,body.kind,body.create===true);break;
     case '/__coral_local/list':value=await service.list(body.id,body.parts);break;
