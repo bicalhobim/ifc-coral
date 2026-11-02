@@ -1,3 +1,6 @@
+import {preserveEditing,watchEditing} from '../ui/editing-state.ts';
+import {isEmptyConstraint} from './constraints.ts';
+import {adoptPackage,editPackageField} from './integrated.ts';
 import {restrictionChecklist} from './constraints-ui.ts';
 import {openConstraintAssistant} from './constraint-ai-ui.ts';
 import {downloadBlob} from '../workspace/downloads.ts';
@@ -15,7 +18,7 @@ import {createSelectionPackage,selectionPackageStatus} from './selection-package
 import {createManualPackage,deletePackage,restorePackage,packageDeletionBlock,type RemovedPackage} from './package-management.ts';
 import {usesResourceSupply} from './supply-mode.ts';
 import type {PackageMeasureRequest} from './package-quantities-ui.ts';
-type Hooks={getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];showElements?:(refs:ElementRef[])=>void;elementName?:(ref:ElementRef)=>string;selectionContext?:()=>{locations:string[]};select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;importModel:()=>void;quantity:(refs:WorkPackage['elements'])=>VolumeSummary;quantification?:(request:PackageMeasureRequest)=>void};
+type Hooks={openSupplies?:(id:string)=>void;createPackages?:()=>void;getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];showElements?:(refs:ElementRef[])=>void;elementName?:(ref:ElementRef)=>string;selectionContext?:()=>{locations:string[]};select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;importModel:()=>void;quantity:(refs:WorkPackage['elements'])=>VolumeSummary;quantification?:(request:PackageMeasureRequest)=>void};
 export function el<K extends keyof HTMLElementTagNameMap>(tag:K,text='',cls=''){const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;return n;}
 function btn(text:string,action:()=>void,cls=''){const b=el('button',text,cls);b.type='button';b.onclick=action;return b;}
 function field(label:string,value:string,type='text'){
@@ -43,26 +46,28 @@ export class ProductionPanel{
  readonly element=el('section','','workshop');private tab='Produção';private selected='';private reviewer='';private restrictionsOpen=false;private openConstraint='';
  private hooks:Hooks;private error='';private lastTab='';private expandedSupplies=new Set<string>();private projectId='';
  private removed:RemovedPackage|undefined;
+ private renderedContext='';
  private feedback=el('p','','work-feedback notice error');
  constructor(hooks:Hooks){this.hooks=hooks;this.render();}
- focusPackage(id:string){this.selected=id;this.tab='Produção';this.restrictionsOpen=false;this.render();}
+ focusPackage(id:string,tab='Produção'){this.selected=id;this.tab=tab==='Restrições'?'Produção':tab;this.restrictionsOpen=tab==='Restrições';this.render(false);}
  private action(fn:(p:Project)=>void){
- try{this.hooks.change(fn);this.error='';this.render();}
+ try{this.hooks.change(fn);this.error='';this.render(false);}
  catch(e){this.error=e instanceof Error?e.message:String(e);this.renderFeedback();this.feedback.focus({preventScroll:true});const rect=this.feedback.getBoundingClientRect();if(rect.top<0||rect.bottom>window.innerHeight)this.feedback.scrollIntoView({block:'center'});}
  }
  private renderFeedback(){this.feedback.textContent=this.error;this.feedback.hidden=!this.error;this.feedback.tabIndex=-1;this.feedback.setAttribute('role','alert');}
  private selectionButton(text='Criar pacote da seleção'){
-  const group=el('div','','selection-create'),help=el('p','','selection-help'),button=btn(text,()=>this.createFromSelection(),'primary');
+  const group=el('div','','selection-create'),help=el('p','','selection-help'),button=btn(text,()=>this.hooks.createPackages?this.hooks.createPackages():this.createFromSelection(),'primary');
   help.dataset.selectionHelp='';button.dataset.createSelection='';button.setAttribute('aria-describedby',help.id=`selection-help-${uid()}`);group.append(help,button);return group;
  }
  updateSelectionState(){
   for(const button of this.element.querySelectorAll<HTMLButtonElement>('[data-use-quantification]'))button.disabled=!this.selectionRefs().length||!this.hooks.quantification;
   for(const node of this.element.querySelectorAll<HTMLElement>('[data-constraint-selection]')){const pkg=this.hooks.getProject().packages.find(p=>p.id===node.dataset.constraintSelection);const count=this.selectionRefs().filter(e=>pkg?.elements.some(p=>p.modelId===e.modelId&&p.globalId===e.globalId)).length;node.textContent=`${count} selecionado${count===1?'':'s'} deste pacote`;}
-  const state=selectionPackageStatus(this.hooks.getProject(),this.hooks.selection());
+  const state=this.hooks.createPackages?{ready:this.selectionRefs().length>0,message:'Selecione elementos e escolha os serviços para criar seus pacotes.'}:selectionPackageStatus(this.hooks.getProject(),this.hooks.selection());
   for(const help of this.element.querySelectorAll<HTMLElement>('[data-selection-help]'))help.textContent=state.message;
   for(const button of this.element.querySelectorAll<HTMLButtonElement>('[data-create-selection]')){button.disabled=!state.ready;button.title=state.message;}
  }
- render(){
+ render(preserve=true){const context=this.hooks.getProject().id+'|'+this.selected+'|'+this.tab+'|'+this.restrictionsOpen;const restore=preserve&&context===this.renderedContext?preserveEditing(this.element):undefined;this.renderContents();restore?.();watchEditing(this.element);this.renderedContext=this.hooks.getProject().id+'|'+this.selected+'|'+this.tab+'|'+this.restrictionsOpen;}
+ private renderContents(){
  const p=this.hooks.getProject();if(p.id!==this.projectId){this.projectId=p.id;this.tab='Produção';this.selected='';this.reviewer='';this.lastTab='';this.error='';this.expandedSupplies.clear();this.removed=undefined;this.restrictionsOpen=false;this.openConstraint='';}const previousScroll=this.lastTab===this.tab?(this.element.querySelector('.work-body')?.scrollTop??0):0;this.lastTab=this.tab;this.element.replaceChildren();
  const teaching=isTeachingProject(p);
  const nav=el('nav','','work-nav');nav.setAttribute('aria-label','Planejamento e controle');
@@ -92,7 +97,7 @@ export class ProductionPanel{
  const block=packageDeletionBlock(p,current.id);remove.disabled=!!block;remove.title=block||'Excluir rascunho com opção de desfazer';pkgActions.append(remove);if(!(this.tab==='Produção'&&this.restrictionsOpen))body.append(pkgActions,this.newPackageControl(),this.selectionButton('+ Pacote da seleção'));this.updateSelectionState();
  const pkg=p.packages.find(x=>x.id===this.selected)!;const readiness=assessReadiness(p,pkg);
  if(!(this.tab==='Produção'&&this.restrictionsOpen))body.append(el('p',`${pkg.location} · ${pkg.service}`,'eyebrow'),el('h2',pkg.name),el('p',p.week?.commitments.some(c=>c.packageId===pkg.id)?(readiness.ready?'COMPROMISSO REGISTRADO · CONDIÇÕES ATUAIS ATENDIDAS':'COMPROMISSO REGISTRADO · REVISAR CONDIÇÕES ATUAIS'):(readiness.ready?'PRONTO PARA COMPROMISSO':'PREPARAR ANTES DE PROMETER'),readiness.ready?'badge good':'badge warn'));
- if(this.tab==='Produção'){if(this.restrictionsOpen)restrictionChecklist(body,pkg,{change:fn=>this.action(fn),selection:()=>this.selectionRefs(),show:refs=>this.hooks.showElements?.(refs),name:ref=>this.hooks.elementName?.(ref)??'Elemento IFC do pacote',back:()=>{this.restrictionsOpen=false;this.render();},openId:this.openConstraint,open:id=>{this.openConstraint=id;},suggest:()=>this.suggestRestrictions(pkg.id)});else this.production(body,pkg,p);}
+ if(this.tab==='Produção'){if(this.restrictionsOpen)restrictionChecklist(body,pkg,{getProject:this.hooks.getProject,change:fn=>this.action(fn),selection:()=>this.selectionRefs(),show:refs=>this.hooks.showElements?.(refs),name:ref=>this.hooks.elementName?.(ref)??'Elemento IFC do pacote',back:()=>{this.restrictionsOpen=false;this.render();},openId:this.openConstraint,open:id=>{this.openConstraint=id;},suggest:()=>this.suggestRestrictions(pkg.id)});else this.production(body,pkg,p);}
  if(this.tab==='Suprimentos')this.supply(body,pkg,p);
  if(this.tab==='Semana / PPC')this.week(body,pkg,p);
  if(this.tab==='IA'){body.append(btn('Sugerir restrições com IA',()=>this.suggestRestrictions(pkg.id),'primary'),el('p','Prepara propostas revisáveis do pacote selecionado usando Codex local ou sua API.','notice'));const general=el('details');general.append(el('summary','Outras análises de IA — projeto e compras (API)'));mountAI(general,()=>this.hooks.getProject());body.append(general);}
@@ -104,6 +109,7 @@ export class ProductionPanel{
   const box=el('div','','package-undo');box.append(el('span',`Pacote “${this.removed!.package.name}” excluído.`),btn('Desfazer exclusão',()=>this.action(p=>{restorePackage(p,this.removed!);this.selected=this.removed!.package.id;this.removed=undefined;})));return box;
  }
  private newPackageControl(){
+ if(this.hooks.createPackages){const box=el('div');box.append(btn('+ Novo pacote por serviço',()=>this.hooks.createPackages!()));return box;}
   const details=el('details','','package-new');details.append(el('summary','+ Novo pacote'));
   const name=field('Nome do novo pacote',''),location=field('Local do novo pacote',''),service=field('Serviço do novo pacote','');
   const unit=el('select');unit.setAttribute('aria-label','Unidade do novo pacote');for(const u of ['m³','kg','m²']){const option=el('option',u);option.value=u;unit.append(option);}
@@ -113,29 +119,31 @@ export class ProductionPanel{
  this.selected=createSelectionPackage(p,this.hooks.selection(),this.hooks.quantity,this.hooks.selectionContext?.()).id;
  });}
  private production(body:HTMLElement,pkg:WorkPackage,p:Project){
- const checklist=el('div','','restriction-overview'),released=pkg.constraints.filter(c=>c.resolved).length;checklist.append(el('div',`${released}/${pkg.constraints.length} condições liberadas`),btn('Abrir checklist de restrições',()=>{this.restrictionsOpen=true;this.render();this.element.querySelector('.work-body')?.scrollTo({top:0});},'primary'));body.append(checklist);
+ const checklist=el('div','','restriction-overview'),released=pkg.constraints.filter(c=>c.resolved).length;checklist.append(el('div',`${released}/${pkg.constraints.filter(c=>!isEmptyConstraint(c)).length} condições identificadas liberadas`),btn('Abrir checklist de restrições',()=>{this.restrictionsOpen=true;this.render();this.element.querySelector('.work-body')?.scrollTo({top:0});},'primary'));body.append(checklist);
  const frozen=p.week?.commitments.some(c=>c.packageId===pkg.id),measured=!!pkg.measureLinks?.length,concrete=pkg.unit==='m³'&&/concretagem|concrete/i.test(pkg.name+' '+pkg.service),callout=el('div','','quantity-callout');
  if(measured){
   callout.append(el('strong',`${pkg.quantity?.toLocaleString('pt-BR',{maximumFractionDigits:3})??'A conferir'} ${pkg.unit} · quantificação herdada`),helpButton('Origem da quantificação do pacote',pkg.quantitySource),el('p',`${pkg.measureLinks!.length} medições vinculadas aos elementos · unidade do serviço preservada.`,'fine'));
   if(quantificationNeedsReview(p,pkg))callout.append(el('p','A origem mudou: confira a seleção e atualize o quantitativo antes de planejar.','notice warn'));
  }else{
   const q=this.hooks.quantity(pkg.elements);callout.append(el('strong',!pkg.elements.length?'Pacote sem elementos vinculados':q.totalM3===null?'Volume IFC a conferir':`${q.totalM3.toLocaleString('pt-BR',{maximumFractionDigits:3})} m³ no IFC`),helpButton('Origem do volume IFC',q.source));
-  const apply=btn('Usar volume IFC neste pacote',()=>this.action(x=>{if(frozen)throw new Error('O compromisso já foi congelado. Preserve o quantitativo assumido.');if(q.totalM3===null||!concrete)throw new Error('Confira o serviço de concretagem e o quantitativo completo.');const target=x.packages.find(t=>t.id===pkg.id)!;target.quantity=Math.round(q.totalM3*1e6)/1e6;target.quantitySource=q.source;log(x,'Quantidade IFC aplicada',q.source);}));apply.disabled=q.totalM3===null||!!frozen||!concrete;callout.append(apply);
+  const apply=btn('Usar volume IFC neste pacote',()=>this.action(x=>{if(frozen)throw new Error('O compromisso já foi congelado. Preserve o quantitativo assumido.');if(q.totalM3===null||!concrete)throw new Error('Confira o serviço de concretagem e o quantitativo completo.');const target=x.packages.find(t=>t.id===pkg.id)!;if(x.planning)editPackageField(x,pkg.id,'quantity',Math.round(q.totalM3*1e6)/1e6);target.quantity=Math.round(q.totalM3*1e6)/1e6;target.quantitySource=q.source;log(x,'Quantidade IFC aplicada',q.source);}));apply.disabled=q.totalM3===null||!!frozen||!concrete;callout.append(apply);
  }
  if(frozen)callout.append(el('p','Compromisso congelado: o quantitativo assumido permanece preservado.'));body.append(callout);
  const inherit=btn('Trazer quantificação da seleção',()=>this.hooks.quantification?.({packageId:pkg.id,service:pkg.serviceCode??(pkg.unit==='kg'?'reinforcement':pkg.unit==='m²'?'formwork':'concrete')}),'primary');inherit.dataset.useQuantification='';body.append(inherit,el('p','Herde concreto (m³), aço (kg) ou fôrmas (m²), com elementos, cálculo e conferência. Salve alterações da definição antes de usar.','fine'));
  body.append(el('p','Planeje por local e serviço. O pavimento do IFC ajuda a localizar; o pacote é uma decisão da equipe, não uma EAP gerada automaticamente.','lead'));
  const origin=p.tasks.find(t=>pkg.taskIds.includes(t.id));if(origin)body.append(el('p',`Origem IFC: ${origin.start} → ${origin.finish}. As datas abaixo pertencem ao cenário de trabalho.`,'notice'));
  const fields=[field('Nome do pacote',pkg.name),field('Local / frente',pkg.location),field('Serviço',pkg.service),field('Responsável',pkg.responsible),field(`Quantidade do serviço (${pkg.unit})`,pkg.quantity===null?'':String(pkg.quantity),'number'),field('Origem / premissa da quantidade',pkg.quantitySource),field('Necessidade na frente',pkg.needDate,'date'),field('Prazo de conclusão',pkg.finishDate,'date'),field('Critério verificável de conclusão',pkg.criterion)];
+ if(p.planning?.packages[pkg.id])fields[2].input.readOnly=true;
  if(pkg.measureLinks?.length||frozen){fields[4].input.disabled=true;fields[5].input.readOnly=true;}
  const grid=el('div','','form-grid');grid.append(...fields.map(f=>f.label));const capacity=check('Capacidade de equipe e equipamento conferida',pkg.capacityConfirmed);grid.append(capacity.label);body.append(grid);
- body.append(btn('Salvar definição do pacote',()=>this.action(x=>{const t=x.packages.find(q=>q.id===pkg.id)!;Object.assign(t,{name:fields[0].input.value,location:fields[1].input.value,service:fields[2].input.value,responsible:fields[3].input.value,quantity:fields[4].input.value===''?null:Number(fields[4].input.value),quantitySource:fields[5].input.value,needDate:fields[6].input.value,finishDate:fields[7].input.value,criterion:fields[8].input.value,capacityConfirmed:capacity.input.checked});log(x,'Pacote atualizado',t.name);}), 'primary'));
+ body.append(btn('Salvar definição do pacote',()=>this.action(x=>{const t=x.packages.find(q=>q.id===pkg.id)!;if(x.planning){if(x.week?.commitments.some(c=>c.packageId===pkg.id)||x.actuals.some(a=>a.packageId===pkg.id)||x.planning.packages[pkg.id]?.supersededBy)throw new Error('Registro congelado: crie uma revisão.');adoptPackage(x,pkg.id);const q=fields[4].input.value===''?null:Number(fields[4].input.value);if(t.quantity!==q)editPackageField(x,pkg.id,'quantity',q);if(t.needDate!==fields[6].input.value)editPackageField(x,pkg.id,'needDate',fields[6].input.value);if(t.finishDate!==fields[7].input.value)editPackageField(x,pkg.id,'finishDate',fields[7].input.value);}Object.assign(t,{name:fields[0].input.value,location:fields[1].input.value,service:fields[2].input.value,responsible:fields[3].input.value,quantity:fields[4].input.value===''?null:Number(fields[4].input.value),quantitySource:fields[5].input.value,needDate:fields[6].input.value,finishDate:fields[7].input.value,criterion:fields[8].input.value,capacityConfirmed:capacity.input.checked});log(x,'Pacote atualizado',t.name);}), 'primary'));
  body.append(btn(`Realçar ${pkg.elements.length} elementos no modelo`,()=>this.hooks.select(pkg)),el('p','Local inicial do pacote: hierarquia de planejamento Summary3, quando disponível. Confira-o contra a geometria e a árvore espacial; classificações do IFC podem divergir da divisão de produção.','fine'));
  if(pkg.measureLinks?.length&&!frozen)body.append(btn('Atualizar com conferências vigentes',()=>this.action(x=>{if(!this.hooks.review(pkg))throw new Error('Conferir vínculos IFC.');refreshPackageMeasures(x,pkg.id);})));
  if(pkg.reviewRequired)body.append(btn('Conferir vínculos da revisão',()=>this.action(x=>{if(!this.hooks.review(pkg)||quantificationNeedsReview(x,pkg))throw new Error('Há vínculos ou quantitativos a conferir; use Quantificação e atualize as conferências.');x.packages.find(q=>q.id===pkg.id)!.reviewRequired=false;log(x,'Vínculos conferidos',pkg.name);}),'warning'));
 
  }
  private supply(body:HTMLElement,pkg:WorkPackage,p:Project){
+ if(p.planning?.packages[pkg.id]&&this.hooks.openSupplies){body.append(el('p','Insumos, unidades, prazos e cobertura deste pacote estão integrados ao mapa de suprimentos.','notice'),btn('Abrir composição e mapa',()=>this.hooks.openSupplies!(pkg.id),'primary'));return;}
  this.supplyMap(body,p);
  if(usesResourceSupply(p,pkg)){this.resourceSupply(body,pkg,p);return;}
  const balance=packageBalance(p,pkg),dates=supplyWindow(pkg.needDate,2,1);

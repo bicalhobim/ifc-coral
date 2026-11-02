@@ -24,6 +24,14 @@ export class Viewer {
   /** Modelo ativo: o último carregado, ou o clicado no viewport (ver pickAt). */
   model?: FRAGS.FragmentsModel;
   private _highlighted = new Map<FRAGS.FragmentsModel, number[]>();
+  private _themes: {model:FRAGS.FragmentsModel;ids:number[];color:string}[]=[];
+  async setManagementColors(rows:{model:FRAGS.FragmentsModel;ids:number[];color:string}[]){
+    for(const row of this._themes)await row.model.resetHighlight(row.ids);
+    this._themes=rows;
+    for(const row of rows)await row.model.highlight(row.ids,{...SELECT_MAT,color:new THREE.Color(row.color)});
+    for(const [model,ids] of this._highlighted)await model.highlight(ids,SELECT_MAT);
+    await this.fragments.core.update(true);
+  }
 
   async init(viewport: HTMLElement) {
     const worlds = this.components.get(OBC.Worlds);
@@ -99,6 +107,7 @@ export class Viewer {
 
   async unload(model: FRAGS.FragmentsModel) {
     this._highlighted.delete(model);
+    this._themes=this._themes.filter(row=>row.model!==model);
     await this.fragments.core.disposeModel(model.modelId);
     if (this.model === model) this.model = undefined;
   }
@@ -120,6 +129,7 @@ export class Viewer {
       await model.resetHighlight(ids);
     }
     this._highlighted.clear();
+    for(const row of this._themes)await row.model.highlight(row.ids,{...SELECT_MAT,color:new THREE.Color(row.color)});
   }
 
   /** Realça um elemento, resetando o realce anterior. */

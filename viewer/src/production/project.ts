@@ -1,3 +1,4 @@
+import {validatePlanning} from './integrated.ts';
 import type {Project,ModelRevision} from './types.ts';
 import {migrateV1} from './migrations.ts';
 import {isReviewCurrent} from '../quantification/review.ts';
@@ -29,7 +30,7 @@ const list=(r:Rule):Rule=>v=>{if(!Array.isArray(v)||v.length>100000)fail();(v as
 const obj=(rules:Record<string,Rule>,optional:Record<string,Rule>={}):Rule=>v=>{if(!v||typeof v!=='object'||Array.isArray(v))fail();const o=v as Record<string,unknown>,all={...rules,...optional};if(Object.keys(o).some(k=>!Object.hasOwn(all,k))||Object.keys(rules).some(k=>!Object.hasOwn(o,k)))fail();for(const [key,rule]of Object.entries(all))if(Object.hasOwn(o,key))rule(o[key]);};
 const ref=obj({modelId:txt,globalId:txt});
 const constraint=obj({id:txt,category:txt,description:txt,resolved:bool,evidence:txt,reviewer:txt},{scope:literal('package','elements'),elements:list(ref),owner:txt,dueDate:date,action:txt,attachments:validateEvidenceImages,aiOrigin:obj({provider:literal('codex','openai','gemini'),model:txt,generatedAt:txt,reviewedAt:txt,reviewer:txt,reason:txt,basis:list(txt)})});
-const unit=literal('m³','kg','m²'),service=literal('concrete','reinforcement','formwork');
+const unit=literal('m³','kg','m²','m','L','h','un','dia'),service=literal('concrete','reinforcement','formwork');
 const jsonData:Rule=v=>{if(JSON.stringify(v).length>50000)fail();};
 const quantRule=obj({id:txt,version:txt,label:txt,ifcClass:txt,priority:pos,steelRate:nullable(pos),formMethod:nullable(txt),source:txt,status:literal('draft')},{predefinedType:txt,typePattern:txt});
 const measureRule=obj({id:txt,elementRef:obj({modelId:txt,modelHash:txt,globalId:txt,ifcClass:txt,predefinedType:txt,typeName:txt,properties:jsonData}),serviceCode:service,ruleId:txt,ruleVersion:txt,ruleSnapshot:quantRule,inputs:jsonData,amount:nullable(pos),unit,origin:literal('declared','geometric','estimated'),status:literal('draft','pending'),pendingReasons:list(txt),evidence:list(txt)},{classificationOverride:obj({author:txt,reason:txt})});
@@ -45,11 +46,11 @@ const schemaFor=(version:1|2)=>obj({schema:literal(version),id:txt,name:txt,mode
  supplies:list(obj({...supplyFields,unit:version===1?literal('m³'):unit},version===1?{}:{resourceCode:txt,specification:txt,reusable:bool,availableUntil:date})),
  allocations:list(obj({id:txt,packageId:txt,supplyId:txt,quantity:pos})),deliveries:list(obj({id:txt,allocationId:txt,date:date,received:pos,rejected:pos,evidence:txt,reviewer:txt})),
  week:nullable(obj({frozenAt:txt,reviewer:txt,commitments:list(obj({packageId:txt,name:txt,location:txt,quantity:pos,unit:version===1?literal('m³'):unit,deadline:date,criterion:txt,responsible:txt}))})),actuals:list(obj({packageId:txt,date:date,complete:bool,evidence:txt,reason:txt})),audit:list(obj({at:txt,action:txt,detail:txt})),
- ...(version===2?{measures:list(snapshotRule),resources:list(obj({id:txt,packageId:txt,resourceCode:txt,specification:txt,specificationConfirmed:bool,quantity:pos,unit,needDate:date,from:date,to:date,factor:pos,lossPercent:pos,leadDays:pos,preparationDays:pos,reusable:bool,cycleDays:pos,evidence:txt,procurementBlockers:list(txt)})),resourceAllocations:list(obj({id:txt,requirementId:txt,supplyId:txt,quantity:pos}))}:{})
-},version===2?{templateId:literal('torre02'),quantificationCatalog:list(quantRule),supplyPlans:list(supplyPlanRule),measureHistory:list(snapshotRule)}:{});
+ ...(version===2?{measures:list(snapshotRule),resources:list(obj({id:txt,packageId:txt,resourceCode:txt,specification:txt,specificationConfirmed:bool,quantity:pos,unit,needDate:date,from:date,to:date,factor:pos,lossPercent:pos,leadDays:pos,preparationDays:pos,reusable:bool,cycleDays:pos,evidence:txt,procurementBlockers:list(txt)},{compositionId:txt})),resourceAllocations:list(obj({id:txt,requirementId:txt,supplyId:txt,quantity:pos}))}:{})
+},version===2?{templateId:literal('torre02'),quantificationCatalog:list(quantRule),supplyPlans:list(supplyPlanRule),measureHistory:list(snapshotRule),planning:v=>validatePlanning(v as any)}:{});
 const schema=schemaFor(2),legacySchema=schemaFor(1);
 export function validateProject(p:Project):void{
- schema(p);
+ if(p.schema===3){const copy={...p,schema:2};delete copy.planning;schema(copy);if(p.planning)validatePlanning(p.planning);}else{const copy={...p};delete copy.planning;schema(copy);if(p.planning)validatePlanning(p.planning);}
  if(p.packages.flatMap(pkg=>pkg.constraints).flatMap(c=>c.attachments??[]).reduce((n,a)=>n+a.size,0)>MAX_PROJECT_IMAGE_BYTES)throw new Error('O projeto atingiu o limite de 12 MB de prints. Use imagens menores.');
  if(new Set(p.measures.map(s=>s.measure.id)).size!==p.measures.length)fail();
  for(const plan of p.supplyPlans??[])if(!plan.reviewer.trim()||!plan.evidence.trim()||plan.fingerprint!==JSON.stringify(plan.entries))fail();
@@ -58,6 +59,7 @@ export function validateProject(p:Project):void{
  [p.models,p.tasks,p.packages,p.supplies,p.allocations,p.deliveries,p.resources,p.resourceAllocations].forEach(unique);
  if(new Set([...p.allocations,...p.resourceAllocations].map(a=>a.id)).size!==p.allocations.length+p.resourceAllocations.length)fail();
  const packages=new Set(p.packages.map(x=>x.id)),models=new Set(p.models.map(x=>x.id)),tasks=new Set(p.tasks.map(x=>x.id));
+ if(p.schema===3&&!p.planning)fail();if(p.planning)for(const [id,m]of Object.entries(p.planning.packages)){if(!packages.has(id)||m.revisionOf&&(!packages.has(m.revisionOf)||m.revisionOf===id)||m.supersededBy&&(!packages.has(m.supersededBy)||m.supersededBy===id)||p.packages.find(q=>q.id===id)!.unit!==m.serviceSnapshot.unit)fail();}
  if(p.models.some(m=>!(/^[a-f0-9]{64}$/.test(m.hash))))fail();
  if(p.tasks.some(t=>!models.has(t.modelId)||!t.globalId||t.finish<t.start))fail();
  for(const pkg of p.packages){unique(pkg.constraints);if(pkg.finishDate<pkg.needDate||pkg.elements.some(e=>!models.has(e.modelId)||!e.globalId)||(!pkg.reviewRequired&&pkg.taskIds.some(id=>!tasks.has(id))))fail();if(pkg.constraints.some(c=>c.resolved&&(!hasConstraintEvidence(c)||!c.reviewer.trim())))fail();}

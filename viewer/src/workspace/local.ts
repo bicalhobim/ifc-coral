@@ -137,10 +137,16 @@ export async function saveProjectFolder(dir:DirectoryHandle,project:Project,byte
     }else await writeAtomically(await models.getFileHandle(name,{create:true}),value);
    }
   }
+  if(currentText&&currentText!==packed)await storeVersion(dir,currentText);
   await writeAtomically(existing??await dir.getFileHandle(PROJECT_FILE,{create:true}),packed);
   observedVersions.set(dir,await textHash(packed));
+  await storeVersion(dir,packed);
  });
 }
+
+async function storeVersion(dir:DirectoryHandle,text:string){const folder=await dir.getDirectoryHandle('Historico',{create:true}),hash=await textHash(text),description=String(JSON.parse(text).project?.audit?.at(-1)?.action??'Projeto salvo').replace(/[^\p{L}\p{N} _-]/gu,'').slice(0,60);for await(const entry of folder.values())if(entry.kind==='file'&&entry.name.endsWith(`-${hash}.json`)){const existing=await (await entry.getFile()).text();if(await textHash(existing)===hash)return;}await writeAtomically(await folder.getFileHandle(`${new Date().toISOString().replace(/[:.]/g,'-')}-${description}-${crypto.randomUUID().slice(0,8)}-${hash}.json`,{create:true}),text);}
+export async function listProjectVersions(dir:DirectoryHandle){let folder:DirectoryHandle;try{folder=await dir.getDirectoryHandle('Historico');}catch(e){if(missing(e))return [];throw e;}const result:{name:string;title:string}[]=[];for await(const e of folder.values())if(e.kind==='file'&&/^\d{4}-.*-[a-f0-9]{64}\.json$/.test(e.name))result.push({name:e.name,title:e.name.slice(0,24)+(e.name.match(/^.{24}-(.*)-[a-f0-9]{8}-[a-f0-9]{64}\.json$/)?.[1]?' · '+e.name.match(/^.{24}-(.*)-[a-f0-9]{8}-[a-f0-9]{64}\.json$/)![1]:'')});return result.sort((a,b)=>b.name.localeCompare(a.name));}
+export async function readProjectVersion(dir:DirectoryHandle,name:string){safeName(name);if(!/^\d{4}-.*-[a-f0-9]{64}\.json$/.test(name))throw new Error('Versão inválida.');const folder=await dir.getDirectoryHandle('Historico'),file=await folder.getFileHandle(name),text=await (await file.getFile()).text();if(!name.endsWith(`-${await textHash(text)}.json`))throw new Error('Integridade da versão divergente.');return unpackProject(text);}
 
 export async function readProjectFolder(dir:DirectoryHandle):Promise<{project:Project;bytes:Map<string,Uint8Array>}>{
  // Authoritative package contains IFC bytes; loose copies are never trusted in its place.

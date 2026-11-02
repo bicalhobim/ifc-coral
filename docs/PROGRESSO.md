@@ -218,3 +218,12 @@ O diagnóstico anterior foi evoluído para o catálogo do aplicativo. Plano exec
 - Verificação desta rodada: 147 testes, tipos, três selfchecks e build; log local `.cache/checkpoint-2026-11-01-verify.log`. Permanece o aviso de bundle grande. QA visual anterior registrado nos relatórios específicos; não foram feitas novas chamadas de IA ou operações em projetos do professor nesta rodada.
 - Catálogo editável de serviços, composições com vários insumos e unificação da criação de pacotes ainda são proposta para a próxima atualização. O mapa atual mantém os três serviços e suas regras existentes; não emite compras.
 - Registros anteriores de “sem commit” descrevem o estado de cada rodada na data em que foram escritos; este fechamento consolida essas alterações.
+
+## Evolução integrada — 02/11/2026 — versão local
+
+- Schema 3 compatível com projetos anteriores; operações atômicas, autosave 2s, até 50 undo/redo, histórico local com integridade e conflito antes de sobrescrever.
+- Catálogos editáveis, composições com múltiplas unidades, previsões 4D com substituição pelo recorte detalhado, suprimentos datados e consolidação de reutilização.
+- Restrições por categoria, reaproveitamento de padrões vazios, justificativas de não aplicabilidade; propostas não liberam trabalho.
+- Lista/Kanban validado, gestão visual por serviço e proteção das premissas humanas e dos registros congelados.
+- 174 testes, tipos, selfchecks e build aprovados. Ensaio real TORRE02: três pacotes, ajuste20m³, reserva/recebimento, compromisso/início/conclusão, PPC100%, undo0/redo100, autosave/reabertura e restauração. Janela estreita e preservação de texto entre vistas conferidas.
+- [Guia](GUIA_EVOLUCAO_INTEGRADA.md) e [QA/evidências/limites](QA_EVOLUCAO_INTEGRADA.md). Instalação externa e chamadas reais de IA não repetidas. Nenhum commit/push nesta rodada.

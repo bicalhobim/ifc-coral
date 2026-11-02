@@ -1,3 +1,9 @@
+# Evolução integrada — estado local em 02/11/2026
+
+Referência atual: [guia](GUIA_EVOLUCAO_INTEGRADA.md) e [QA](QA_EVOLUCAO_INTEGRADA.md). Schema3, múltiplos insumos por pacote, mapa macro/detalhado, Kanban, cores e histórico substituem as limitações de recurso único do registro histórico abaixo. 174 testes e ensaio de navegador concluídos; avaliação do professor e autorização de commit continuam distintas de QA técnico.
+
+---
+
 # Verificação do primeiro recorte · 17/10/2026
 
 Estado: **laboratório local funcional**. Não é a declaração de conclusão de todos os RF/CA do documento 5.4. O núcleo foi exercitado com TORRE02 real e dados de produção/suprimentos sintéticos. Nenhuma mensagem externa, pedido ou pagamento foi realizado.

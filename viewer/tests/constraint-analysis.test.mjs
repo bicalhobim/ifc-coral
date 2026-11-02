@@ -2,9 +2,15 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createProject,serializeProject,parseProject} from '../src/production/project.ts';
 import {createManualPackage} from '../src/production/package-management.ts';
+import {adoptPackage} from '../src/production/integrated.ts';
 import {analysisContext,parseConstraintAnalysis,applyConstraintAnalysis,constraintAnalysisInstructions} from '../src/production/constraint-analysis.ts';
 function fixture(){const p=createProject(),pkg=createManualPackage(p,{name:'Laje P1',location:'P1',service:'Concretagem'});p.models.push({id:'m',hash:'a'.repeat(64),name:'Estrutura',projectGlobalId:'root'});pkg.elements=[{modelId:'m',globalId:'a'}];pkg.quantity=12;pkg.quantitySource='Cenário didático';return {p,pkg};}
 const response=()=>({summary:'Preparar a concretagem.',facts:['12 m³ informados no cenário.'],gaps:['Entrega sem confirmação.'],suggestions:[{category:'Materiais e suprimentos',description:'Confirmar janela de entrega do concreto',action:'Consultar disponibilidade na janela necessária.',verification:'Conferir confirmação documentada.',reason:'Não há confirmação de entrega.',basis:['package'],scope:'package',elements:[]}]});
+test('non-applicable category is respected and changing it invalidates in-flight analysis',()=>{const {p,pkg}=fixture();const context=analysisContext(p,pkg.id);adoptPackage(p,pkg.id).notApplicable={'Materiais e suprimentos':'QA: escopo sem materiais'};const next=analysisContext(p,pkg.id);assert.ok(!next.requiredCategories.includes('Materiais e suprimentos'));assert.throws(()=>applyConstraintAnalysis(p,context,response(),[0],{provider:'codex',model:'qa',reviewer:'QA'}),/mudou/);assert.throws(()=>applyConstraintAnalysis(p,next,response(),[0],{provider:'codex',model:'qa',reviewer:'QA'}),/não aplicável/);});
+
+test('AI fills the intact category placeholder instead of adding a duplicate empty condition',()=>{
+ const {p,pkg}=fixture(),id=pkg.constraints[4].id;applyConstraintAnalysis(p,analysisContext(p,pkg.id),response(),[0],{provider:'codex',model:'qa',reviewer:'QA'});assert.equal(pkg.constraints.length,5);assert.equal(pkg.constraints[4].id,id);assert.match(pkg.constraints[4].description,/janela/);assert.equal(pkg.constraints[4].resolved,false);
+});
 test('context isolates selected package, excludes image bytes and preserves unknown quantity',()=>{
  const {p,pkg}=fixture();pkg.quantity=null;const other=createManualPackage(p,{name:'SEGREDO OUTRO PACOTE',location:'P2',service:'Serviço'});other.constraints[0].evidence='NAO ENVIAR';
  const context=analysisContext(p,pkg.id),text=JSON.stringify(context);assert.equal(context.package.quantity,null);assert.ok(!text.includes(other.name));assert.ok(!text.includes('NAO ENVIAR'));assert.ok(!text.includes('dataUrl'));assert.equal(context.package.elements[0].globalId,'a');
@@ -15,7 +21,7 @@ test('response is strict, scoped and cannot release, invent references or smuggl
  assert.throws(()=>parseConstraintAnalysis('```json\n{}\n```',context));
 });
 test('review applies selected suggestions only, pending and attributable, survives reopen without overwriting evidence',()=>{
- const {p,pkg}=fixture(),context=analysisContext(p,pkg.id),before=structuredClone(pkg.constraints);const result=parseConstraintAnalysis(JSON.stringify(response()),context);
+ const {p,pkg}=fixture();pkg.constraints[4].action='Apontamento humano existente';const context=analysisContext(p,pkg.id),before=structuredClone(pkg.constraints);const result=parseConstraintAnalysis(JSON.stringify(response()),context);
  assert.throws(()=>applyConstraintAnalysis(p,context,result,[0],{provider:'codex',model:'test-model',reviewer:''}));
  const count=applyConstraintAnalysis(p,context,result,[0],{provider:'codex',model:'test-model',reviewer:'Lucas'});assert.equal(count,1);assert.deepEqual(pkg.constraints.slice(0,before.length),before);
  const saved=parseProject(serializeProject(p)),c=saved.packages[0].constraints.at(-1);assert.equal(c.resolved,false);assert.equal(c.evidence,'');assert.equal(c.reviewer,'');assert.equal(c.aiOrigin.reviewer,'Lucas');assert.equal(c.aiOrigin.model,'test-model');assert.equal(c.scope,'package');

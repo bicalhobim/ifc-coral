@@ -1,3 +1,4 @@
+import type {PlanningData} from './integrated.ts';
 export type ElementRef={modelId:string;globalId:string};
 export type ModelRevision={id:string;hash:string;name:string;projectGlobalId:string};
 export type TaskRecord={id:string;modelId:string;globalId:string;slot:string;name:string;location:string;service:string;start:string;finish:string};
@@ -12,6 +13,6 @@ export type Allocation={id:string;packageId:string;supplyId:string;quantity:numb
 export type Commitment={packageId:string;name:string;location:string;quantity:number;unit:MeasureUnit;deadline:string;criterion:string;responsible:string};
 export type Delivery={id:string;allocationId:string;date:string;received:number;rejected:number;evidence:string;reviewer:string};
 export type Actual={packageId:string;date:string;complete:boolean;evidence:string;reason:string};
-export type ResourceRequirement={id:string;packageId:string;resourceCode:string;specification:string;specificationConfirmed:boolean;quantity:number;unit:MeasureUnit;needDate:string;from:string;to:string;factor:number;lossPercent:number;leadDays:number;preparationDays:number;reusable:boolean;cycleDays:number;evidence:string;procurementBlockers:string[]};
+export type ResourceRequirement={id:string;compositionId?:string;packageId:string;resourceCode:string;specification:string;specificationConfirmed:boolean;quantity:number;unit:MeasureUnit;needDate:string;from:string;to:string;factor:number;lossPercent:number;leadDays:number;preparationDays:number;reusable:boolean;cycleDays:number;evidence:string;procurementBlockers:string[]};
 export type ResourceAllocation={id:string;requirementId:string;supplyId:string;quantity:number};
-export type Project={templateId?:'torre02';schema:2;id:string;name:string;models:ModelRevision[];tasks:TaskRecord[];packages:WorkPackage[];supplies:Supply[];allocations:Allocation[];deliveries:Delivery[];week:{frozenAt:string;reviewer:string;commitments:Commitment[]}|null;actuals:Actual[];audit:{at:string;action:string;detail:string}[];measures:MeasureSnapshot[];measureHistory?:MeasureSnapshot[];resources:ResourceRequirement[];resourceAllocations:ResourceAllocation[];quantificationCatalog?:QuantRule[];supplyPlans?:SupplyPlanSnapshot[]};
+export type Project={templateId?:'torre02';schema:2|3;planning?:PlanningData;id:string;name:string;models:ModelRevision[];tasks:TaskRecord[];packages:WorkPackage[];supplies:Supply[];allocations:Allocation[];deliveries:Delivery[];week:{frozenAt:string;reviewer:string;commitments:Commitment[]}|null;actuals:Actual[];audit:{at:string;action:string;detail:string}[];measures:MeasureSnapshot[];measureHistory?:MeasureSnapshot[];resources:ResourceRequirement[];resourceAllocations:ResourceAllocation[];quantificationCatalog?:QuantRule[];supplyPlans?:SupplyPlanSnapshot[]};

@@ -1,3 +1,4 @@
+import {isEmptyConstraint,constraintCategories} from './constraints.ts';
 import {hasConstraintEvidence,validateEvidenceImages} from './evidence-images.ts';
 import type {Project,WorkPackage,Actual,Delivery} from './types.ts';
 import {day,log,uid} from './project.ts';
@@ -24,7 +25,7 @@ export function allocate(p:Project,packageId:string,supplyId:string,quantity:num
  if(pkg.quantity===null||reserved+quantity>pkg.quantity+1e-8)throw new Error('Reserva excede a demanda do pacote. Libere reservas anteriores antes de substituir.');
  p.allocations.push({id:uid(),packageId,supplyId,quantity});log(p,'Reserva de fornecimento',`${quantity} ${s.unit} de ${s.name} para ${pkg.name}`);
 }
-export function packageBalance(p:Project,pkg:WorkPackage){const resources=p.resources.filter(r=>r.packageId===pkg.id);if(resources.length){const r=resources[0],b=resourceCoverage(p,r);return {covered:b.covered,balance:pkg.coverageKnown&&resources.length===1?b.balance:null,excess:b.excess};}return supplyBalance(pkg.coverageKnown?pkg.quantity:null,p.allocations.filter(a=>a.packageId===pkg.id).map(a=>{
+export function packageBalance(p:Project,pkg:WorkPackage){const resources=p.resources.filter(r=>r.packageId===pkg.id);if(resources.length){const r=resources[0],b=resourceCoverage(p,r);return {covered:resources.length===1?b.covered:0,balance:pkg.coverageKnown?(resources.length===1?b.balance:resources.every(x=>resourceCoverage(p,x).balance<=1e-8)?0:null):null,excess:resources.length===1?b.excess:0};}return supplyBalance(pkg.coverageKnown?pkg.quantity:null,p.allocations.filter(a=>a.packageId===pkg.id).map(a=>{
  const s=p.supplies.find(s=>s.id===a.supplyId)!;
  const deliveries=p.deliveries.filter(d=>d.allocationId===a.id);
  if(deliveries.length)return {quantity:deliveries.filter(d=>d.date===pkg.needDate).reduce((n,d)=>n+d.received-d.rejected,0),unit:s.unit,confirmed:s.technical};
@@ -38,10 +39,12 @@ export function assessReadiness(p:Project,pkg:WorkPackage){
  if(quantificationNeedsReview(p,pkg))reasons.push('Refazer conferência da quantificação após mudança de regra, taxa ou modelo.');
  if(pkg.measureLinks?.length&&!p.resources.some(r=>r.packageId===pkg.id))reasons.push('Compor o recurso do serviço e sua especificação.');
  for(const r of p.resources.filter(r=>r.packageId===pkg.id)){if(r.procurementBlockers.length||!r.specificationConfirmed)reasons.push('Conferir especificação de compra e método executivo.');if(!resourceWindowCurrent(p,r))reasons.push('Revalidar toda a janela do recurso após reprogramação, inclusive conclusão e ciclo.');}
+ if(p.planning?.packages[pkg.id])for(const category of constraintCategories.slice(0,6))if(!p.planning.packages[pkg.id].notApplicable?.[category]&&!pkg.constraints.some(c=>c.category===category&&!isEmptyConstraint(c)))reasons.push('Analisar categoria: '+category);
+ if(p.planning?.packages[pkg.id]?.origins.quantity?.mode==='auto')reasons.push('Conferir a quantidade automática do serviço.');
  if(!pkg.responsible.trim())reasons.push('Definir responsável.');
  if(!pkg.capacityConfirmed)reasons.push('Confirmar capacidade da equipe e equipamentos.');
  if(!pkg.criterion.trim())reasons.push('Definir critério de conclusão.');
- if(!pkg.constraints.length||pkg.constraints.some(c=>!c.resolved||!hasConstraintEvidence(c)||!c.reviewer.trim()))reasons.push('Remover restrições com evidência e conferente.');
+ if(!pkg.constraints.length||pkg.constraints.some(c=>!((p.planning?.packages[pkg.id]?.notApplicable?.[c.category]&&isEmptyConstraint(c))||(c.resolved&&hasConstraintEvidence(c)&&c.reviewer.trim()))))reasons.push('Remover restrições com evidência e conferente.');
  if(pkg.quantity===null||pkg.quantity<=0)reasons.push('Quantidade precisa ser informada e positiva.');
  if(!pkg.quantitySource.trim())reasons.push('Registrar origem do quantitativo.');
  if(balance.balance===null)reasons.push('Quantidade ou cobertura existente ainda não conferida.');else if(balance.balance>1e-8)reasons.push(`Faltam ${balance.balance} ${pkg.unit} confirmados na janela.`);

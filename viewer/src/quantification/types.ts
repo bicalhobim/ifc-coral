@@ -1,5 +1,5 @@
 export type ServiceCode='concrete'|'reinforcement'|'formwork';
-export type MeasureUnit='m³'|'kg'|'m²';
+export type MeasureUnit='m³'|'kg'|'m²'|'m'|'L'|'h'|'un'|'dia';
 export type ElementMetadata={modelId:string;modelHash:string;globalId:string;ifcClass:string;predefinedType:string;typeName:string;properties:Record<string,unknown>};
 export type QuantRule={id:string;version:string;label:string;ifcClass:string;predefinedType?:string;typePattern?:string;priority:number;steelRate:number|null;formMethod:string|null;source:string;status:'draft'};
 export type ClassificationResult={status:'matched'|'pending';rule:QuantRule|null;reason:string;override?:{author:string;reason:string}};

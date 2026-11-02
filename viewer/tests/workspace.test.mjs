@@ -2,9 +2,23 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createProject} from '../src/production/project.ts';
 import {sha256,unpackProject} from '../src/production/storage.ts';
-import {PROJECT_FILE,chooseDirectory,ensurePermission,createProjectFolder,saveProjectFolder,readProjectFolder,saveArtifact,rememberFolder,recentFolders} from '../src/workspace/local.ts';
+import {PROJECT_FILE,chooseDirectory,ensurePermission,createProjectFolder,saveProjectFolder,readProjectFolder,saveArtifact,rememberFolder,recentFolders,listProjectVersions,readProjectVersion} from '../src/workspace/local.ts';
 
 const notFound=()=>new DOMException('Missing','NotFoundError');
+
+test('successful saves retain recoverable previous and current versions',async()=>{
+ const dir=new FakeDirectory('History'),{project,bytes}=await fixture();await saveProjectFolder(dir,project,bytes);project.name='Changed';await saveProjectFolder(dir,project,bytes);
+ const versions=await dir.getDirectoryHandle('Historico');const texts=[];for await(const entry of versions.values())if(entry.kind==='file')texts.push(await (await entry.getFile()).text());assert.ok(texts.some(t=>JSON.parse(t).project.name==='Changed'));assert.ok(texts.some(t=>JSON.parse(t).project.name==='Novo projeto'));
+});
+test('retry repairs history after partial failure without discarding damaged evidence',async()=>{
+ const dir=new FakeDirectory('History failure'),{project,bytes}=await fixture();
+ const history=new FakeDirectory('Historico');const get=history.getFileHandle.bind(history);let first=true;
+ history.getFileHandle=async(...args)=>{const file=await get(...args);if(first){first=false;file.failWrite=true;}return file;};
+ const original=dir.getDirectoryHandle.bind(dir);dir.getDirectoryHandle=async(name,options)=>{if(name==='Historico'){dir.entries.set(name,history);return history;}return original(name,options);};
+ await assert.rejects(()=>saveProjectFolder(dir,project,bytes),/disk full/);await saveProjectFolder(dir,project,bytes);
+ const versions=await listProjectVersions(dir);assert.equal(versions.length,2);
+ assert.equal((await readProjectVersion(dir,versions[0].name)).project.id,project.id);
+});
 class FakeFile {
  kind='file';data=new Uint8Array();failWrite=false;failClose=false;aborts=0;
  constructor(name){this.name=name;}

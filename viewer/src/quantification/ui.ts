@@ -30,8 +30,9 @@ export class QuantificationPanel{
  clearReports(){this.reports.clear();}
  resetForProject(rules?:QuantRule[]){this.notice='';this.catalogAll=false;this.rules=structuredClone(rules??catalog);this.overrides.clear();for(const s of this.hooks.reviews()){const original=s.measure.classificationOverride;if(original)this.overrides.set(JSON.stringify([s.measure.elementRef.modelId,s.measure.elementRef.globalId]),{ruleId:s.measure.ruleId,...original});}this.render();}
  addReport(text:string){const report=parseReport(text);this.reports.set(report.sourceHash,report);this.render();}
- measures():MeasureResult[]{return this.hooks.selection().flatMap(({element,volume})=>{
-  const classification=classifyElement(element,this.rules,this.overrides.get(JSON.stringify([element.modelId,element.globalId])));const r=this.reports.get(element.modelHash)?.elements.find(r=>r.globalId===element.globalId);
+ measures():MeasureResult[]{return this.measuresFor(this.hooks.selection());}
+ measuresFor(selection:QuantSelection[],rules=this.rules):MeasureResult[]{return selection.flatMap(({element,volume})=>{
+  const classification=classifyElement(element,rules,this.overrides.get(JSON.stringify([element.modelId,element.globalId])));const r=this.reports.get(element.modelHash)?.elements.find(r=>r.globalId===element.globalId);
   const rule=classification.rule??{...this.rules[0],id:'pending',label:'Classificação pendente',steelRate:null,formMethod:null};
   const measures=calculateMeasures({element,volume,classificationOverride:classification.override,volumeDivergence:r?.volumeDivergence===true,geometry:r?.geometry?{candidateArea:r.geometry.candidateArea,lowerArea:r.geometry.lowerArea,deductedArea:r.contacts?.deductedArea??null,contactsResolved:r.contacts?.contactsResolved===true&&!r.volumeDivergence,source:`IfcOpenShell · revisão ${element.modelHash.slice(0,8)}`,method:r.contacts?.method??r.geometry.method??''}:undefined},rule);
   if(classification.status==='pending')for(const m of measures){m.pendingReasons.push(classification.reason);m.status='pending';m.amount=null;}

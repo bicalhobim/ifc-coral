@@ -1,3 +1,4 @@
+import type {PackagePlan} from './integrated.ts';
 import {defaultConstraints} from './constraints.ts';
 import type {Project,WorkPackage,ResourceRequirement} from './types.ts';
 import {uid,log,validateProject} from './project.ts';
@@ -7,8 +8,9 @@ export function createManualPackage(p:Project,input:{name:string;location:string
  const pkg:WorkPackage={id:uid(),name:input.name.trim(),location:input.location.trim(),service:input.service.trim(),elements:[],taskIds:[],quantity:null,unit:input.unit??'m³',quantitySource:'Quantidade a conferir',coverageKnown:false,needDate:today,finishDate:today,criterion:'',responsible:'',capacityConfirmed:false,constraints:defaultConstraints(),reviewRequired:false};
  p.packages.push(pkg);log(p,'Pacote criado',pkg.name);return pkg;
 }
-export type RemovedPackage={package:WorkPackage;resources:ResourceRequirement[];index:number};
+export type RemovedPackage={planning?:PackagePlan;package:WorkPackage;resources:ResourceRequirement[];index:number};
 export function packageDeletionBlock(p:Project,id:string):string {
+ if(p.planning&&Object.values(p.planning.packages).some(m=>m.revisionOf===id||m.supersededBy===id))return 'Pacote integra um histórico de revisões. Preserve as referências.';
  if(p.week?.commitments.some(c=>c.packageId===id))return 'Este pacote possui compromisso congelado. Preserve o histórico e o PPC.';
  if(p.actuals.some(a=>a.packageId===id))return 'Este pacote possui realizado registrado.';
  const resources=p.resources.filter(r=>r.packageId===id);
@@ -19,12 +21,12 @@ export function packageDeletionBlock(p:Project,id:string):string {
 export function deletePackage(p:Project,id:string):RemovedPackage {
  const index=p.packages.findIndex(pkg=>pkg.id===id);if(index<0)throw new Error('Pacote não encontrado.');
  const reason=packageDeletionBlock(p,id);if(reason)throw new Error(reason);
- const removed=structuredClone({package:p.packages[index],resources:p.resources.filter(r=>r.packageId===id),index});
- p.packages.splice(index,1);p.resources=p.resources.filter(r=>r.packageId!==id);log(p,'Pacote excluído',removed.package.name);return removed;
+ const removed=structuredClone({...(p.planning?.packages[id]?{planning:p.planning.packages[id]}:{}),package:p.packages[index],resources:p.resources.filter(r=>r.packageId===id),index});
+ p.packages.splice(index,1);if(p.planning)delete p.planning.packages[id];p.resources=p.resources.filter(r=>r.packageId!==id);log(p,'Pacote excluído',removed.package.name);return removed;
 }
 export function restorePackage(p:Project,removed:RemovedPackage){
  if(p.packages.some(pkg=>pkg.id===removed.package.id)||removed.resources.some(r=>p.resources.some(q=>q.id===r.id)))throw new Error('O pacote ou recurso já existe.');
  if(removed.package.elements.some(e=>!p.models.some(m=>m.id===e.modelId)))throw new Error('O modelo do pacote foi removido. Reabra a revisão original antes de desfazer.');
- const candidate=structuredClone(p);candidate.packages.splice(Math.min(removed.index,candidate.packages.length),0,structuredClone(removed.package));candidate.resources.push(...structuredClone(removed.resources));validateProject(candidate);
- p.packages=candidate.packages;p.resources=candidate.resources;log(p,'Exclusão desfeita',removed.package.name);
+ const candidate=structuredClone(p);candidate.packages.splice(Math.min(removed.index,candidate.packages.length),0,structuredClone(removed.package));candidate.resources.push(...structuredClone(removed.resources));if(removed.planning&&candidate.planning)candidate.planning.packages[removed.package.id]=structuredClone(removed.planning);validateProject(candidate);
+ p.planning=candidate.planning;p.packages=candidate.packages;p.resources=candidate.resources;log(p,'Exclusão desfeita',removed.package.name);
 }
