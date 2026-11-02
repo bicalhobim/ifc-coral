@@ -9,3 +9,11 @@ export function dockWidths(width:number,left:number,right:number){
  const available=Math.max(0,width-220),total=Math.max(0,left)+Math.max(0,right),ratio=total>available?available/total:1;
  return {left:Math.floor(Math.max(0,left)*ratio),right:Math.floor(Math.max(0,right)*ratio)};
 }
+export function overlaps(a:WindowRect,b:WindowRect){return a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.height&&a.y+a.height>b.y;}
+/** Preserve requested size; if it cannot fit beside peers, the caller docks it. */
+export function placeWithoutOverlap(rect:WindowRect,others:WindowRect[],w:number,h:number):WindowRect|null{
+ const r=fitWindow(rect,w,h),free=(candidate:WindowRect)=>!others.some(o=>overlaps(candidate,o));if(free(r))return r;
+ const xs=[0,...others.flatMap(o=>[o.x+o.width+6,o.x-r.width-6])],ys=[0,...others.flatMap(o=>[o.y+o.height+6,o.y-r.height-6])];
+ const candidates=xs.flatMap(x=>ys.map(y=>({...r,x,y}))).filter(c=>c.x>=0&&c.y>=0&&c.x+c.width<=w&&c.y+c.height<=h&&free(c));
+ candidates.sort((a,b)=>Math.hypot(a.x-r.x,a.y-r.y)-Math.hypot(b.x-r.x,b.y-r.y));return candidates[0]??null;
+}

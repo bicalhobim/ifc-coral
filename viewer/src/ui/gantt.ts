@@ -1,3 +1,6 @@
+import {PlanningBoard} from './planning-board.ts';
+import type {Project} from '../production/types.ts';
+import type {ActivityRow} from '../production/planning-view.ts';
 import type { ElementTask } from "../ifc/schedule";
 import { groupTasks, taskGroupKey } from '../ifc/identity.ts';
 import {csvCell} from './csv.ts';
@@ -6,6 +9,8 @@ import {simulationDates,simulationFrame} from '../ifc/simulation.ts';
 import {summarizeVolumes} from '../ifc/quantities.ts';
 
 export interface GanttHooks {
+  project?:()=>Project;
+  inspect?:(row:ActivityRow,activate?:boolean)=>void;
   onScrub: (date: Date, visible: ElementTask[], hidden: ElementTask[],active:ElementTask[]) => Promise<void>|void;
   onSelect: (tasks: ElementTask[]) => void;
 }
@@ -61,7 +66,9 @@ function collectAllTasks(n: TreeNode): ElementTask[] {
 export class Gantt {
   private domainStart = 0;
   private domainEnd = 1;
-  private mode: "gantt" | "table" = "gantt";
+  private mode: "planner" | "gantt" | "table" = "planner";
+  private board=new PlanningBoard();
+  refresh(){if(this._hooks?.project)this.board.refresh(this._hooks.project(),this._tasks);}
   private _container!: HTMLElement;
   private _tasks: ElementTask[]=[];
   private _hooks!: GanttHooks;
@@ -78,7 +85,7 @@ export class Gantt {
     this._container = container;
     this._tasks = tasks;
     this._hooks = hooks;
-    this.mode = "gantt";
+    this.mode = hooks.project?"planner":"gantt";
     this._selected = null;
     this._tree = this.buildTree(tasks);
     this.updateDomain();
@@ -184,7 +191,7 @@ export class Gantt {
     const { _container: container, _tasks: tasks } = this;
     const previousScroll=container.querySelector('.gantt-body')?.scrollTop??0;
     container.innerHTML = "";
-    container.appendChild(this.toolbar());
+    if(this.mode!=='planner')container.appendChild(this.toolbar());
 
     if (tasks.length === 0) {
       const msg = document.createElement("p");
@@ -196,7 +203,9 @@ export class Gantt {
 
     this._flat = this.flatten(this._tree);
 
-    if (this.mode === "gantt") {
+    if(this.mode==='planner' && this._hooks.project){
+      const host=document.createElement('div');container.append(host);this.board.render(host,this._hooks.project(),tasks,{hierarchy:()=>{this.mode='gantt';this._renderView();},select:tasks=>{this.pause();this.selection=tasks;this.scope=tasks.length?'selection':'all';this.dates=simulationDates(this.scopeTasks());this.index=Math.max(0,this.dates.length-1);this.updateDomain();this.syncControls();this._hooks.onSelect(tasks);},inspect:(r,activate)=>this._hooks.inspect?.(r,activate)});
+    } else if (this.mode === "gantt") {
       const body = document.createElement("div");
       body.className = "gantt-body";
       body.append(this.combinedPanel());
@@ -236,10 +245,10 @@ export class Gantt {
 
     const toggle = document.createElement("button");
     toggle.className = "gantt-btn gantt-toggle";
-    toggle.textContent = this.mode === "gantt" ? "☰ Tabela" : "📊 Gantt";
+    toggle.textContent = this.mode === "planner" ? "Hierarquia IFC" : this.mode === "gantt" ? "Tabela IFC" : "Planejamento integrado";
     toggle.title = "Alternar visualização";
     toggle.addEventListener("click", () => {
-      this.mode = this.mode === "gantt" ? "table" : "gantt";
+      this.mode = this.mode === "planner" ? "gantt" : this.mode === "gantt" ? "table" : this._hooks.project?"planner":"gantt";
       this._renderView();
     });
 
@@ -251,7 +260,7 @@ export class Gantt {
 
     bar.appendChild(toggle);
     bar.appendChild(exportBtn);
-    const search=document.createElement('input');search.type='search';search.className='gantt-search';search.placeholder='Buscar atividade ou pavimento';search.setAttribute('aria-label','Buscar atividade no 4D');search.value=this.filter;search.oninput=()=>{this.filter=search.value.toLocaleLowerCase('pt-BR');for(const row of this._container.querySelectorAll<HTMLElement>('[data-activity-search]'))row.hidden=!!this.filter&&!row.dataset.activitySearch?.includes(this.filter);};bar.append(search);
+    const search=document.createElement('input');search.type='search';search.className='gantt-search';search.placeholder='Buscar atividade ou pavimento';search.setAttribute('aria-label','Buscar atividade no 4D');search.value=this.filter;search.oninput=()=>{this.filter=search.value.toLocaleLowerCase('pt-BR');for(const row of this._container.querySelectorAll<HTMLElement>('[data-activity-search]'))row.hidden=!!this.filter&&!row.dataset.activitySearch?.includes(this.filter);};if(this.mode!=='planner')bar.append(search);
     const quantity=document.createElement('span');quantity.className='gantt-selection-summary';
     const summary=summarizeVolumes(this.selection);
     quantity.textContent=summary.count?`${summary.count} elementos · ${summary.totalM3===null?`${summary.measured}/${summary.count} com volume`:summary.totalM3.toLocaleString('pt-BR',{maximumFractionDigits:3})+' m³'}`:'Selecione uma atividade';
@@ -489,7 +498,7 @@ export class Gantt {
   pause(){this.playing=false;this.run++;if(this.timer)clearTimeout(this.timer);this.timer=undefined;this.syncControls();}
   /** Viewport/tree selection also defines the available playback selection. */
   setSelection(tasks:ElementTask[]){
-    this.pause();this.selection=[...tasks];this._selected=null;
+    this.pause();this.selection=[...tasks];this._selected=null;this.board.setSelection(tasks);
     this.scope=tasks.length?'selection':'all';this.dates=simulationDates(this.scopeTasks());
     this.index=Math.max(0,this.dates.length-1);this.updateDomain();
     if(this._container)this._renderView();
@@ -515,7 +524,7 @@ export class Gantt {
     const root=this.controls;if(!root)return;const range=root.querySelector<HTMLInputElement>('input'),date=root.querySelector('.gantt-date'),play=root.querySelector<HTMLButtonElement>('.play'),scope=root.querySelector<HTMLSelectElement>('[aria-label="Escopo da simulação"]');
     if(range){range.max=String(Math.max(0,this.dates.length-1));range.value=String(this.index);}if(date)date.textContent=this.dates[this.index]===undefined?'Sem datas':fmt(new Date(this.dates[this.index]));
     if(play){play.textContent=this.playing?'❚❚':'▶';play.setAttribute('aria-label',this.playing?'Pausar simulação':'Reproduzir simulação');play.title=this.playing?'Pausar':'Reproduzir';}
-    if(scope)scope.value=this.scope;
+    if(scope){scope.value=this.scope;const option=scope.querySelector<HTMLOptionElement>('option[value=selection]');if(option)option.disabled=!this.selection.length;}
     const cursor=this._container?.querySelector<HTMLElement>('.simulation-cursor');if(cursor&&this.dates[this.index]!==undefined)cursor.style.left=`calc(50% + ${this.x(this.dates[this.index])/2}%)`;
   }
   private playback(){

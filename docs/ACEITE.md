@@ -83,3 +83,11 @@ Catálogo e revisão humana, geometria local IfcOpenShell, schema 2 multiunidade
 - Compra exige especificação/BBS conferido. Mapa confirmado é planejamento; não dispara contato, pedido ou pagamento. Agentes comerciais e chamadas reais Gemini/OpenAI não foram validados nesta entrega.
 - Guia PPTX/PDF v02 continua histórico, não retrata a ferramenta v04. Capturas e arquivo portátil do ensaio ficam em `artifacts/quantification-v1/browser`; guia atual em Markdown.
 
+
+## Recorte adicional — planejamento e janelas (02/11/2026)
+
+Planejamento integrado por atividade/local/tempo e inspetor de relações implementados, preservando identidade IFC e premissas operacionais. Principais janelas encaixáveis e flutuantes. Validação técnica e visual registrada em [QA](QA_PLANEJAMENTO_JANELAS_2026-11-02.md); aceite de Lucas ainda pendente. Não se declara equivalência ao SYNCHRO, cálculo CPM ou nivelamento de recursos. Checkpoint anterior 468636f; atualização ainda local.
+
+## Revisão UX de suprimentos e linha de balanço
+
+Em 02/11/2026, mapa em grade com edição e exportações filtradas, detalhes do pacote com abas e linha de balanço ascendente foram verificados localmente. [Escopo, testes, evidências e limites](QA_UX_SUPRIMENTOS_LOB_2026-11-02.md). Aceite de Lucas e novo commit ainda pendentes.

@@ -1,0 +1,89 @@
+import {activityRows,filterActivities,emptyPlanningFilter,locationOrder,balanceLinks,balanceRows,type ActivityRow,type PlanningFilter} from '../production/planning-view.ts';
+import type {Project} from '../production/types.ts';
+import type {ElementTask} from '../ifc/schedule.ts';
+import {packageStage,stageLabels} from '../production/integrated.ts';
+import {isEmptyConstraint} from '../production/constraints.ts';
+import {csvCell} from './csv.ts';
+import {downloadBlob} from '../workspace/downloads.ts';
+const day=86400000,colors=['#8b28d8','#127e9b','#c05f19','#217b4e','#bc4379','#536bc0'];
+const n=<K extends keyof HTMLElementTagNameMap>(tag:K,text='',cls='')=>{const e=document.createElement(tag);e.textContent=text;e.className=cls;return e;};
+const btn=(text:string,fn:()=>void)=>{const b=n('button',text);b.type='button';b.onclick=fn;return b;};
+const fmt=(t:number)=>new Date(t).toLocaleDateString('pt-BR');
+const iso=(t:number)=>{const d=new Date(t);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+type Hooks={hierarchy:()=>void;select:(tasks:ElementTask[])=>void;inspect:(row:ActivityRow,activate?:boolean)=>void};
+export class PlanningBoard{
+ private filter=emptyPlanningFilter();private mode='gantt';private group='location';private order:string[]=[];private projectId='';private selected='';private zoom=1;private rows:ActivityRow[]=[];private container?:HTMLElement;private hooks?:Hooks;
+ private resize?:ResizeObserver;private size='';private inspectorRow?:ActivityRow;private selectionKeys=new Set<string>();private onlySelected=false;
+ setSelection(tasks:ElementTask[]){this.selectionKeys=new Set(tasks.filter(t=>t.modelKey&&t.globalId).map(t=>JSON.stringify([t.modelKey,t.globalId])));if(this.container?.isConnected)this.drawContent();}
+ private visibleRows(){return filterActivities(this.rows,this.filter).filter(r=>!this.onlySelected||r.elements.some(e=>this.selectionKeys.has(JSON.stringify([e.modelId,e.globalId]))));}
+ private saveView(){try{localStorage.setItem('coral.planning-view.'+this.projectId,JSON.stringify({mode:this.mode,group:this.group,order:this.order}));}catch{}}
+ render(container:HTMLElement,p:Project,tasks:ElementTask[],hooks:Hooks){
+  if(this.projectId!==p.id){this.filter=emptyPlanningFilter();this.order=[];this.selected='';this.inspectorRow=undefined;this.projectId=p.id;this.onlySelected=false;this.selectionKeys.clear();try{const saved=JSON.parse(localStorage.getItem('coral.planning-view.'+p.id)??'null');if(saved){if(['gantt','balance','table'].includes(saved.mode))this.mode=saved.mode;if(['location','service','model','owner','none'].includes(saved.group))this.group=saved.group;if(Array.isArray(saved.order)&&saved.order.every((x:unknown)=>typeof x==='string'))this.order=saved.order;}}catch{}}
+  this.container=container;this.hooks=hooks;this.rows=activityRows(p,tasks);this.draw();
+ }
+ refresh(p:Project,tasks:ElementTask[]){if(!this.container?.isConnected)return;this.rows=activityRows(p,tasks);this.drawContent();if(this.inspectorRow){const r=[...this.rows,...balanceRows(this.rows)].find(r=>r.id===this.inspectorRow!.id);if(r){this.inspectorRow=r;this.hooks?.inspect(r,false);}}}
+ private pick(r:ActivityRow){this.selected=r.id;this.inspectorRow=r;this.hooks?.select(r.tasks);this.hooks?.inspect(r);this.drawContent();}
+ private draw(){this.resize?.disconnect();const root=this.container!;root.replaceChildren();root.className='planning-board';const toolbar=n('div','','planning-tools');
+  const choose=(label:string,values:[string,string][],value:string,fn:(v:string)=>void)=>{const l=n('label',label),s=n('select');s.setAttribute('aria-label',label);for(const [v,t]of values){const o=n('option',t);o.value=v;s.append(o);}s.value=value;s.onchange=()=>fn(s.value);l.append(s);toolbar.append(l);return s;};
+  choose('Visualização',[['gantt','Gantt'],['balance','Linha de balanço'],['table','Tabela']],this.mode,v=>{this.mode=v;this.saveView();this.draw();});
+  choose('Agrupar por',[['location','Local'],['service','Serviço'],['model','Modelo'],['owner','Responsável'],['none','Sem agrupamento']],this.group,v=>{this.group=v;this.saveView();this.drawContent();});
+  const search=n('input');search.type='search';search.placeholder='Atividade, local, responsável ou recurso';search.setAttribute('aria-label','Buscar no planejamento');search.value=this.filter.search;search.oninput=()=>{this.filter.search=search.value;this.drawContent();};toolbar.append(search);
+  toolbar.append(btn('Hierarquia IFC',()=>this.hooks?.hierarchy()),btn('−',()=>{this.zoom=Math.max(1,this.zoom/1.5);this.drawContent();}),btn('+',()=>{this.zoom=Math.min(12,this.zoom*1.5);this.drawContent();}),btn('Ajustar período',()=>{this.zoom=1;this.drawContent();}),btn('CSV filtrado',()=>this.export()));
+  root.append(toolbar);const filters=n('details','','planning-filters');filters.append(n('summary','Filtros e horizonte de planejamento'));const fields=n('div','','planning-tools');filters.append(fields);root.append(filters);
+  const option=(key:keyof PlanningFilter,label:string,values:[string,string][])=>{const l=n('label',label),s=n('select');s.setAttribute('aria-label',label);for(const [value,text]of [['','Todos'],...values]){const o=n('option',text);o.value=value;s.append(o);}s.value=String(this.filter[key]);s.onchange=()=>{Object.assign(this.filter,{[key]:s.value});this.drawContent();};l.append(s);fields.append(l);};
+  const unique=(values:string[])=>[...new Set(values)].sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true})).map(v=>[v,v] as [string,string]);
+  option('model','Modelo',[...new Map(this.rows.map(r=>[r.modelId,r.model])).entries()]);option('location','Local',unique(this.rows.map(r=>r.location)));option('service','Serviço',unique(this.rows.map(r=>r.service)));option('owner','Responsável',unique(this.rows.flatMap(r=>r.owners)));option('resource','Recurso / insumo',unique(this.rows.flatMap(r=>r.resources)));option('state','Situação do pacote',unique(this.rows.flatMap(r=>r.states)));
+  const dates:HTMLInputElement[]=[];for(const [key,label]of [['from','Desde'],['to','Até']] as const){const l=n('label',label),input=n('input');input.type='date';input.setAttribute('aria-label',label);input.value=this.filter[key];input.onchange=()=>{this.filter[key]=input.value;this.drawContent();};dates.push(input);l.append(input);fields.append(l);}
+  for(const [days,label]of [[42,'6 semanas'],[90,'90 dias']] as const)fields.append(btn(label,()=>{const start=this.filter.from||iso(Math.min(...this.rows.map(r=>r.start)));this.filter.from=start;this.filter.to=iso(+new Date(start+'T12:00:00')+(days-1)*day);dates[0].value=start;dates[1].value=this.filter.to;this.drawContent();}));
+  const l=n('label','Com restrições / análise pendente'),check=n('input');check.type='checkbox';check.checked=this.filter.pending;check.onchange=()=>{this.filter.pending=check.checked;this.drawContent();};l.prepend(check);fields.append(l,btn('Limpar filtros',()=>{this.filter=emptyPlanningFilter();this.onlySelected=false;this.draw();}));
+  const selectionLabel=n('label','Somente elementos selecionados no 3D'),selectionCheck=n('input');selectionCheck.type='checkbox';selectionCheck.checked=this.onlySelected;selectionCheck.onchange=()=>{this.onlySelected=selectionCheck.checked;this.drawContent();};selectionLabel.prepend(selectionCheck);fields.append(selectionLabel);
+  if(this.mode==='balance'){const ordering=n('details','','planning-order');ordering.append(n('summary','Ordenar locais (da base para o topo)'));const places=locationOrder(this.rows,this.order);for(const [i,place]of places.entries()){const item=n('div',place);const move=(offset:number)=>{const j=i+offset;if(j<0||j>=places.length)return;[places[i],places[j]]=[places[j],places[i]];this.order=places;this.saveView();this.draw();};item.append(btn('↑',()=>move(-1)),btn('↓',()=>move(1)));ordering.append(item);}filters.append(ordering);}
+  root.append(n('p','','planning-summary'),n('div','','planning-content'));this.drawContent();const content=root.querySelector<HTMLElement>('.planning-content')!;this.size='';this.resize=new ResizeObserver(()=>{const size=`${content.clientWidth}:${content.clientHeight}`;if(size!==this.size){this.size=size;this.drawContent();}});this.resize.observe(content);
+ }
+ private drawContent(){const root=this.container;if(!root)return;const body=root.querySelector<HTMLElement>('.planning-content');if(!body)return;const top=body.scrollTop,left=body.scrollLeft;body.replaceChildren();
+  const rows=this.visibleRows(),summary=root.querySelector('.planning-summary')!;
+  summary.textContent=`${rows.length} de ${this.rows.length} atividades · Datas do IFC · ${this.mode==='balance'?'Tempo → · Pavimentos ↑ (mais baixo na base). Cor = serviço; linha cheia = início, tracejada = término. Ligações indicam fluxo, não precedência. Faixas agregadas podem conter intervalos.':'Clique em uma atividade para localizar os elementos e consultar seus vínculos.'}`;
+  if(this.filter.from&&this.filter.to&&this.filter.from>this.filter.to){summary.textContent='O início do horizonte deve ser anterior ao término.';return;}
+  if(!rows.length){body.append(n('p','Nenhuma atividade neste recorte. Ajuste os filtros.'));return;}
+  if(this.mode==='table'){const table=n('table'),head=n('tr');for(const title of ['Atividade','Local','Serviço','Início IFC','Fim IFC','Responsável','Recursos / insumos','Pacotes','Restrições abertas'])head.append(n('th',title));table.append(head);for(const r of rows){const tr=n('tr');const cell=n('td');cell.append(btn(r.name,()=>this.pick(r)));tr.append(cell);for(const text of [r.location,r.service,fmt(r.start),fmt(r.finish),r.owners.join(', ')||'Não definido',r.resources.join(', ')||'Não definidos',String(r.packages.length),`${r.pending} · ${r.unanalysed} a analisar`])tr.append(n('td',text));table.append(tr);}body.append(table);}
+  else this.chart(body,this.mode==='balance'?balanceRows(rows):rows);
+  body.scrollTop=top;body.scrollLeft=left;
+ }
+ private chart(body:HTMLElement,rows:ActivityRow[]){
+  const from=this.filter.from?+new Date(this.filter.from+'T00:00:00'):Math.min(...rows.map(r=>r.start)),end=this.filter.to?+new Date(this.filter.to+'T23:59:59'):Math.max(...rows.map(r=>r.finish)),span=Math.max(day,end-from),labelWidth=250,w=Math.max(550,body.clientWidth-labelWidth-20)*this.zoom;
+  const chart=n('div','','planning-chart');chart.style.width=`${labelWidth+w}px`;const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');const draw=(tag:string,attrs:Record<string,string|number>,text='')=>{const e=document.createElementNS(svg.namespaceURI,tag);for(const [key,val]of Object.entries(attrs))e.setAttribute(key,String(val));e.textContent=text;svg.append(e);return e;};const x=(date:number)=>labelWidth+Math.max(0,Math.min(1,(date-from)/span))*(w-8),services=[...new Set(this.rows.map(r=>r.service))].sort(),color=(r:ActivityRow)=>colors[services.indexOf(r.service)%colors.length];
+  let y=48;const centers=new Map<string,number>();const bands:{label:string;y:number}[]=[];
+  const add=(r:ActivityRow)=>{centers.set(r.id,y+17);y+=36;};
+  if(this.mode==='balance'){
+   const places=locationOrder(rows,this.order),step=Math.max(12,Math.min(48,(body.clientHeight-140)/Math.max(1,places.length-1)));
+   for(const [index,place]of [...places].reverse().entries()){const cy=48+index*step;bands.push({label:place,y:cy-8});for(const r of rows.filter(r=>r.location===place))centers.set(r.id,cy);}
+   y=60+Math.max(0,places.length-1)*step;
+  }
+  else{const key=(r:ActivityRow)=>this.group==='owner'?r.owners.join(', ')||'Responsável não definido':this.group==='service'?r.service:this.group==='model'?r.model:this.group==='location'?r.location:'';for(const label of [...new Set(rows.map(key))]){if(label){bands.push({label,y});y+=25;}for(const r of rows.filter(r=>key(r)===label))add(r);}}
+  svg.setAttribute('width',String(labelWidth+w));svg.setAttribute('height',String(y+(this.mode==='balance'?48:20)));svg.setAttribute('aria-label',this.mode==='balance'?'Linha de balanço por local e tempo':'Gantt por atividade e tempo');
+  const ticks=Math.max(2,Math.min(10,Math.floor(w/105)));for(let i=0;i<=ticks;i++){const t=from+span*i/ticks;draw('line',{x1:x(t),y1:30,x2:x(t),y2:y,stroke:'#ece6f3'});draw('text',{x:x(t),y:this.mode==='balance'?y+20:22,fill:'#645570','font-size':11,'text-anchor':i===0?'start':i===ticks?'end':'middle'},fmt(t));}
+  for(const band of bands){draw('line',{x1:0,y1:band.y,x2:labelWidth+w,y2:band.y,stroke:'#e4d8ed'});draw('text',{x:8,y:band.y+17,fill:'#633788','font-size':12},band.label.length>33?band.label.slice(0,31)+'…':band.label);}
+  if(this.mode==='balance'){
+   draw('text',{x:8,y:20,fill:'#534360','font-size':11},'Pavimentos / locais ↑');
+   draw('text',{x:labelWidth+w-10,y:y+40,fill:'#534360','font-size':11,'text-anchor':'end'},'Tempo →');
+   for(const link of balanceLinks(rows,locationOrder(rows,this.order))){const a=link.from,b=link.to,ay=centers.get(a.id)!,by=centers.get(b.id)!;
+    draw('polygon',{points:`${x(a.start)},${ay} ${x(b.start)},${by} ${x(b.finish)},${by} ${x(a.finish)},${ay}`,fill:color(a),opacity:.09,'pointer-events':'none'});
+    draw('line',{x1:x(a.start),y1:ay,x2:x(b.start),y2:by,stroke:color(a),'stroke-width':2,opacity:.8,'pointer-events':'none'});
+    draw('line',{x1:x(a.finish),y1:ay,x2:x(b.finish),y2:by,stroke:color(a),'stroke-width':1.5,'stroke-dasharray':'5 4',opacity:.7,'pointer-events':'none'});
+   }
+  }
+  for(const r of rows){const cy=centers.get(r.id)!;if(this.mode!=='balance')draw('text',{x:10,y:cy+4,fill:'#3c3448','font-size':11},r.name.length>35?r.name.slice(0,33)+'…':r.name);
+   const bar=draw('rect',{x:x(r.start),y:cy-(this.mode==='balance'?4:10),width:Math.max(5,x(r.finish)-x(r.start)),height:this.mode==='balance'?8:20,rx:3,fill:color(r),stroke:r.id===this.selected?'#241036':'none','stroke-width':3,tabindex:0,role:'button','aria-label':`${r.name}, ${r.location}, ${fmt(r.start)} a ${fmt(r.finish)}. Ver informações vinculadas`});
+   const title=document.createElementNS(svg.namespaceURI,'title');title.textContent=`${r.name}\n${r.location} · ${r.service}\n${fmt(r.start)} → ${fmt(r.finish)}\n${r.packages.length} pacotes · ${r.pending} restrições abertas`;bar.append(title);bar.addEventListener('click',()=>this.pick(r));bar.addEventListener('keydown',e=>{const event=e as KeyboardEvent;if(event.key==='Enter'||event.key===' '){event.preventDefault();this.pick(r);}});
+  }
+  chart.append(svg);body.append(chart);const legend=n('div','','planning-legend');for(const s of services.filter(s=>rows.some(r=>r.service===s))){const item=n('span',s);item.style.borderLeft=`10px solid ${colors[services.indexOf(s)%colors.length]}`;legend.append(item);}body.append(legend);
+ }
+ private export(){const rows=this.visibleRows(),csv=[['atividade','modelo','local','serviço','início IFC','fim IFC','responsável','recursos','pacotes','restrições abertas','elementos modelo+GlobalId'],...rows.map(r=>[r.name,r.model,r.location,r.service,iso(r.start),iso(r.finish),r.owners.join(' | '),r.resources.join(' | '),r.packages.map(q=>q.id).join(' | '),r.pending,JSON.stringify(r.elements)])].map(row=>row.map(v=>csvCell(String(v))).join(';')).join('\r\n');downloadBlob('Planejamento-filtrado.csv',new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));}
+}
+export function activityInspector(container:HTMLElement,r:ActivityRow,p:Project,hooks:{show:()=>void;create:()=>void;open:(id:string,tab?:string)=>void}){
+ const scroll=container.scrollTop;container.replaceChildren(n('h3',r.name),n('p',`${r.location} · ${r.service}`),n('p',`Origem IFC: ${fmt(r.start)} → ${fmt(r.finish)}`),n('p',`${r.elements.length} elementos · ${r.model}`),btn('Localizar elementos',hooks.show),btn('Criar pacote deste recorte',hooks.create));
+ container.append(n('p','O vínculo é modelo + GlobalId. Datas e decisões dos pacotes abaixo são planejamento operacional; não alteram o IFC.','planning-note'));
+ for(const q of r.packages){const card=n('article','','activity-package');card.append(n('strong',q.name),n('p',`${stageLabels[packageStage(p,q)]} · ${q.responsible||'Responsável a definir'}`),n('p',`${q.needDate} → ${q.finishDate} · ${q.quantity??'A quantificar'} ${q.unit}`),btn('Editar pacote',()=>hooks.open(q.id)),btn('Revisar restrições',()=>hooks.open(q.id,'Restrições')),btn('Ver suprimentos',()=>hooks.open(q.id,'Suprimentos')));const constraints=n('details');constraints.append(n('summary','Restrições e condições'));for(const c of q.constraints)constraints.append(n('p',`${c.category}: ${isEmptyConstraint(c)?'A analisar':c.description} · ${c.resolved?'Liberada':'Pendente'}${c.owner?' · '+c.owner:''}${c.dueDate?' · '+c.dueDate:''}${c.scope==='elements'?' · alcance parcial':''}`));card.append(constraints);const resources=n('details');resources.append(n('summary','Recursos / insumos'));for(const req of p.resources.filter(x=>x.packageId===q.id))resources.append(n('p',`${req.specification||req.resourceCode}: ${req.quantity} ${req.unit} · necessidade ${req.needDate}`));for(const c of p.planning?.packages[q.id]?.serviceSnapshot.composition??[]){const meta=p.planning!.packages[q.id];resources.append(n('p',`Composição: ${(meta.inputSnapshot??p.planning!.inputs).find(i=>i.id===c.inputId)?.name??c.inputId} · fator ${c.factor} · premissa a conferir`));}card.append(resources);container.append(card);}
+ if(!r.packages.length)container.append(n('p','Sem pacote vinculado a esta atividade/serviço. Outros serviços nos mesmos elementos não são considerados concluídos.'));
+ const ids=n('details');ids.append(n('summary','Identidade dos elementos e vínculos'));for(const ref of r.elements)ids.append(n('p',`${ref.modelId} · ${ref.globalId}`));container.append(ids);container.scrollTop=scroll;
+}

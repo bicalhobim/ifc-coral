@@ -1,11 +1,13 @@
 import {mountWindows} from './windows.ts';
-export type ViewerPanel='model'|'properties'|'timeline'|'quantification';
+export type ViewerPanel='model'|'properties'|'timeline'|'quantification'|'production'|'packages'|'macro'|'supplies'|'catalogues'|'activity';
 export interface ShellHandles {
  viewportEl:HTMLElement;ganttEl:HTMLElement;treeEl:HTMLElement;propsEl:HTMLElement;quantEl:HTMLElement;fileInput:HTMLInputElement;
  fitButton:HTMLButtonElement;allButton:HTMLButtonElement;viewButtons:Record<string,HTMLButtonElement>;
  multiSelectButton:HTMLButtonElement;clearSelectionButton:HTMLButtonElement;selectionCountEl:HTMLElement;
  setPanel:(name:ViewerPanel,open:boolean)=>void;
+ focusPanel:(name:ViewerPanel)=>void;
  isPanelOpen:(name:ViewerPanel)=>boolean;
+ addPanel:(name:ViewerPanel,title:string,content:HTMLElement,place?:'left'|'right'|'bottom'|'float')=>void;
 }
 const icons={model:'<path d="M4 3h6v6H4zM14 15h6v6h-6zM4 15h6v6H4zM7 9v3h10v3M7 12v3"/>',properties:'<path d="M5 4h14v16H5zM9 8h6M9 12h6M9 16h3"/>',timeline:'<path d="M4 4v16h17M7 7h8M10 11h10M7 15h5"/>',fit:'<path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5M8 8h8v8H8z"/>',all:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',cube:'<path d="m12 2 9 5v10l-9 5-9-5V7zM3 7l9 5 9-5M12 12v10"/>'};
 function node(tag:string,cls:string){const n=document.createElement(tag);n.className=cls;return n;}
@@ -44,5 +46,6 @@ export function buildShell(root:HTMLElement,onPanelChange?:(name:ViewerPanel,ope
  const overlay=node('div','simulation-overlay');overlay.hidden=true;overlay.setAttribute('aria-label','Estado da simulação');viewportEl.append(views,overlay);
  root.append(toolbar,fileInput);windows=mountWindows(root,viewportEl,panes,buttons,onPanelChange);
 
- return {viewportEl,ganttEl,treeEl,propsEl,quantEl:quant.body,fileInput,fitButton,allButton,viewButtons,multiSelectButton,clearSelectionButton,selectionCountEl,setPanel,isPanelOpen:windows.isPanelOpen};
+ const addPanel:ShellHandles['addPanel']=(name,title,content,place='right')=>{const item=panel(name,title,'panel-extra');item.body.append(content);buttons[name]=tool(title,icons.properties,()=>setPanel(name,panes[name].hidden));windows.register(name,item.p,buttons[name],place);};
+ return {focusPanel:windows.focusPanel,addPanel,viewportEl,ganttEl,treeEl,propsEl,quantEl:quant.body,fileInput,fitButton,allButton,viewButtons,multiSelectButton,clearSelectionButton,selectionCountEl,setPanel,isPanelOpen:windows.isPanelOpen};
 }

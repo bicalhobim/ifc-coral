@@ -227,3 +227,23 @@ O diagnóstico anterior foi evoluído para o catálogo do aplicativo. Plano exec
 - Lista/Kanban validado, gestão visual por serviço e proteção das premissas humanas e dos registros congelados.
 - 174 testes, tipos, selfchecks e build aprovados. Ensaio real TORRE02: três pacotes, ajuste20m³, reserva/recebimento, compromisso/início/conclusão, PPC100%, undo0/redo100, autosave/reabertura e restauração. Janela estreita e preservação de texto entre vistas conferidas.
 - [Guia](GUIA_EVOLUCAO_INTEGRADA.md) e [QA/evidências/limites](QA_EVOLUCAO_INTEGRADA.md). Instalação externa e chamadas reais de IA não repetidas. Nenhum commit/push nesta rodada.
+
+## Planejamento integrado e janelas — 02/11/2026
+
+- Checkpoint anterior autorizado: `468636f`. Nova implementação local, ainda sem commit/push.
+- Gantt, tabela e linha de balanço com filtros por local/serviço/responsável/recurso/datas/situação; inspetor liga atividade a elementos IFC, pacotes, restrições e suprimentos por identidade estável.
+- Pacotes/Kanban e áreas principais agora compartilham encaixe, flutuação, maximização e redimensionamento; preferências locais do navegador.
+- 180 testes, tipos, build e schedule.selfcheck aprovados. Ensaio no navegador com TORRE02/QA, inclusive janela estreita, ligação ao pacote correto e encaixe por arraste.
+- [Guia](GUIA_PLANEJAMENTO_JANELAS.md) e [QA, evidências e limites](QA_PLANEJAMENTO_JANELAS_2026-11-02.md). Linha de balanço visual; sem CPM/nivelamento ou intercâmbio nativo SYNCHRO.
+
+## Revisão UX — pacotes, suprimentos e linha de balanço — 02/11/2026
+
+- Resumo/Restrições/Suprimentos no mesmo contexto do pacote; aberturas ampliadas sem ferramentas 3D concorrentes.
+- Grade de suprimentos com edição de coeficientes/prazos, filtros, downloads CSV/JSON e salvar na pasta. Exportações filtradas e quantidades desconhecidas preservadas.
+- Linha de balanço com locais ascendentes da base ao topo, serviços na mesma cota e linhas de início/término. Ordem sugerida pelos nomes, editável; sem cálculo de produtividade/CPM.
+- 184 testes, tipos e build aprovados. Ensaio real: edição/recalcular/autosave/desfazer/reabrir, checklist contextual e downloads conferidos. [QA e capturas](QA_UX_SUPRIMENTOS_LOB_2026-11-02.md).
+- Sem novo commit ou push; 468636f permanece checkpoint anterior.
+
+## Commit autorizado — planejamento e experiência de suprimentos
+
+Lucas autorizou novo commit após o ensaio de 184 testes e verificação visual. Este checkpoint consolida Gantt integrado, linha de balanço, janelas encaixáveis, navegação contextual dos pacotes e grade editável/exportável de suprimentos. Os registros anteriores de alterações locais descrevem o estado histórico antes desta autorização. Publicação remota não executada nesta rodada.

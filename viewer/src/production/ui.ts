@@ -18,7 +18,7 @@ import {createSelectionPackage,selectionPackageStatus} from './selection-package
 import {createManualPackage,deletePackage,restorePackage,packageDeletionBlock,type RemovedPackage} from './package-management.ts';
 import {usesResourceSupply} from './supply-mode.ts';
 import type {PackageMeasureRequest} from './package-quantities-ui.ts';
-type Hooks={openSupplies?:(id:string)=>void;createPackages?:()=>void;getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];showElements?:(refs:ElementRef[])=>void;elementName?:(ref:ElementRef)=>string;selectionContext?:()=>{locations:string[]};select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;importModel:()=>void;quantity:(refs:WorkPackage['elements'])=>VolumeSummary;quantification?:(request:PackageMeasureRequest)=>void};
+type Hooks={openRestrictions?:(id:string)=>void;openSupplies?:(id:string)=>void;createPackages?:()=>void;getProject:()=>Project;change:(fn:(p:Project)=>void)=>void;selection:()=>string[];showElements?:(refs:ElementRef[])=>void;elementName?:(ref:ElementRef)=>string;selectionContext?:()=>{locations:string[]};select:(pkg:WorkPackage)=>void;review:(pkg:WorkPackage)=>boolean;importModel:()=>void;quantity:(refs:WorkPackage['elements'])=>VolumeSummary;quantification?:(request:PackageMeasureRequest)=>void};
 export function el<K extends keyof HTMLElementTagNameMap>(tag:K,text='',cls=''){const n=document.createElement(tag);n.textContent=text;if(cls)n.className=cls;return n;}
 function btn(text:string,action:()=>void,cls=''){const b=el('button',text,cls);b.type='button';b.onclick=action;return b;}
 function field(label:string,value:string,type='text'){
@@ -119,7 +119,7 @@ export class ProductionPanel{
  this.selected=createSelectionPackage(p,this.hooks.selection(),this.hooks.quantity,this.hooks.selectionContext?.()).id;
  });}
  private production(body:HTMLElement,pkg:WorkPackage,p:Project){
- const checklist=el('div','','restriction-overview'),released=pkg.constraints.filter(c=>c.resolved).length;checklist.append(el('div',`${released}/${pkg.constraints.filter(c=>!isEmptyConstraint(c)).length} condições identificadas liberadas`),btn('Abrir checklist de restrições',()=>{this.restrictionsOpen=true;this.render();this.element.querySelector('.work-body')?.scrollTo({top:0});},'primary'));body.append(checklist);
+ const checklist=el('div','','restriction-overview'),released=pkg.constraints.filter(c=>c.resolved).length;checklist.append(el('div',`${released}/${pkg.constraints.filter(c=>!isEmptyConstraint(c)).length} condições identificadas liberadas`),btn('Abrir checklist de restrições',()=>{if(this.hooks.openRestrictions){this.hooks.openRestrictions(pkg.id);return;}this.restrictionsOpen=true;this.render();this.element.querySelector('.work-body')?.scrollTo({top:0});},'primary'));body.append(checklist);
  const frozen=p.week?.commitments.some(c=>c.packageId===pkg.id),measured=!!pkg.measureLinks?.length,concrete=pkg.unit==='m³'&&/concretagem|concrete/i.test(pkg.name+' '+pkg.service),callout=el('div','','quantity-callout');
  if(measured){
   callout.append(el('strong',`${pkg.quantity?.toLocaleString('pt-BR',{maximumFractionDigits:3})??'A conferir'} ${pkg.unit} · quantificação herdada`),helpButton('Origem da quantificação do pacote',pkg.quantitySource),el('p',`${pkg.measureLinks!.length} medições vinculadas aos elementos · unidade do serviço preservada.`,'fine'));
