@@ -247,3 +247,8 @@ O diagnóstico anterior foi evoluído para o catálogo do aplicativo. Plano exec
 ## Commit autorizado — planejamento e experiência de suprimentos
 
 Lucas autorizou novo commit após o ensaio de 184 testes e verificação visual. Este checkpoint consolida Gantt integrado, linha de balanço, janelas encaixáveis, navegação contextual dos pacotes e grade editável/exportável de suprimentos. Os registros anteriores de alterações locais descrevem o estado histórico antes desta autorização. Publicação remota não executada nesta rodada.
+
+
+## 02/11/2026 — zoom e quantificação da seleção física
+
+Zoom por arraste na escala temporal (Gantt integrado, hierarquia e balanço), cabeçalhos recolhíveis, catálogo com cobertura explícita e rascunhos preservados. Quantificação independente de tarefas 4D. QA: 187 testes, tipos, build e schedule selfcheck aprovados; ensaio real na TORRE02 em projeto QA. Registro: `QA_ZOOM_QUANTIFICACAO_2026-11-02.md`. Commit autorizado pelo pedido desta rodada após testes; publicação remota não solicitada.

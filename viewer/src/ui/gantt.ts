@@ -1,3 +1,4 @@
+import {bindTimelineZoom,anchoredScroll} from './timeline-zoom.ts';
 import {PlanningBoard} from './planning-board.ts';
 import type {Project} from '../production/types.ts';
 import type {ActivityRow} from '../production/planning-view.ts';
@@ -64,6 +65,7 @@ function collectAllTasks(n: TreeNode): ElementTask[] {
 }
 
 export class Gantt {
+  private timelineZoom=1;
   private domainStart = 0;
   private domainEnd = 1;
   private mode: "planner" | "gantt" | "table" = "planner";
@@ -293,6 +295,8 @@ export class Gantt {
   private combinedPanel(): HTMLElement {
     const panel = document.createElement("div");
     panel.className = "gantt-combined";
+    const labelWidth=360,timeWidth=()=>Math.max(300,this._container.clientWidth-labelWidth);
+    panel.style.width=`${labelWidth+timeWidth()*this.timelineZoom}px`;
 
     const monthsRow = document.createElement("div");
     monthsRow.className = "gantt-combined-months";
@@ -330,6 +334,8 @@ export class Gantt {
       initialsRow.appendChild(m);
     }
 
+    monthsBars.title='Arraste as datas: direita amplia, esquerda reduz. Home restaura o zoom.';
+    bindTimelineZoom(monthsBars,()=>this.timelineZoom,(zoom,clientX)=>{const body=this._container.querySelector<HTMLElement>('.gantt-body')!;const x=clientX-body.getBoundingClientRect().left,fraction=(body.scrollLeft+x-labelWidth)/(timeWidth()*this.timelineZoom);this.timelineZoom=zoom;panel.style.width=`${labelWidth+timeWidth()*zoom}px`;body.scrollLeft=anchoredScroll(fraction,timeWidth()*zoom,labelWidth,x);monthsBars.setAttribute('aria-valuenow',String(Math.round(zoom*100)));monthsBars.setAttribute('aria-valuetext',`${Math.round(zoom*100)}%`);});
     monthsBars.append(yearsRow, initialsRow);
     monthsRow.append(monthsInfo, monthsBars);
     panel.appendChild(monthsRow);
@@ -432,7 +438,7 @@ export class Gantt {
     if (today!==undefined&&today >= this.domainStart && today <= this.domainEnd) {
       const line = document.createElement("div");
       line.className = "gantt-today-combined simulation-cursor";
-      line.style.left = `calc(50% + ${this.x(today)/2}%)`;
+      line.style.left = `calc(${this.x(today)}% + ${labelWidth*(1-this.x(today)/100)}px)`;
       panel.appendChild(line);
     }
 

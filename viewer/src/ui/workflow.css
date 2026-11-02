@@ -36,3 +36,19 @@
 .package-context>.package-detail-tabs{grid-column:1 / -1;grid-row:3;margin-top:8px}
 .package-context .package-detail-tabs button{padding:8px 12px}.package-context~.supply-intro{margin:8px 0}
 @media(max-width:740px){.package-context>button:first-child{grid-column:1;grid-row:1}.model-host .panel-extra .package-context h2{grid-row:2}.package-context>p{grid-row:3}.package-context>.package-detail-tabs{grid-row:4}.package-context{grid-template-columns:1fr!important}}
+
+/* Compact headers retain a title bar and accessible restore action. */
+.coral-header .header-collapse{font-size:11px;padding:5px 8px;margin-left:auto}
+.coral-header.header-compact{padding:4px 12px;min-height:34px;gap:10px;flex-wrap:nowrap}
+.coral-header.header-compact .wordmark,.coral-header.header-compact .header-actions{display:none}
+.coral-header.header-compact .document-label{width:auto;flex:1;margin:0;padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.window-compact .planning-tools,.window-compact .planning-filters,.window-compact .planning-summary,.window-compact .gantt-toolbar,.window-compact .integrated-header,.window-compact .quant-intro{display:none!important}
+.window-compact .panel-head{min-height:26px;padding-top:2px;padding-bottom:2px}
+.timeline-zoom-axis{cursor:ew-resize;touch-action:none;user-select:none}
+.timeline-zoom-axis:focus{outline:2px solid #a100ff;outline-offset:-2px}
+.catalog-selection{padding:8px;background:#f5f0fb;border-radius:8px;margin-block:8px}
+.catalog-selection p{font-size:12px;border-bottom:1px solid #e5d9ef;padding-bottom:6px;overflow-wrap:anywhere}
+
+.gantt-combined .gantt-combined-months-info,.gantt-combined .gantt-combined-info{width:360px;flex:0 0 360px;box-sizing:border-box;position:sticky;left:0;z-index:2;background:#fcfaff}
+.gantt-combined .gantt-combined-months-bars,.gantt-combined .gantt-combined-bars{width:auto;flex:1 1 0;min-width:0}
+.window-compact .window-place{display:none}
