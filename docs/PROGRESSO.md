@@ -266,3 +266,76 @@ Implementado o contrato `ifc-coral-procurement` v1, exportador sem mutações, c
 - Revalidação: 201 testes, tipos e build aprovados. O aviso de bundle grande permanece. O ensaio visual da exportação de 02/11 continua sendo a evidência funcional desta interface, que não foi alterada na rodada de documentação. A sessão de trabalho do professor foi preservada.
 - Novas imagens revisadas visualmente. A figura funcional é ilustração conceitual, não captura de tela. Fontes técnicas e limites em `architecture/HIGH_LEVEL_DESIGN.md` e no recibo de QA da integração.
 - Commit solicitado expressamente nesta rodada; não há autorização de push neste pedido. Registros anteriores de “sem commit” descrevem a situação histórica de cada rodada.
+
+
+## 05/11/2026 — piloto IFC sem datas + CSV
+
+> Os registros desta data são históricos: “sem commit/push” descreve o encerramento de cada rodada. Fontes consolidadas em `8564d9a`, guias/evidências sintéticas em `abab910`; a publicação posterior dos recibos não amplia seus critérios de aceite.
+
+Implementação local autorizada por Lucas e alinhada com a coordenação 2.0 após as capturas. Assistente CSV/IFC, sugestão Codex revisável, cópia IFC rastreável, datas manuais explícitas, vínculo físico independente de 4D e conferência de revisão no salvamento. 208 testes aprovados, tipos/build/selfcheck e ensaio no navegador com chamada Codex real, reabertura e TORRE02. Limites e pendências em [QA do piloto](QA_PILOTO_IFC_CSV_2026-11-05.md); operação em [guia de importação](IMPORTACAO_CRONOGRAMA.md). Sem novo commit/push. Seletor Windows e instalação em segunda máquina ainda precisam de ensaio manual. Sem mudança no kit institucional ou no contrato Compras IA v1.
+
+
+## 05/11/2026 — gestão central de restrições
+
+Menu Restrições integrado aos pacotes e checklist: cadastro, edição, exclusão com motivo e proteções, filtros, indicadores e gráficos por área/responsável, CSV filtrado. Mesma fonte de dados e histórico do projeto. 213 testes aprovados, tipos e build aprovados, ensaio real no navegador em projeto sintético, incluindo reabertura. [Guia](GESTAO_RESTRICOES.md) e [QA/limites](QA_RESTRICOES_2026-11-05.md). Alterações locais, sem novo commit/push; piloto IFC + CSV anterior preservado.
+
+## 05/11/2026 — grade, coordenadas e alinhamento visual
+
+Controle de cota da grade, coordenadas locais sob o cursor e alinhamento rígido por três pares de pontos, aplicado ao modelo ativo ou aos modelos do projeto. A prévia é reversível e o JSON preserva os parâmetros para reabertura. O IFC original não é alterado. Ensaiado em cópia independente da TORRE02 no navegador: base da grade detectada, cursor sobre o modelo, prévia de translação de 8 m, confirmação e seleção de elemento após mover. Testes automatizados: 215 aprovados; tipos e build aprovados. [Uso e limites](COORDENADAS_ALINHAMENTO.md). Falta ensaio de salvar/reabrir com seletor nativo em outra máquina e edição de elementos isolados. Alterações locais, sem commit/push.
+
+## 05/11/2026 — entradas da aula e ensaio isolado de instalação
+
+Home com Explore (caso fictício preenchido e tour), Pratique E02 (IFC/4D limpos para o grupo) e Crie (projeto local em branco com dados gerais). [QA detalhado](QA_ENTRADAS_IAT001_2026-11-05.md): 218 testes aprovados, tipos/build e fluxo E02 até JSON de uma demanda no navegador. Instalação `npm ci --offline` em cópia temporária independente, build e abertura de IFC/Gantt aprovados. Permanecem o ensaio do seletor nativo e de outro computador. Sem commit/push ou mudança no README público.
+
+O visualizador agora mostra coordenadas locais sob o cursor, permite ajustar a cota da grade e mover elementos selecionados, modelo ativo ou projeto inteiro por três pares de pontos. No navegador, um pilar foi deslocado 100 m, selecionado em sua nova posição e restaurado. O IFC original permanece intacto. [Uso e limites](COORDENADAS_ALINHAMENTO.md).
+
+## 05/11/2026 — limite de preparação IFC ampliado
+
+O assistente IFC + CSV aceita até 100 MB do arquivo original (antes: 25 MB). Validações de interface, Node e Python alinhadas; transporte JSON até 160 MB, resposta até 200 MB e processamento até 5 minutos. Mantidos os limites de atividades e a preservação do original.
+
+Verificação: 220 testes aprovados, tipos, build e schedule.selfcheck aprovados. IFC sintético de 26.003.097 bytes inspecionado e enriquecido no teste Node/Python; o servidor ativo em 127.0.0.1:5178 também respondeu HTTP 200 à inspeção desse arquivo. O tamanho foi ampliado com comentário STEP: valida o limite/transporte, não o desempenho de geometria complexa de 100 MB. O arquivo CANTEIRO_TEMPORARIO do usuário não foi reprocessado neste ensaio. Sem recarregar a sessão aberta; conferência visual da nova mensagem pendente. Alterações locais, sem commit/push.
+
+## 05/11/2026 — pesquisa e desenho da preparação federada
+
+Análise de código e fontes primárias para evolução do assistente em pipeline multimodelo: [decisão arquitetural e plano](architecture/ADR-2026-11-05-preparacao-federada.md), [protótipo navegável ilustrativo](architecture/prototipo-preparacao-4d.html). Identificados limite de 50 milhões de caracteres no pacote portátil, inventário estrutural parcial, contrato de CSV por um único modelo e necessidade de aplicação por revisão única. O aumento para 100 MB do analisador não remove essas limitações do fluxo completo.
+
+Recomendação: aproveitar IfcOpenShell existente, inventário paginado, processamento local por jobs, de-para CSV, associações por modelo + GlobalId, preparação de cópias e confirmação de manifesto. IA atua sobre lotes de metadados e propostas revisáveis. IfcPatch/IfcCSV/IfcTester/Ifc4D/IfcDiff/IfcMCP e Speckle avaliados como componentes/referências, sem instalação ou integração nesta rodada. Protótipo tem somente dados ilustrativos; sintaxe JavaScript conferida, sem ensaio visual de navegador. Runtime permanece inalterado nesta pesquisa. Implementação e critérios de aceite estão enumerados na decisão; sem novo commit/push.
+
+
+## 05/11/2026 — pipeline federado integrado e ensaiado
+
+Central Preparação 4D em seis etapas implementada no aplicativo: vários modelos, inventário filtrável/editável, CSV com de-para, vínculos por modelo + GlobalId, Codex por recorte, revisão e aplicação de cópias validadas. Persistência em pasta v2 com IFCs por hash, leitura/backup de v1 e histórico. 229 testes Node, 5 testes Python, tipos/build e autoteste 4D aprovados. Ensaio real com dois IFCs sintéticos: salvar/reabrir quatro vínculos e correção de nome; duas chamadas reais ao Codex. [Guia](IMPORTACAO_CRONOGRAMA.md) · [QA e limites](QA_PIPELINE_FEDERADO_2026-11-05.md). Seletor nativo, outro computador, modelos grandes reais e migração com pacotes ainda pendentes. Sem commit/push; README público preservado.
+
+
+## 05/11/2026 — datas exportadas do Project/Navisworks
+
+Importação aceita DD/MM/AA com dia da semana abreviado em português, inclusive “Ter 01/10/24”, “Qui 02/11/28” e “Sáb 26/10/24”. Ano curto usa 2000–2099 explicitamente; dia/mês numéricos continuam validados, sem aceitar datas impossíveis ou término anterior. 230 testes, tipos, build e schedule.selfcheck aprovados. CSV sintético com três atividades normalizado pela interface real; [captura](evidencias/pipeline-federado-2026-11-05/datas-project.jpg). Não foi processado o CSV completo do usuário. Sem commit/push.
+
+
+## 05/11/2026 — escala da preparação e retorno da IA
+
+Cronograma até 1.000 atividades e CSV até 10 MB. Análise de metadados em lotes por contagem/tamanho, com progresso, cancelamento e resultado visível mesmo vazio; seleção de todos do filtro. 235 testes Node, 6 Python, tipos/build e selfcheck aprovados. No navegador: 40 elementos processados pelo Codex real; 1.000 atividades aplicadas, salvas e reabertas no Gantt. [QA e limites](QA_ESCALA_PREPARACAO_2026-11-05.md). Sem commit/push.
+
+
+## 05/11/2026 — correção com CRONOGRAMA.csv real
+
+790 registros importados e reimportados no navegador. Corrigida a interpretação de Navisworks_User1 como ID único; normalização preserva códigos, predecessoras, datas e demais campos de origem. Detecção UTF-8/Windows-1252, IDs automáticos e downloads de conversão. 238 testes, tipos, build e selfcheck aprovados. [QA e limites](QA_CRONOGRAMA_REAL_2026-11-05.md). Sem novo commit.
+
+
+## 05/11/2026 — sugestões IFC e cancelamento
+
+Cancelamento identificado no cliente/servidor, liberação do bloqueio independente de falha de limpeza e rejeição de respostas tardias. Tabela de revisão de correções e vínculos, busca, edição de proposta, seleção e ações em lote; escopo de vínculos explícito. 244 testes, tipos, build e selfcheck aprovados; navegador operado com IFC real sintético e executor controlado. [QA e limites](QA_SUGESTOES_IFC_2026-11-05.md). Sem commit.
+
+## 05/11/2026 — associação determinística IFC × CSV
+
+Associação por código/propriedade passou a ser a ação principal da etapa Associações: perfil por modelo e revisão, escopo explícito, inventário completo com proveniência ocorrência/tipo, igualdade exata, prévia e adoção em lote. IDs de atividade separados dos códigos; metadados de origem e predecessoras preservados. Decisões manuais e remoções protegidas; revisão de diferenças ao reprocessar, persistência no JSON v2 e transação de cópias existentes. Cronograma externo mantém prévia disponível e aplicação bloqueada. IA continua opcional.
+
+259 testes Node, 6 Python, tipos/build/selfcheck aprovados. CSV/TORRE02 reais reproduziram 174 atividades, 2.292 pares e 764 elementos, com 616 pendências explícitas; sem aplicação no modelo real. Aplicação, reabertura, cancelamento/repetição, localização 3D e exportação ensaiados em dois IFCs sintéticos com códigos/GUIDs coincidentes e três serviços. [QA, capturas e limites](QA_ASSOCIACAO_CODIGO_2026-11-05.md). Sem commit/push; checkout e alterações anteriores preservados.
+
+## 05/11/2026 — datas herdadas visíveis antes de criar pacotes
+
+Criar pacotes por serviço mostra início/término já preenchidos pelas atividades IFC/CSV de cada serviço nos elementos selecionados, com origem e critério de composição. Edição humana preservada por campo; janela ambígua pede escolha da atividade, cobertura parcial pede confirmação e ausência fica vazia. Nenhuma liberação ou compromisso é inferido. Sincronização protege intervalos mistos e compromissos congelados. 266 testes, tipos/build/selfcheck aprovados; navegador comprovou três períodos distintos, edição/alternância, dois pacotes salvos e reabertos. [QA e capturas](QA_DATAS_PACOTES_2026-11-05.md). Sem commit/push.
+
+## 05/11/2026 — consolidação dos recibos para publicação
+
+Commit e push autorizados expressamente por Lucas. Revalidação sobre `abab910`: 266 testes Node aprovados, zero falhas/ignorados, tipos/build e `schedule.selfcheck` aprovados; aviso preexistente de tamanho do bundle mantido. Revisão independente dos documentos, logs e imagens concluída. Publicados apenas os resultados agregados do CSV privado; amostras com nomes/datas/GlobalIds e duas capturas do CSV permanecem locais. Evidências sintéticas e registros históricos preservados, com nota sobre acentos corrompidos no recibo sintético. Nenhuma alteração funcional nesta consolidação.

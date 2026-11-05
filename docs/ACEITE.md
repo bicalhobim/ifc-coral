@@ -104,3 +104,28 @@ Exportador v1 implementado e testado com rascunhos, lacunas, revisões, reservas
 - Revalidação nesta data: 201 testes aprovados, typecheck e build aprovados, com aviso de bundle grande. Os testes não substituem ensaio em outra máquina nem conferência técnica dos quantitativos.
 - Contrato/exportador Compras IA documentados; o ciclo completo com o consumidor continua pendente de ensaio conjunto. IA OpenAI/Gemini com chave real, autenticação de contas, colaboração e sincronização contínua não foram validados/implementados por esta rodada, conforme os limites específicos do HLD.
 - A documentação e as imagens não alteram critérios de liberação ou o kit institucional aprovado.
+
+
+## 05/11/2026 — piloto IFC sem datas + CSV
+
+> Os registros desta data são históricos: “sem commit/push” descreve o encerramento de cada rodada. Fontes consolidadas em `8564d9a`, guias/evidências sintéticas em `abab910`; a publicação posterior dos recibos não amplia seus critérios de aceite.
+
+Implementação local autorizada por Lucas e alinhada com a coordenação 2.0 após as capturas. Assistente CSV/IFC, sugestão Codex revisável, cópia IFC rastreável, datas manuais explícitas, vínculo físico independente de 4D e conferência de revisão no salvamento. 208 testes aprovados, tipos/build/selfcheck e ensaio no navegador com chamada Codex real, reabertura e TORRE02. Limites e pendências em [QA do piloto](QA_PILOTO_IFC_CSV_2026-11-05.md); operação em [guia de importação](IMPORTACAO_CRONOGRAMA.md). Sem novo commit/push. Seletor Windows e instalação em segunda máquina ainda precisam de ensaio manual. Sem mudança no kit institucional ou no contrato Compras IA v1.
+
+
+## 05/11/2026 — gestão central de restrições
+
+Menu Restrições integrado aos pacotes e checklist: cadastro, edição, exclusão com motivo e proteções, filtros, indicadores e gráficos por área/responsável, CSV filtrado. Mesma fonte de dados e histórico do projeto. 213 testes aprovados, tipos e build aprovados, ensaio real no navegador em projeto sintético, incluindo reabertura. [Guia](GESTAO_RESTRICOES.md) e [QA/limites](QA_RESTRICOES_2026-11-05.md). Alterações locais, sem novo commit/push; piloto IFC + CSV anterior preservado.
+
+## 05/11/2026 — coordenadas e movimento visual
+
+Grade com cota editável, leitura local X/Y/Z e alinhamento rígido de modelo ou projeto por três pares foram implementados e ensaiados na TORRE02 em navegador. 215 testes, typecheck e build aprovados. O arquivo IFC não é editado; transformação persistida no JSON do projeto, com prévia/cancelamento e suporte a desfazer/refazer. A gravação/reabertura por seletor Windows em outra máquina e o deslocamento de elementos isolados ainda não têm aceite. Ver [guia](COORDENADAS_ALINHAMENTO.md). Sem novo commit/push.
+
+## 05/11/2026 — percurso inicial da IAT001
+
+Explore, Pratique E02 e Crie aparecem na home e geram projetos independentes. O tour pode ser pulado e reiniciado; E02 não herda a premissa fictícia de 12 m³ do exemplo. No ensaio isolado, o E02 chegou a pacote concreto de 6,304 m³ e baixou JSON v1 de uma demanda, sem autorização de compra. Instalação independente por `npm ci --offline`, build e abertura de 180 atividades 4D aprovados. Grade e alinhamento visual por três pontos foram testados; um pilar movido foi selecionado na nova posição. **218 testes, tipos e build** aprovados. Aceite para distribuição depende de pasta nativa, reabertura real no computador do aluno, versão/empacotamento discente e revisão editorial do guia. [Recibo técnico](QA_ENTRADAS_IAT001_2026-11-05.md). Sem commit/push.
+
+
+## 05/11/2026 — pipeline federado integrado e ensaiado
+
+Central Preparação 4D em seis etapas implementada no aplicativo: vários modelos, inventário filtrável/editável, CSV com de-para, vínculos por modelo + GlobalId, Codex por recorte, revisão e aplicação de cópias validadas. Persistência em pasta v2 com IFCs por hash, leitura/backup de v1 e histórico. 229 testes Node, 5 testes Python, tipos/build e autoteste 4D aprovados. Ensaio real com dois IFCs sintéticos: salvar/reabrir quatro vínculos e correção de nome; duas chamadas reais ao Codex. [Guia](IMPORTACAO_CRONOGRAMA.md) · [QA e limites](QA_PIPELINE_FEDERADO_2026-11-05.md). Seletor nativo, outro computador, modelos grandes reais e migração com pacotes ainda pendentes. Sem commit/push; README público preservado.

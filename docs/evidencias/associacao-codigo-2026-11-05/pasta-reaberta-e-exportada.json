@@ -1,0 +1,434 @@
+{
+  "name": "QA Codigo Multimodelo",
+  "models": [
+    {
+      "id": "a",
+      "name": "Estrutura-4D.ifc",
+      "hash": "5190712a89922776709002d7487221a53ed6a90fc879e175c027ce23cbc8ac83",
+      "projectGlobalId": "0EEfeaKHvBn8DuTf8iHcoQ"
+    },
+    {
+      "id": "b",
+      "name": "OutraTorre-4D.ifc",
+      "hash": "23dd7605d7bae70a958d4047d9308127a101c4145ecaff0127a36a425b20bb83",
+      "projectGlobalId": "3HOu4kJ7n7Mx4NwayS6OPi"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "[\"a\",\"0000000000000000000001\",\"CSV:A\"]",
+      "modelId": "a",
+      "globalId": "0000000000000000000001",
+      "slot": "CSV:A",
+      "name": "Formas",
+      "location": "Local nÃ£o identificado",
+      "service": "Formas",
+      "start": "2026-11-05",
+      "finish": "2026-11-06"
+    },
+    {
+      "id": "[\"a\",\"0000000000000000000001\",\"CSV:B\"]",
+      "modelId": "a",
+      "globalId": "0000000000000000000001",
+      "slot": "CSV:B",
+      "name": "Armar",
+      "location": "Local nÃ£o identificado",
+      "service": "Armar",
+      "start": "2026-11-07",
+      "finish": "2026-11-08"
+    },
+    {
+      "id": "[\"a\",\"0000000000000000000001\",\"CSV:C\"]",
+      "modelId": "a",
+      "globalId": "0000000000000000000001",
+      "slot": "CSV:C",
+      "name": "Concreto",
+      "location": "Local nÃ£o identificado",
+      "service": "Concreto",
+      "start": "2026-11-09",
+      "finish": "2026-11-10"
+    },
+    {
+      "id": "[\"a\",\"0000000000000000000002\",\"CSV:A\"]",
+      "modelId": "a",
+      "globalId": "0000000000000000000002",
+      "slot": "CSV:A",
+      "name": "Formas",
+      "location": "Local nÃ£o identificado",
+      "service": "Formas",
+      "start": "2026-11-05",
+      "finish": "2026-11-06"
+    },
+    {
+      "id": "[\"a\",\"0000000000000000000002\",\"CSV:B\"]",
+      "modelId": "a",
+      "globalId": "0000000000000000000002",
+      "slot": "CSV:B",
+      "name": "Armar",
+      "location": "Local nÃ£o identificado",
+      "service": "Armar",
+      "start": "2026-11-07",
+      "finish": "2026-11-08"
+    },
+    {
+      "id": "[\"a\",\"0000000000000000000002\",\"CSV:C\"]",
+      "modelId": "a",
+      "globalId": "0000000000000000000002",
+      "slot": "CSV:C",
+      "name": "Concreto",
+      "location": "Local nÃ£o identificado",
+      "service": "Concreto",
+      "start": "2026-11-09",
+      "finish": "2026-11-10"
+    },
+    {
+      "id": "[\"b\",\"0000000000000000000001\",\"CSV:A\"]",
+      "modelId": "b",
+      "globalId": "0000000000000000000001",
+      "slot": "CSV:A",
+      "name": "Formas",
+      "location": "Local nÃ£o identificado",
+      "service": "Formas",
+      "start": "2026-11-05",
+      "finish": "2026-11-06"
+    },
+    {
+      "id": "[\"b\",\"0000000000000000000001\",\"CSV:B\"]",
+      "modelId": "b",
+      "globalId": "0000000000000000000001",
+      "slot": "CSV:B",
+      "name": "Armar",
+      "location": "Local nÃ£o identificado",
+      "service": "Armar",
+      "start": "2026-11-07",
+      "finish": "2026-11-08"
+    },
+    {
+      "id": "[\"b\",\"0000000000000000000001\",\"CSV:C\"]",
+      "modelId": "b",
+      "globalId": "0000000000000000000001",
+      "slot": "CSV:C",
+      "name": "Concreto",
+      "location": "Local nÃ£o identificado",
+      "service": "Concreto",
+      "start": "2026-11-09",
+      "finish": "2026-11-10"
+    },
+    {
+      "id": "[\"b\",\"0000000000000000000002\",\"CSV:A\"]",
+      "modelId": "b",
+      "globalId": "0000000000000000000002",
+      "slot": "CSV:A",
+      "name": "Formas",
+      "location": "Local nÃ£o identificado",
+      "service": "Formas",
+      "start": "2026-11-05",
+      "finish": "2026-11-06"
+    },
+    {
+      "id": "[\"b\",\"0000000000000000000002\",\"CSV:B\"]",
+      "modelId": "b",
+      "globalId": "0000000000000000000002",
+      "slot": "CSV:B",
+      "name": "Armar",
+      "location": "Local nÃ£o identificado",
+      "service": "Armar",
+      "start": "2026-11-07",
+      "finish": "2026-11-08"
+    },
+    {
+      "id": "[\"b\",\"0000000000000000000002\",\"CSV:C\"]",
+      "modelId": "b",
+      "globalId": "0000000000000000000002",
+      "slot": "CSV:C",
+      "name": "Concreto",
+      "location": "Local nÃ£o identificado",
+      "service": "Concreto",
+      "start": "2026-11-09",
+      "finish": "2026-11-10"
+    }
+  ],
+  "profile": {
+    "version": 1,
+    "id": "a456bca2-da85-470b-bc02-87bd0acbd806",
+    "revision": 3,
+    "csvColumn": "codigo_vinculo",
+    "rules": [
+      {
+        "modelId": "a",
+        "modelHash": "4ce4e8c31b1161587aa62a8ed1bb8afe402e6ee0b91c6a830727d0af5380f2d6",
+        "pset": "Autoria_CWP",
+        "property": "Codigo",
+        "inheritance": "occurrence-first"
+      },
+      {
+        "modelId": "b",
+        "modelHash": "1570ae2def3414cbb3fcfc865cf6b2109688f69e969adbcbddf3fd4aa7ad2d26",
+        "pset": "Autoria_CWP",
+        "property": "Codigo",
+        "inheritance": "occurrence-first"
+      }
+    ]
+  },
+  "activities": [
+    {
+      "row": {
+        "id": "A",
+        "name": "Formas",
+        "start": "2026-11-05",
+        "finish": "2026-11-06",
+        "location": "",
+        "service": "Formas",
+        "associationCode": "001.4.1",
+        "modelScope": "",
+        "rowKind": "atividade",
+        "parentId": "",
+        "sourceRow": 2,
+        "globalIds": []
+      },
+      "links": [
+        {
+          "modelId": "a",
+          "globalId": "0000000000000000000001"
+        },
+        {
+          "modelId": "a",
+          "globalId": "0000000000000000000002"
+        },
+        {
+          "modelId": "b",
+          "globalId": "0000000000000000000001"
+        },
+        {
+          "modelId": "b",
+          "globalId": "0000000000000000000002"
+        }
+      ],
+      "disposition": "link",
+      "reason": "",
+      "association": {
+        "profileId": "a456bca2-da85-470b-bc02-87bd0acbd806",
+        "profileRevision": 3,
+        "sourceHash": "e5163ec36b9a6f7a401430c44e504056013f49a16659374ab2e73ea1e8192208",
+        "sourceRow": 2,
+        "code": "001.4.1",
+        "links": [
+          {
+            "modelId": "a",
+            "globalId": "0000000000000000000001"
+          },
+          {
+            "modelId": "a",
+            "globalId": "0000000000000000000002"
+          },
+          {
+            "modelId": "b",
+            "globalId": "0000000000000000000001"
+          },
+          {
+            "modelId": "b",
+            "globalId": "0000000000000000000002"
+          }
+        ],
+        "rules": [
+          {
+            "modelId": "a",
+            "modelHash": "4ce4e8c31b1161587aa62a8ed1bb8afe402e6ee0b91c6a830727d0af5380f2d6",
+            "pset": "Autoria_CWP",
+            "property": "Codigo",
+            "inheritance": "occurrence-first"
+          },
+          {
+            "modelId": "b",
+            "modelHash": "1570ae2def3414cbb3fcfc865cf6b2109688f69e969adbcbddf3fd4aa7ad2d26",
+            "pset": "Autoria_CWP",
+            "property": "Codigo",
+            "inheritance": "occurrence-first"
+          }
+        ]
+      }
+    },
+    {
+      "row": {
+        "id": "B",
+        "name": "Armar",
+        "start": "2026-11-07",
+        "finish": "2026-11-08",
+        "location": "",
+        "service": "Armar",
+        "associationCode": "001.4.1",
+        "modelScope": "",
+        "rowKind": "atividade",
+        "parentId": "",
+        "sourceRow": 3,
+        "globalIds": []
+      },
+      "links": [
+        {
+          "modelId": "a",
+          "globalId": "0000000000000000000001"
+        },
+        {
+          "modelId": "a",
+          "globalId": "0000000000000000000002"
+        },
+        {
+          "modelId": "b",
+          "globalId": "0000000000000000000001"
+        },
+        {
+          "modelId": "b",
+          "globalId": "0000000000000000000002"
+        }
+      ],
+      "disposition": "link",
+      "reason": "",
+      "association": {
+        "profileId": "a456bca2-da85-470b-bc02-87bd0acbd806",
+        "profileRevision": 3,
+        "sourceHash": "e5163ec36b9a6f7a401430c44e504056013f49a16659374ab2e73ea1e8192208",
+        "sourceRow": 3,
+        "code": "001.4.1",
+        "links": [
+          {
+            "modelId": "a",
+            "globalId": "0000000000000000000001"
+          },
+          {
+            "modelId": "a",
+            "globalId": "0000000000000000000002"
+          },
+          {
+            "modelId": "b",
+            "globalId": "0000000000000000000001"
+          },
+          {
+            "modelId": "b",
+            "globalId": "0000000000000000000002"
+          }
+        ],
+        "rules": [
+          {
+            "modelId": "a",
+            "modelHash": "4ce4e8c31b1161587aa62a8ed1bb8afe402e6ee0b91c6a830727d0af5380f2d6",
+            "pset": "Autoria_CWP",
+            "property": "Codigo",
+            "inheritance": "occurrence-first"
+          },
+          {
+            "modelId": "b",
+            "modelHash": "1570ae2def3414cbb3fcfc865cf6b2109688f69e969adbcbddf3fd4aa7ad2d26",
+            "pset": "Autoria_CWP",
+            "property": "Codigo",
+            "inheritance": "occurrence-first"
+          }
+        ]
+      }
+    },
+    {
+      "row": {
+        "id": "C",
+        "name": "Concreto",
+        "start": "2026-11-09",
+        "finish": "2026-11-10",
+        "location": "",
+        "service": "Concreto",
+        "associationCode": "001.4.1",
+        "modelScope": "",
+        "rowKind": "atividade",
+        "parentId": "",
+        "sourceRow": 4,
+        "globalIds": []
+      },
+      "links": [
+        {
+          "modelId": "a",
+          "globalId": "0000000000000000000001"
+        },
+        {
+          "modelId": "a",
+          "globalId": "0000000000000000000002"
+        },
+        {
+          "modelId": "b",
+          "globalId": "0000000000000000000001"
+        },
+        {
+          "modelId": "b",
+          "globalId": "0000000000000000000002"
+        }
+      ],
+      "disposition": "link",
+      "reason": "",
+      "association": {
+        "profileId": "a456bca2-da85-470b-bc02-87bd0acbd806",
+        "profileRevision": 3,
+        "sourceHash": "e5163ec36b9a6f7a401430c44e504056013f49a16659374ab2e73ea1e8192208",
+        "sourceRow": 4,
+        "code": "001.4.1",
+        "links": [
+          {
+            "modelId": "a",
+            "globalId": "0000000000000000000001"
+          },
+          {
+            "modelId": "a",
+            "globalId": "0000000000000000000002"
+          },
+          {
+            "modelId": "b",
+            "globalId": "0000000000000000000001"
+          },
+          {
+            "modelId": "b",
+            "globalId": "0000000000000000000002"
+          }
+        ],
+        "rules": [
+          {
+            "modelId": "a",
+            "modelHash": "4ce4e8c31b1161587aa62a8ed1bb8afe402e6ee0b91c6a830727d0af5380f2d6",
+            "pset": "Autoria_CWP",
+            "property": "Codigo",
+            "inheritance": "occurrence-first"
+          },
+          {
+            "modelId": "b",
+            "modelHash": "1570ae2def3414cbb3fcfc865cf6b2109688f69e969adbcbddf3fd4aa7ad2d26",
+            "pset": "Autoria_CWP",
+            "property": "Codigo",
+            "inheritance": "occurrence-first"
+          }
+        ]
+      }
+    },
+    {
+      "row": {
+        "id": "R",
+        "name": "Resumo",
+        "start": "2026-11-05",
+        "finish": "2026-11-10",
+        "location": "",
+        "service": "",
+        "associationCode": "001.4.1",
+        "modelScope": "",
+        "rowKind": "resumo",
+        "parentId": "",
+        "sourceRow": 5,
+        "globalIds": []
+      },
+      "links": [],
+      "disposition": "excluded",
+      "reason": "Resumo mantido para gestÃ£o; nÃ£o duplica atividades 3D.",
+      "manualDecision": true
+    }
+  ],
+  "export": {
+    "name": "Estrutura-4D.ifc",
+    "hash": "5190712a89922776709002d7487221a53ed6a90fc879e175c027ce23cbc8ac83",
+    "bindings": 6,
+    "elements": 2
+  },
+  "browserReopened": true,
+  "originalFilesPreserved": true
+}

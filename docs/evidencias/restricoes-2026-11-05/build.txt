@@ -1,0 +1,19 @@
+
+> ifc-coral-viewer@0.2.0 build
+> tsc && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 93 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                      0.44 kB │ gzip:     0.30 kB
+dist/assets/worker-GQlxtHkx.mjs  3,477.87 kB
+dist/assets/index-xIYz0cnB.css      82.63 kB │ gzip:    17.10 kB
+dist/assets/index-coTq1yXO.js    6,297.99 kB │ gzip: 1,167.57 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 8.70s
