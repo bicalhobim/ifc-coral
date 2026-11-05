@@ -1,5 +1,5 @@
 import {mountWindows} from './windows.ts';
-export type ViewerPanel='model'|'properties'|'timeline'|'quantification'|'production'|'packages'|'macro'|'supplies'|'catalogues'|'activity';
+export type ViewerPanel='model'|'properties'|'timeline'|'quantification'|'production'|'packages'|'macro'|'supplies'|'catalogues'|'restrictions'|'activity';
 export interface ShellHandles {
  viewportEl:HTMLElement;ganttEl:HTMLElement;treeEl:HTMLElement;propsEl:HTMLElement;quantEl:HTMLElement;fileInput:HTMLInputElement;
  fitButton:HTMLButtonElement;allButton:HTMLButtonElement;viewButtons:Record<string,HTMLButtonElement>;

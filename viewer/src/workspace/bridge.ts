@@ -27,11 +27,11 @@ class LocalFile{
  readonly id:string;readonly parts:string[];readonly name:string;
  constructor(id:string,parts:string[],name:string){this.id=id;this.parts=parts;this.name=name;}
  async getFile(){const result=await request<{data:string}>('read',{id:this.id,parts:this.parts});return new File([Uint8Array.from(decode(result.data))],this.name);}
- async createWritable(){
+ async createWritable(options?:{expectedHash?:string}){
   let data:Uint8Array|undefined,closed=false;
   return {
    write:async(value:string|Blob|Uint8Array)=>{if(closed)throw new Error('Gravação encerrada.');data=typeof value==='string'?new TextEncoder().encode(value):value instanceof Blob?new Uint8Array(await value.arrayBuffer()):Uint8Array.from(value);},
-   close:async()=>{if(closed)throw new Error('Gravação encerrada.');if(!data)throw new Error('Nenhum conteúdo para gravar.');await request('write',{id:this.id,parts:this.parts,data:encode(data)});closed=true;},
+   close:async()=>{if(closed)throw new Error('Gravação encerrada.');if(!data)throw new Error('Nenhum conteúdo para gravar.');await request('write',{id:this.id,parts:this.parts,data:encode(data),...(options?.expectedHash?{expectedHash:options.expectedHash}:{})});closed=true;},
    abort:async()=>{data=undefined;closed=true;}
   };
  }

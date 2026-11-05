@@ -22,6 +22,14 @@
 .supply-row-actions summary{cursor:pointer;color:#7841a1}.supply-row-actions details p{max-width:240px}
 .supply-pending{color:#89551d}.supply-reviewed{color:#236946}.supply-totals{margin-top:16px}.supply-totals summary{cursor:pointer;font-weight:600}
 .integrated-dialog:not(.integrated-side){width:min(920px,94vw);max-height:88vh;border:1px solid #dfd4ea;border-radius:16px;padding:24px;overflow:auto}
+dialog.integrated-side.alignment-dialog{position:fixed;inset:70px 12px auto auto;margin:0;width:min(440px,calc(100vw - 24px));min-width:0;height:auto;max-height:calc(100vh - 82px);padding:16px;resize:none;z-index:1000}
+.alignment-dialog .alignment-coordinates label,.alignment-dialog .alignment-offset label{display:flex;flex-direction:column;gap:2px;margin:0;font-size:11px}
+.alignment-dialog .alignment-coordinates input,.alignment-dialog .alignment-offset input{width:82px;padding:5px}
+.alignment-dialog .alignment-coordinates>span,.alignment-dialog .alignment-offset>span{min-width:55px}
+.alignment-dialog .alignment-actions button{display:inline-flex;margin:2px}
+.example-tour{position:fixed;left:18px;bottom:36px;width:min(365px,calc(100vw - 36px));z-index:950;padding:17px 19px;border:1px solid #d9b8ec;border-radius:15px;background:#fff;box-shadow:0 16px 45px #2d173744;color:#34243e}
+.example-tour h2{font-size:17px;margin:7px 0}.example-tour p{font-size:13px;line-height:1.5;margin:0 0 13px}.example-tour-progress{font-size:10px;color:#7d38ab;letter-spacing:1px;text-transform:uppercase}
+.example-tour-actions{display:flex;gap:6px;flex-wrap:wrap}.example-tour-actions button{font-size:11px;padding:7px 10px;border:1px solid #dfcaee;border-radius:7px;background:#f8f1fc;color:#6d009d;cursor:pointer}.example-tour-actions button:disabled{opacity:.45}
 .integrated-dialog-body>label{display:flex;flex-direction:column;gap:6px;margin:10px 0}.integrated-dialog-body>button{margin:8px 8px 0 0}.integrated-dialog-body input,.integrated-dialog-body select{padding:9px;min-height:35px}
 .integrated-dialog header{position:sticky;top:-24px;z-index:2;background:#fff;padding:12px 0;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .integrated-dialog .notice.error{position:sticky;top:60px;z-index:2;background:#fff0f1;padding:12px;color:#ab2434}

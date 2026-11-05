@@ -1,0 +1,14 @@
+import {readFile,mkdir,writeFile} from 'node:fs/promises';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {decodeScheduleCsv,normalizeScheduleCsv,normalizedScheduleCsv} from '../src/ifc/schedule-normalization.ts';
+import {guessMapping,readCsvGrid} from '../src/ifc/schedule-pipeline.ts';
+const [source,destination]=process.argv.slice(2);
+if(!source||!destination)throw Error('Informe o CSV de origem e uma pasta nova de saída.');
+const bytes=await readFile(source),decoded=decodeScheduleCsv(bytes),mapping=guessMapping(readCsvGrid(decoded.text)[0]),result=normalizeScheduleCsv(decoded.text,mapping);
+const report={source:path.resolve(source),sourceHash:createHash('sha256').update(bytes).digest('hex'),encoding:decoded.encoding,mapping,...result};
+await mkdir(destination,{recursive:true});
+await writeFile(path.join(destination,'CRONOGRAMA_ORIGINAL.csv'),bytes,{flag:'wx'});
+await writeFile(path.join(destination,'CRONOGRAMA_IFC_CORAL.csv'),normalizedScheduleCsv(result),{encoding:'utf8',flag:'wx'});
+await writeFile(path.join(destination,'RELATORIO_CONVERSAO.json'),JSON.stringify(report,null,2),{encoding:'utf8',flag:'wx'});
+console.log(JSON.stringify({rows:result.rows.length,generatedIds:result.ids.length,encoding:decoded.encoding,sourceHash:report.sourceHash,destination:path.resolve(destination)}));

@@ -1,8 +1,10 @@
 import {chooseDirectory,type DirectoryHandle} from './local.ts';
+import type {Project} from '../production/types.ts';
 let destinationOpen=false;
+type GeneralSettings=NonNullable<Project['settings']>;
 
 /** One consistent dialog for New and Save As. No project is created until confirmed. */
-export function projectDestination(options:{title:string;name:string;confirm:string;save:(name:string,parent:DirectoryHandle)=>Promise<void>}):Promise<boolean>{
+export function projectDestination(options:{title:string;name:string;confirm:string;generalSettings?:boolean;save:(name:string,parent:DirectoryHandle,settings?:GeneralSettings)=>Promise<void>}):Promise<boolean>{
  if(destinationOpen)return Promise.resolve(false);destinationOpen=true;
  return new Promise(resolve=>{
   const dialog=document.createElement('dialog');dialog.className='project-destination';dialog.setAttribute('aria-label',options.title);
@@ -10,6 +12,8 @@ export function projectDestination(options:{title:string;name:string;confirm:str
   const copy=document.createElement('p');copy.textContent='Dê um nome ao projeto e escolha onde deseja salvá-lo. Uma pasta com esse nome será criada no local escolhido.';
   const label=document.createElement('label');label.textContent='Nome do projeto';
   const name=document.createElement('input');name.value=options.name;name.required=true;name.maxLength=180;name.setAttribute('aria-label','Nome do projeto');label.append(name);
+  const settings:GeneralSettings={client:'',manager:'',description:''},fields:HTMLLabelElement[]=[];
+  if(options.generalSettings)for(const [key,title] of [['client','Cliente / obra'],['manager','Responsável pelo projeto'],['description','Descrição breve']] as const){const field=document.createElement('label');field.textContent=title;const input=document.createElement('input');input.maxLength=500;input.setAttribute('aria-label',title);input.oninput=()=>{settings[key]=input.value.trim();};field.append(input);fields.push(field);}
   const placeLabel=document.createElement('label');placeLabel.textContent='Onde deseja salvar?';
   const location=document.createElement('input');location.readOnly=true;location.placeholder='Escolha uma pasta no computador';location.setAttribute('aria-label','Local de salvamento');placeLabel.append(location);
   const browse=document.createElement('button');browse.type='button';browse.textContent='Escolher pasta…';
@@ -34,8 +38,8 @@ export function projectDestination(options:{title:string;name:string;confirm:str
   form.onsubmit=e=>{
    e.preventDefault();if(working||!parent)return;
    const chosen=parent,projectName=name.value.trim();setWorking(true);error.textContent='';status.textContent='Salvando o projeto…';
-   void options.save(projectName,chosen).then(()=>close(true)).catch(e=>{error.textContent=e instanceof Error?e.message:String(e);status.textContent='';}).finally(()=>setWorking(false));
+   void options.save(projectName,chosen,options.generalSettings?settings:undefined).then(()=>close(true)).catch(e=>{error.textContent=e instanceof Error?e.message:String(e);status.textContent='';}).finally(()=>setWorking(false));
   };
-  actions.append(cancel,save);form.append(heading,copy,label,placeLabel,browse,preview,status,error,actions);dialog.append(form);document.body.append(dialog);dialog.showModal();name.focus();name.select();
+  actions.append(cancel,save);form.append(heading,copy,label,...fields,placeLabel,browse,preview,status,error,actions);dialog.append(form);document.body.append(dialog);dialog.showModal();name.focus();name.select();
  });
 }

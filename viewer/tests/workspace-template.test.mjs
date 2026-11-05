@@ -42,3 +42,21 @@ test('template refuses invalid model content',async()=>{
  const {torreTemplate}=await import('../src/workspace/templates.ts');
  await assert.rejects(()=>torreTemplate(new TextEncoder().encode('<html>missing</html>')),/IFC/i);
 });
+
+test('Explore and Pratique open independent copies with distinct teaching intent',async()=>{
+ const {torreTemplate}=await import('../src/workspace/templates.ts');
+ const bytes=new Uint8Array(await readFile(new URL('../public/models/TORRE02_ESTRUTURA_4D.ifc',import.meta.url)));
+ const explore=await torreTemplate(bytes,'explore'),practice=await torreTemplate(bytes,'e02');
+ assert.notEqual(explore.project.id,practice.project.id);
+ assert.equal(explore.project.templateId,'explore');assert.equal(practice.project.templateId,'e02');
+ assert.equal(practice.project.packages.length,0);assert.equal(practice.project.supplies.length,0);
+ assert.equal(practice.project.models[0].hash,explore.project.models[0].hash);
+ explore.bytes.values().next().value[0]=0;assert.notEqual(practice.bytes.values().next().value[0],0);
+ validateProject(explore.project);validateProject(practice.project);
+});
+
+test('blank project settings survive copy without teaching data',()=>{
+ const p=createProject();p.settings={client:'Obra fictícia',manager:'Grupo 2',description:'Estudo do curso'};
+ const saved=parseProject(serializeProject(p));assert.deepEqual(saved.settings,p.settings);
+ assert.equal(saved.models.length,0);assert.equal(saved.packages.length,0);assert.equal(saved.templateId,undefined);
+});

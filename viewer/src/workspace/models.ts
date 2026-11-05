@@ -7,5 +7,7 @@ export function removeUnlinkedModel(source:Project,modelId:string):Project{
  if(p.packages.some(pkg=>pkg.elements.some(e=>e.modelId===modelId)))throw new Error('Este modelo está vinculado a pacotes de produção. Substitua a revisão para preservar os vínculos e compromissos.');
  p.models=p.models.filter(m=>m.id!==modelId);p.tasks=p.tasks.filter(t=>t.modelId!==modelId);
  p.measures=p.measures.filter(s=>s.measure.elementRef.modelId!==modelId);
+ if(p.display?.alignments)delete p.display.alignments[modelId];
+ if(p.display?.elementAlignments)delete p.display.elementAlignments[modelId];
  log(p,'Modelo removido',model.name);validateProject(p);return p;
 }

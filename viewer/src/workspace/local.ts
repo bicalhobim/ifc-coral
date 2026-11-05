@@ -1,6 +1,6 @@
 import type {Project} from '../production/types.ts';
 import {validateProject,serializeProject,parseProject} from '../production/project.ts';
-import {packProject,unpackProject,sha256} from '../production/storage.ts';
+import {unpackProject,sha256} from '../production/storage.ts';
 import {chooseLocalDirectory,serializeDirectory,restoreDirectory} from './bridge.ts';
 
 type Permission = 'granted'|'denied'|'prompt';
@@ -13,7 +13,7 @@ type FileHandle = {
  readonly kind:'file';
  readonly name:string;
  getFile():Promise<File>;
- createWritable():Promise<Writable>;
+ createWritable(options?:{expectedHash?:string}):Promise<Writable>;
 };
 /** Structural subset of the native File System Access API, also usable by test doubles. */
 export type DirectoryHandle = {
@@ -31,6 +31,20 @@ type FolderRecord={id:string;name:string;folderName:string;handle:DirectoryHandl
 const observedVersions=new WeakMap<DirectoryHandle,string>();
 const textHash=(value:string)=>sha256(new TextEncoder().encode(value));
 const stale=()=>new Error('O projeto foi alterado em outra sessão. Reabra a pasta antes de salvar para evitar perda de alterações.');
+
+/** Folder v2 keeps immutable IFC blobs outside the JSON. Portable v1 stays readable. */
+async function packFolder(project:Project,bytes:Map<string,Uint8Array>){
+ for(const m of project.models){const value=bytes.get(m.id);if(!value||await sha256(value)!==m.hash)throw new Error('Falha de integridade do IFC antes de salvar.');}
+ return JSON.stringify({format:'ifc-coral-folder',version:2,project,models:project.models.map(m=>({id:m.id,hash:m.hash}))});
+}
+async function unpackFolder(dir:DirectoryHandle,text:string):Promise<{project:Project;bytes:Map<string,Uint8Array>}>{
+ const data=JSON.parse(text);if(data.format==='ifc-coral')return unpackProject(text);
+ if(data.format!=='ifc-coral-folder'||data.version!==2||Object.keys(data).some(k=>!['format','version','project','models'].includes(k)))throw new Error('Formato de pasta não reconhecido.');
+ const project=parseProject(JSON.stringify(data.project)),bytes=new Map<string,Uint8Array>();
+ if(!Array.isArray(data.models)||data.models.length!==project.models.length)throw new Error('Referências IFC ausentes.');
+ for(const row of data.models){const m=project.models.find(m=>m.id===row?.id);if(!m||bytes.has(m.id)||row.hash!==m.hash||! /^[a-f0-9]{64}$/.test(row.hash)||Object.keys(row).some(k=>!['id','hash'].includes(k)))throw new Error('Referência IFC com integridade divergente.');const folder=await dir.getDirectoryHandle('Modelos'),file=await folder.getFileHandle(`${m.hash}.ifc`),value=new Uint8Array(await (await file.getFile()).arrayBuffer());if(await sha256(value)!==m.hash)throw new Error('Arquivo IFC ausente ou com integridade divergente.');bytes.set(m.id,value);}
+ return {project,bytes};
+}
 
 /** Call from the click handler itself: the picker requires transient user activation. */
 export async function chooseDirectory():Promise<DirectoryHandle>{
@@ -74,9 +88,9 @@ function exclusive<T>(operation:()=>Promise<T>):Promise<T>{
  const next=pending.then(run,run);pending=next.then(()=>undefined,()=>undefined);return next;
 }
 
-async function writeAtomically(handle:FileHandle,data:string|Blob|Uint8Array):Promise<void>{
+async function writeAtomically(handle:FileHandle,data:string|Blob|Uint8Array,expectedHash?:string):Promise<void>{
  // Native createWritable stages changes in a temporary file; only successful close commits.
- const stream=await handle.createWritable();
+ const stream=await handle.createWritable(expectedHash?{expectedHash}:undefined);
  try{await stream.write(data);await stream.close();}
  catch(error){
   try{await stream.abort();}catch(abortError){throw new AggregateError([error,abortError],'Falha na gravação e no encerramento do arquivo.');}
@@ -97,14 +111,14 @@ export async function saveProjectFolder(dir:DirectoryHandle,project:Project,byte
  // Capture and validate before awaiting the write queue: later UI edits cannot alter this save.
  const snapshot={project:parseProject(serializeProject(project)),bytes:new Map([...bytes].map(([id,value])=>[id,Uint8Array.from(value)]))};
  return exclusive(async()=>{
-  const packed=await packProject(snapshot.project,snapshot.bytes);
+  const packed=await packFolder(snapshot.project,snapshot.bytes);
   const existing=await maybeFile(dir,PROJECT_FILE);
   const currentText=existing?await (await existing.getFile()).text():'';
   const observed=observedVersions.get(dir);
   if(observed&&(!currentText||await textHash(currentText)!==observed))throw stale();
   let recovering=false;
   if(currentText){
-   const current=await unpackProject(currentText);
+   const current=await unpackFolder(dir,currentText);
    if(current.project.id!==snapshot.project.id)throw new Error('Esta pasta pertence a outro projeto. Escolha uma pasta nova.');
   }else{
    // The zero-length marker is created before staging any data. Its filename binds it
@@ -138,7 +152,7 @@ export async function saveProjectFolder(dir:DirectoryHandle,project:Project,byte
    }
   }
   if(currentText&&currentText!==packed)await storeVersion(dir,currentText);
-  await writeAtomically(existing??await dir.getFileHandle(PROJECT_FILE,{create:true}),packed);
+  await writeAtomically(existing??await dir.getFileHandle(PROJECT_FILE,{create:true}),packed,await textHash(currentText));
   observedVersions.set(dir,await textHash(packed));
   await storeVersion(dir,packed);
  });
@@ -146,12 +160,12 @@ export async function saveProjectFolder(dir:DirectoryHandle,project:Project,byte
 
 async function storeVersion(dir:DirectoryHandle,text:string){const folder=await dir.getDirectoryHandle('Historico',{create:true}),hash=await textHash(text),description=String(JSON.parse(text).project?.audit?.at(-1)?.action??'Projeto salvo').replace(/[^\p{L}\p{N} _-]/gu,'').slice(0,60);for await(const entry of folder.values())if(entry.kind==='file'&&entry.name.endsWith(`-${hash}.json`)){const existing=await (await entry.getFile()).text();if(await textHash(existing)===hash)return;}await writeAtomically(await folder.getFileHandle(`${new Date().toISOString().replace(/[:.]/g,'-')}-${description}-${crypto.randomUUID().slice(0,8)}-${hash}.json`,{create:true}),text);}
 export async function listProjectVersions(dir:DirectoryHandle){let folder:DirectoryHandle;try{folder=await dir.getDirectoryHandle('Historico');}catch(e){if(missing(e))return [];throw e;}const result:{name:string;title:string}[]=[];for await(const e of folder.values())if(e.kind==='file'&&/^\d{4}-.*-[a-f0-9]{64}\.json$/.test(e.name))result.push({name:e.name,title:e.name.slice(0,24)+(e.name.match(/^.{24}-(.*)-[a-f0-9]{8}-[a-f0-9]{64}\.json$/)?.[1]?' · '+e.name.match(/^.{24}-(.*)-[a-f0-9]{8}-[a-f0-9]{64}\.json$/)![1]:'')});return result.sort((a,b)=>b.name.localeCompare(a.name));}
-export async function readProjectVersion(dir:DirectoryHandle,name:string){safeName(name);if(!/^\d{4}-.*-[a-f0-9]{64}\.json$/.test(name))throw new Error('Versão inválida.');const folder=await dir.getDirectoryHandle('Historico'),file=await folder.getFileHandle(name),text=await (await file.getFile()).text();if(!name.endsWith(`-${await textHash(text)}.json`))throw new Error('Integridade da versão divergente.');return unpackProject(text);}
+export async function readProjectVersion(dir:DirectoryHandle,name:string){safeName(name);if(!/^\d{4}-.*-[a-f0-9]{64}\.json$/.test(name))throw new Error('Versão inválida.');const folder=await dir.getDirectoryHandle('Historico'),file=await folder.getFileHandle(name),text=await (await file.getFile()).text();if(!name.endsWith(`-${await textHash(text)}.json`))throw new Error('Integridade da versão divergente.');return unpackFolder(dir,text);}
 
 export async function readProjectFolder(dir:DirectoryHandle):Promise<{project:Project;bytes:Map<string,Uint8Array>}>{
- // Authoritative package contains IFC bytes; loose copies are never trusted in its place.
+ // v2 references are authoritative only after the hashes of immutable model files are checked.
  const file=await dir.getFileHandle(PROJECT_FILE);
- const text=await (await file.getFile()).text(),restored=await unpackProject(text);
+ const text=await (await file.getFile()).text(),restored=await unpackFolder(dir,text);
  observedVersions.set(dir,await textHash(text));return restored;
 }
 

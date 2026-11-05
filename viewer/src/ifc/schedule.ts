@@ -114,9 +114,11 @@ export async function buildSchedule(
   modelKey = model.modelId,
   volumes: Map<string,ElementVolume> = new Map(),
 ): Promise<ElementTask[]> {
-  const byCategory = await model.getItemsOfCategories(BUILDING_CATEGORIES);
-  // Categorias devem conter ocorrências físicas, não Ifc*Type com Psets herdados.
-  const localIds = Array.from(new Set(Object.values(byCategory).flat())) as number[];
+  // Read every rendered occurrence, including MEP and represented site objects.
+  // Types/spatial containers without geometry must never duplicate physical tasks.
+  const localIds = typeof model.getItemsIdsWithGeometry==='function'
+    ? Array.from(new Set(await model.getItemsIdsWithGeometry()))
+    : Array.from(new Set(Object.values(await model.getItemsOfCategories(BUILDING_CATEGORIES)).flat())) as number[];
   if (localIds.length === 0) return [];
 
   const guids = await model.getGuidsByLocalIds(localIds);
@@ -144,7 +146,7 @@ export async function buildSchedule(
     const summary4 = props.get("summary4");
 
     // Coleta tasks dinamicamente (Task1..N)
-    const taskEntries: { name: string; start: Date; finish: Date; days: number; slot: string }[] = [];
+    const taskEntries: { name: string; start: Date; finish: Date; days: number; slot: string; location?:string; service?:string }[] = [];
     for (let n = 1; n <= 50; n++) {
       const tName = props.get(`task${n}`);
       const tStart = parseDate(props.get(`task${n}inicio`));
@@ -153,7 +155,7 @@ export async function buildSchedule(
       if (!tStart || !tFinish || tFinish < tStart) continue;
       const tDays = num(props.get(`task${n}duracaodias`))
         ?? Math.round((tFinish.getTime() - tStart.getTime()) / 86_400_000);
-      taskEntries.push({ name: tName ?? `Tarefa ${n}`, start: tStart, finish: tFinish, days: tDays, slot: `Task${n}` });
+      taskEntries.push({ name: tName ?? `Tarefa ${n}`, start: tStart, finish: tFinish, days: tDays, slot: props.get(`task${n}id`) ? `CSV:${props.get(`task${n}id`)}` : `Task${n}`, location:props.get(`task${n}local`), service:props.get(`task${n}servico`) });
     }
 
     // Fallback: se não achou tasks numeradas, tenta StartDate/FinishDate legado
@@ -192,8 +194,8 @@ export async function buildSchedule(
         volume: globalId ? volumes.get(globalId) : undefined,
         summary1,
         summary2,
-        summary3,
-        summary4,
+        summary3:te.location||summary3,
+        summary4:te.service||summary4,
       });
     }
   });

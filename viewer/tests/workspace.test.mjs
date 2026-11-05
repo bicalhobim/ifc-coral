@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createProject} from '../src/production/project.ts';
-import {sha256,unpackProject} from '../src/production/storage.ts';
+import {sha256,packProject} from '../src/production/storage.ts';
 import {PROJECT_FILE,chooseDirectory,ensurePermission,createProjectFolder,saveProjectFolder,readProjectFolder,saveArtifact,rememberFolder,recentFolders,listProjectVersions,readProjectVersion} from '../src/workspace/local.ts';
 
 const notFound=()=>new DOMException('Missing','NotFoundError');
@@ -52,16 +52,32 @@ async function fixture(){
  return {project,bytes:new Map([['model',bytes]])};
 }
 
-test('project folder roundtrip is portable, authoritative and uses content hashes for model copies',async()=>{
+test('folder v2 references immutable IFCs and rejects missing copies',async()=>{
  const dir=new FakeDirectory('Projeto'),{project,bytes}=await fixture();
  await saveProjectFolder(dir,project,bytes);
  assert.deepEqual(await readProjectFolder(dir),{project,bytes});
  const models=await dir.getDirectoryHandle('Modelos');
  assert.deepEqual([...models.entries.keys()],[`${project.models[0].hash}.ifc`]);
  const packed=await (await (await dir.getFileHandle(PROJECT_FILE)).getFile()).text();
- assert.deepEqual(await unpackProject(packed),{project,bytes});
- // Copies are convenient exports; missing/damaged copies do not corrupt portable package reads.
- models.entries.clear();assert.deepEqual(await readProjectFolder(dir),{project,bytes});
+ assert.equal(JSON.parse(packed).version,2);assert.equal(JSON.parse(packed).models[0].base64,undefined);
+ models.entries.clear();await assert.rejects(()=>readProjectFolder(dir));
+});
+
+test('legacy embedded project migrates without losing the old version',async()=>{
+ const dir=new FakeDirectory('Legacy'),{project,bytes}=await fixture();
+ const text=await packProject(project,bytes);(await dir.getFileHandle(PROJECT_FILE,{create:true})).data=new TextEncoder().encode(text);
+ assert.deepEqual(await readProjectFolder(dir),{project,bytes});await saveProjectFolder(dir,project,bytes);
+ const versions=await listProjectVersions(dir);assert.equal(versions.length,2);
+ for(const v of versions)assert.deepEqual(await readProjectVersion(dir,v.name),{project,bytes});
+});
+
+test('folder saves large IFC without embedding it in every history revision',async()=>{
+ const dir=new FakeDirectory('Large'),{project}=await fixture(),value=new Uint8Array(40_000_000).fill(65);project.models[0].hash=await sha256(value);
+ const bytes=new Map([['model',value]]);await saveProjectFolder(dir,project,bytes);
+ const oldHash=project.models[0].hash,nextValue=new TextEncoder().encode('new IFC revision');project.models[0].hash=await sha256(nextValue);bytes.set('model',nextValue);await saveProjectFolder(dir,project,bytes);
+ const models=await dir.getDirectoryHandle('Modelos');assert.ok(models.entries.has(oldHash+'.ifc'));
+ for(const v of await listProjectVersions(dir)){const restored=await readProjectVersion(dir,v.name);assert.equal(restored.bytes.get('model').byteLength,restored.project.models[0].hash===oldHash?40_000_000:nextValue.length);}
+ assert.ok((await (await dir.getFileHandle(PROJECT_FILE)).getFile()).size<10000);
 });
 
 test('writes and close failures leave previous authoritative project intact and propagate errors',async()=>{
@@ -147,7 +163,7 @@ test('corrupt existing hashed model is preserved and blocks a save',async()=>{
  const model=await (await dir.getDirectoryHandle('Modelos')).getFileHandle(`${project.models[0].hash}.ifc`);
  model.data=new Uint8Array([1]);project.name='Changed';
  await assert.rejects(()=>saveProjectFolder(dir,project,bytes),/integridade/i);
- assert.notEqual((await readProjectFolder(dir)).project.name,'Changed');assert.deepEqual(model.data,new Uint8Array([1]));
+ assert.notEqual(JSON.parse(await (await (await dir.getFileHandle(PROJECT_FILE)).getFile()).text()).project.name,'Changed');await assert.rejects(()=>readProjectFolder(dir),/integridade/i);assert.deepEqual(model.data,new Uint8Array([1]));
 });
 
 test('creation refuses existing file/directory, case collisions and unsafe names',async()=>{
@@ -216,4 +232,9 @@ test('recent-folder index stores only handle and display metadata; reads never a
   assert.deepEqual(Object.keys(list[0]).sort(),['folderName','handle','id','name']);
   assert.equal(dir.requests,0);assert.equal(closed,2);
  }finally{delete globalThis.indexedDB;}
+});
+test('association profiles and source-row evidence survive folder save/reopen without altering links',async()=>{
+ const dir=new FakeDirectory('Associacao'),{project,bytes}=await fixture();
+ project.schedulePreparation={models:[{id:'model',name:'QA.ifc',hash:project.models[0].hash}],activities:[{row:{id:'CSV-000001',name:'Forma',start:'2026-11-05',finish:'2026-11-06',location:'',service:'Forma',globalIds:[],associationCode:'001',sourceRow:2,predecessors:'7'},links:[{modelId:'model',globalId:'guid'}],disposition:'link',reason:'',association:{profileId:'qa',profileRevision:1,sourceHash:'f'.repeat(64),sourceRow:2,code:'001',links:[{modelId:'model',globalId:'guid'}],rules:[{modelId:'model',modelHash:project.models[0].hash,pset:'X',property:'CWP',inheritance:'occurrence-first'}]}}],corrections:[],associationProfile:{version:1,id:'qa',revision:1,csvColumn:'codigo_vinculo',rules:[{modelId:'model',modelHash:project.models[0].hash,pset:'X',property:'CWP',inheritance:'occurrence-first'}]},csvSourceHash:'f'.repeat(64)};
+ await saveProjectFolder(dir,project,bytes);assert.deepEqual((await readProjectFolder(dir)).project.schedulePreparation,project.schedulePreparation);
 });

@@ -1,0 +1,8 @@
+// Decimal MB, applied to the original IFC before base64 encoding.
+export const MAX_SCHEDULE_IFC_BYTES=100_000_000;
+export const MAX_SCHEDULE_BASE64_CHARS=4*Math.ceil(MAX_SCHEDULE_IFC_BYTES/3);
+export const MAX_SCHEDULE_REQUEST_BYTES=160_000_000;
+export const MAX_SCHEDULE_RESPONSE_BYTES=200_000_000;
+export const SCHEDULE_TIMEOUT_MS=300_000;
+export const MAX_SCHEDULE_ACTIVITIES=1_000;
+export const MAX_SCHEDULE_CSV_SIZE=10_000_000;

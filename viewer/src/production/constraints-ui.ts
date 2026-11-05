@@ -1,3 +1,4 @@
+import {confirmConstraintDeletion} from './constraint-delete-ui.ts';
 import type {Project,WorkPackage,ElementRef} from './types.ts';
 import {isEmptyConstraint,constraintElements,constraintCategories,sameRef,addConstraint,saveConstraint} from './constraints.ts';
 import {resolveConstraint} from './planning.ts';
@@ -26,7 +27,7 @@ export function restrictionChecklist(body:HTMLElement,pkg:WorkPackage,hooks:Hook
    if(c.resolved)hooks.change(p=>{const target=p.packages.find(x=>x.id===pkg.id)!.constraints.find(x=>x.id===c.id)!;target.resolved=false;log(p,'Restrição reaberta',target.description);});
    else{status.checked=false;detail.open=true;hooks.open(c.id);detail.querySelector<HTMLTextAreaElement>('[data-restriction-evidence]')?.focus();}
   };
-  const content=node('div','','restriction-content'),scope=node('select');scope.setAttribute('aria-label',`Alcance — ${c.description}`);
+  const content=node('div','','restriction-content'),categoryEdit=node('select'),categoryLabel=node('label','Categoria','restriction-field');for(const value of constraintCategories){const option=node('option',value);categoryEdit.append(option);}categoryEdit.value=c.category;categoryLabel.append(categoryEdit);content.append(categoryLabel);const scope=node('select');scope.setAttribute('aria-label',`Alcance — ${c.description}`);
   if(c.aiOrigin)content.append(node('p',`Proposta de ${c.aiOrigin.provider} · ${c.aiOrigin.model} · revisada por ${c.aiOrigin.reviewer}. Continua dependendo de evidência real para liberação.`,'notice'),node('p',c.aiOrigin.reason,'fine'));
   for(const [v,t]of [['package','Todo o pacote'],['elements','Elementos específicos do pacote']]){const o=node('option',t);o.value=v;scope.append(o);}scope.value=c.scope??'package';let refs=structuredClone(c.elements??[]);
   const scopeLine=node('p','','restriction-scope'),elements=node('details','','restriction-elements'),list=node('ol');elements.append(node('summary','Ver elementos vinculados'),list);
@@ -36,10 +37,11 @@ export function restrictionChecklist(body:HTMLElement,pkg:WorkPackage,hooks:Hook
   const actions=node('div','','restriction-scope-actions');actions.append(use,button('Realçar alcance no 3D',()=>{const targets=scope.value==='package'?pkg.elements:refs;if(targets.length)hooks.show(targets);else scopeLine.textContent='Vincule os elementos deste alcance antes de realçar.';}),selected);
   const description=field('Condição a liberar',c.description),owner=field('Responsável pela remoção',c.owner??''),date=field('Prazo para remover',c.dueDate??pkg.needDate,'date'),action=field('Ação para liberar',c.action??'','textarea'),evidence=field('Evidência da liberação',c.evidence,'textarea'),reviewer=field('Conferido por',c.reviewer);evidence.input.dataset.restrictionEvidence='';
   const imageContainer=node('div'),prints=evidenceImages(imageContainer,c.attachments??[],c.description);evidence.input.addEventListener('paste',event=>prints.paste(event as ClipboardEvent));
-  const save=(release:boolean)=>hooks.change(p=>{if(prints.isBusy())throw new Error('Aguarde a leitura do print antes de salvar.');saveConstraint(p,pkg.id,c.id,{description:description.input.value,scope:scope.value as 'package'|'elements',elements:refs,owner:owner.input.value.trim(),dueDate:date.input.value,action:action.input.value.trim(),attachments:prints.images(),...(!c.resolved?{evidence:evidence.input.value.trim(),reviewer:reviewer.input.value.trim()}:{})});if(release)resolveConstraint(p,pkg.id,c.id,evidence.input.value,reviewer.input.value);});
+  const save=(release:boolean)=>hooks.change(p=>{if(prints.isBusy())throw new Error('Aguarde a leitura do print antes de salvar.');saveConstraint(p,pkg.id,c.id,{category:categoryEdit.value,description:description.input.value,scope:scope.value as 'package'|'elements',elements:refs,owner:owner.input.value.trim(),dueDate:date.input.value,action:action.input.value.trim(),attachments:prints.images(),...(!c.resolved?{evidence:evidence.input.value.trim(),reviewer:reviewer.input.value.trim()}:{})});if(release)resolveConstraint(p,pkg.id,c.id,evidence.input.value,reviewer.input.value);});
   content.append(node('label','Onde esta condição se aplica?','restriction-caption'),scope,scopeLine,actions,elements,description.label,owner.label,date.label,action.label);
   if(c.resolved){content.append(node('div',`Evidência: ${c.evidence||'Print anexado'}\nConferido por: ${c.reviewer}`,'restriction-proof'),imageContainer,button('Salvar alcance e acompanhamento',()=>save(false)),button('Salvar evidências e confirmar liberação',()=>save(true),'primary'));}
   else content.append(evidence.label,imageContainer,reviewer.label,node('p','Use texto ou print como evidência. O conferente continua obrigatório.','fine'),button('Salvar apontamento',()=>save(false)),button('Confirmar e liberar',()=>save(true),'primary'));
+  content.append(button('Excluir restrição',()=>confirmConstraintDeletion(pkg.id,c.id,{get:hooks.getProject,change:hooks.change,updated:()=>{hooks.open('');}})));
   detail.append(content);(groups.get(c.category)??board).append(detail);
  }
  filter.onchange=()=>{for(const row of board.querySelectorAll<HTMLElement>('.restriction-row'))row.hidden=filter.value==='pending'?row.dataset.resolved==='true':filter.value==='done'?row.dataset.resolved!=='true':false;};

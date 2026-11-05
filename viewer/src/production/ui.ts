@@ -81,7 +81,7 @@ export class ProductionPanel{
  const journey=el('ol','','journey');for(const title of ['Escolher o local e o serviço','Conferir as restrições','Preparar o fornecimento','Comparar promessa e resultado'])journey.append(el('li',title));body.append(journey);
  if(!p.models.length)body.append(btn('Importar IFC',()=>this.hooks.importModel(),'primary'));
  else {
-  if(teaching&&p.tasks.length)body.append(btn('Criar caso de concretagem',()=>this.action(x=>{if(!isTeachingProject(x))throw new Error('Este comando pertence ao exercício didático.');addConcreteCase(x,x.tasks);const pkg=x.packages[0],q=this.hooks.quantity(pkg.elements);pkg.quantity=q.totalM3===null?null:Math.round(q.totalM3*1e6)/1e6;pkg.quantitySource=q.source;x.supplies.forEach(s=>s.quantity=pkg.quantity);log(x,'Quantidade IFC conferida',q.source);}),'primary'));
+  if(teaching&&p.templateId!=='e02'&&!p.packages.length&&p.tasks.length)body.append(btn('Criar caso de concretagem',()=>this.action(x=>{if(!isTeachingProject(x))throw new Error('Este comando pertence ao exercício didático.');addConcreteCase(x,x.tasks);const pkg=x.packages[0],q=this.hooks.quantity(pkg.elements);pkg.quantity=q.totalM3===null?null:Math.round(q.totalM3*1e6)/1e6;pkg.quantitySource=q.source;x.supplies.forEach(s=>s.quantity=pkg.quantity);log(x,'Quantidade IFC conferida',q.source);}),'primary'));
   if(p.tasks.length)body.append(this.selectionButton());
   else body.append(el('p','Este modelo não possui atividades 4D disponíveis. Use Quantificação para conferir os quantitativos e preparar pacotes.','notice'));
  }

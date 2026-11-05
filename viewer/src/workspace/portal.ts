@@ -8,7 +8,8 @@ export type PortalHooks = {
   onOpen: () => Promise<void>;
   onRecent: (id: string) => Promise<void>;
   onRecover: () => Promise<void>;
-  onTemplate: () => Promise<void>;
+  onExplore: () => Promise<void>;
+  onPractice: () => Promise<void>;
 };
 
 let portalCount = 0;
@@ -115,13 +116,16 @@ export class ProjectPortal {
     logout.addEventListener('click', () => this.showLogin());
     top.append(text, logout);
     this.error = this.errorArea();
+    const starters = node('div', 'portal-starters');
+    const starter=(eyebrow:string,title:string,description:string,action:string,run:()=>Promise<void>)=>{
+      const card=node('section','portal-action-card portal-starter');
+      card.append(node('span','portal-eyebrow',eyebrow),node('h2','',title),node('p','portal-copy',description));
+      const button=this.button(action,'portal-primary');button.addEventListener('click',()=>{void this.run(run);});card.append(button);starters.append(card);
+    };
+    starter('EXEMPLO GUIADO','Explore — Projeto Modelo','Modelo IFC e 4D com pacote, restrições e propostas fictícias já preenchidos. Tour explicativo que você pode pular e reiniciar.','Explorar exemplo',this.hooks.onExplore);
+    starter('ATIVIDADE EM GRUPO','Pratique — Exercício 02','IFC e cronograma 4D preparados. Seu grupo escolhe elementos, confere quantidades e constrói o próprio percurso até a exportação.','Iniciar exercício 02',this.hooks.onPractice);
+    starter('PROJETO PRÓPRIO','Crie — Meu Novo Projeto','Comece sem dados herdados. Defina as informações gerais, escolha uma pasta no computador e importe seu IFC quando quiser.','Criar projeto',this.hooks.onNew);
     const actions = node('div', 'portal-actions');
-    const create = node('section', 'portal-action-card portal-create-card');
-    create.append(node('span', 'portal-card-icon', '+'), node('h2', '', 'Um novo projeto'));
-    create.append(node('p', 'portal-copy', 'Crie seu projeto, escolha onde salvar e continue trabalhando na sua própria pasta.'));
-    const createButton = this.button('Novo projeto', 'portal-primary');
-    create.append(createButton);
-    createButton.addEventListener('click', () => { void this.run(() => this.hooks.onNew()); });
     const open = node('section', 'portal-action-card portal-open-card');
     const folderIcon = node('span', 'portal-card-icon portal-folder-icon', '↗');
     folderIcon.setAttribute('aria-hidden', 'true');
@@ -130,7 +134,7 @@ export class ProjectPortal {
     const openButton = this.button('Abrir pasta de projeto', 'portal-secondary');
     openButton.addEventListener('click', () => { void this.run(() => this.hooks.onOpen()); });
     open.append(openButton);
-    actions.append(create, open);
+    actions.append(open);
 
     const recent = node('section', 'portal-recents');
     const recentTitle = node('h2', '', 'Projetos recentes');
@@ -152,17 +156,9 @@ export class ProjectPortal {
       }
       recent.append(grid);
     }
-    const template = node('section', 'portal-template');
-    template.append(node('span', 'portal-card-icon', '◇'));
-    const templateText = node('div', '');
-    templateText.append(node('span', 'portal-eyebrow', 'COMECE POR AQUI · MODELO DIDÁTICO'), node('h2', '', 'Primeiro exercício — TORRE02'), node('p', 'portal-copy', 'Abra uma cópia independente da estrutura IFC com cronograma 4D. Não é preciso localizar ou importar um arquivo. Explore o modelo, selecione uma frente e prepare seu pacote de produção.'));
-    const start = this.button('Iniciar exercício com TORRE02', 'portal-primary');
-    start.addEventListener('click', () => { void this.run(() => this.hooks.onTemplate()); });
-    templateText.append(node('p', 'portal-copy', 'Depois de abrir, use Salvar como para escolher a pasta do seu exercício.'));
-    template.append(templateText, start);
     this.status = node('p', 'portal-progress');
     this.status.setAttribute('role', 'status');this.status.hidden = true;
-    content.append(top, this.error, this.status, template, actions, recent);
+    content.append(top, this.error, this.status, starters, actions, recent);
     if (legacyAvailable) {
       const recovery = node('aside', 'portal-recovery');
       recovery.append(node('p', '', 'Há uma sessão anterior salva neste navegador.'));

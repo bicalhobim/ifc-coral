@@ -11,7 +11,7 @@ export function watchEditing(root:HTMLElement){
 }
 export function preserveEditing(root:HTMLElement){
  const items=controls(root),active=document.activeElement;
- const saved=items.map((e,i)=>({key:key(e,i),index:i,value:e.value,checked:e instanceof HTMLInputElement?e.checked:undefined,dirty:e.dataset.userDraft==='true',focus:e===active,start:e instanceof HTMLTextAreaElement||e instanceof HTMLInputElement?e.selectionStart:null,end:e instanceof HTMLTextAreaElement||e instanceof HTMLInputElement?e.selectionEnd:null}));
+ const saved=items.map((e,i)=>({key:key(e,i),index:i,value:e.value,checked:e instanceof HTMLInputElement?e.checked:undefined,dirty:e.dataset.userDraft==='true'&&e.dataset.preserveDraft!=='false',focus:e===active,start:e instanceof HTMLTextAreaElement||e instanceof HTMLInputElement?e.selectionStart:null,end:e instanceof HTMLTextAreaElement||e instanceof HTMLInputElement?e.selectionEnd:null}));
  const opened=Array.from(root.querySelectorAll('details')).map((e,i)=>({i,open:e.open}));
  return ()=>{
   const next=controls(root);

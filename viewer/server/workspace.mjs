@@ -1,7 +1,9 @@
 import * as fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,createHash} from 'node:crypto';
+import {prepareSchedule,ScheduleLinkAnalyzer} from './schedule-preparation.mjs';
+import {MAX_SCHEDULE_REQUEST_BYTES} from '../src/ifc/schedule-limits.ts';
 import {createFolderPicker} from './native-picker.mjs';
 import {CodexAnalyzer} from './codex-analysis.mjs';
 
@@ -66,9 +68,14 @@ export class LocalWorkspace{
  async read(id,parts){
   await this.entry(id,parts,'file');return fs.readFile(await this.target(id,parts));
  }
- async write(id,parts,data){
+ async write(id,parts,data,expectedHash){
   const operation=async()=>{
    const target=await this.target(id,parts);await this.entry(id,parts,'file');
+   if(expectedHash!==undefined){
+    if(typeof expectedHash!=='string'||! /^[a-f0-9]{64}$/.test(expectedHash))throw fail('Revisão esperada inválida.');
+    const actual=createHash('sha256').update(await fs.readFile(target)).digest('hex');
+    if(actual!==expectedHash)throw fail('O projeto mudou em outra sessão. Reabra a pasta ou use Salvar como; suas alterações não foram sobrescritas.','ConflictError');
+   }
    const temp=path.join(path.dirname(target),`.ifc-coral-${randomUUID()}.tmp`);
    try{await fs.writeFile(temp,data,{flag:'wx'});await fs.rename(temp,target);}catch(e){await fs.unlink(temp).catch(()=>{});throw e;}
   };
@@ -83,10 +90,10 @@ export function isTrustedRequest(req,token){
   req.headers.origin===`http://${host}`&&req.headers['x-ifc-coral-session']===token;
 }
 
-export function localWorkspacePlugin(){
- const codex=new CodexAnalyzer();
- const pickFolder=createFolderPicker();
- const service=new LocalWorkspace(path.join(process.env.LOCALAPPDATA??path.join(os.homedir(),'.local'),'IFC Coral','folders.json'));
+export function localWorkspacePlugin(options={}){
+ const codex=new CodexAnalyzer(),scheduleAi=options.scheduleAnalyzer??new ScheduleLinkAnalyzer();
+ const pickFolder=options.pickFolder??createFolderPicker();
+ const service=new LocalWorkspace(options.registry??path.join(process.env.LOCALAPPDATA??path.join(os.homedir(),'.local'),'IFC Coral','folders.json'));
  const token=randomUUID();
  const middleware=async(req,res,next)=>{
   if(!req.url?.startsWith('/__coral_local/'))return next();
@@ -98,12 +105,18 @@ export function localWorkspacePlugin(){
   if(req.method!=='POST'||!isTrustedRequest(req,token))return send(403,{error:'Sessão local não autorizada.'});
   try{
    let size=0;const chunks=[];
-   for await(const chunk of req){size+=chunk.length;if(size>(req.url.includes('/ai-')?256*1024:128*1024*1024))throw fail('Pedido excede o limite da versão local.');chunks.push(chunk);}
+   for await(const chunk of req){size+=chunk.length;if(size>(req.url==='/__coral_local/schedule-prepare'||req.url==='/__coral_local/write'?MAX_SCHEDULE_REQUEST_BYTES:req.url.includes('/ai-')?256*1024:128*1024*1024))throw fail('Pedido excede o limite da versão local.');chunks.push(chunk);}
    const body=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');let value;
    switch(req.url){
+    case '/__coral_local/schedule-prepare':
+    case '/__coral_local/ai-schedule':{
+     const controller=new AbortController();const cancel=()=>{if(!res.writableEnded)controller.abort();};res.on('close',cancel);if(res.destroyed)controller.abort();
+     try{value=req.url.endsWith('/ai-schedule')?await scheduleAi.analyze(body,{signal:controller.signal}):await prepareSchedule(body,{signal:controller.signal});}finally{res.off('close',cancel);}break;
+    }
+    case '/__coral_local/ai-schedule-cancel':value=scheduleAi.cancel(body.requestId);break;
     case '/__coral_local/ai-status':value=codex.status();break;
     case '/__coral_local/ai-restrictions':{
-     const controller=new AbortController();const cancel=()=>{if(!res.writableEnded)controller.abort();};res.on('close',cancel);
+     const controller=new AbortController();const cancel=()=>{if(!res.writableEnded)controller.abort();};res.on('close',cancel);if(res.destroyed)controller.abort();
      try{value=await codex.analyze(body,{signal:controller.signal});}finally{res.off('close',cancel);}break;
     }
     case '/__coral_local/choose':{const selected=await pickFolder();value=selected?await service.select(selected):null;break;}
@@ -112,12 +125,13 @@ export function localWorkspacePlugin(){
     case '/__coral_local/read':value={data:(await service.read(body.id,body.parts)).toString('base64')};break;
     case '/__coral_local/write':{
      if(typeof body.data!=='string')throw fail('Conteúdo inválido.');
-     await service.write(body.id,body.parts,Buffer.from(body.data,'base64'));value={ok:true};break;
+     if(body.parts?.at(-1)==='IFC-Coral.projeto.json'&&body.expectedHash===undefined)throw fail('Atualize a página antes de salvar: a revisão esperada é obrigatória.');
+     await service.write(body.id,body.parts,Buffer.from(body.data,'base64'),body.expectedHash);value={ok:true};break;
     }
     default:return send(404,{error:'Comando local não encontrado.'});
    }
    send(200,value);
-  }catch(error){send(400,{error:error.message??'Falha no acesso à pasta.',name:error.name??'Error'});}
+  }catch(error){send(error.name==='ConflictError'?409:400,{error:error.message??'Falha no acesso à pasta.',name:error.name??'Error'});}
  };
  return {name:'ifc-coral-local-workspace',configureServer(server){server.middlewares.use(middleware);},configurePreviewServer(server){server.middlewares.use(middleware);}};
 }

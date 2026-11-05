@@ -25,7 +25,7 @@ export function mountWindows(root:HTMLElement,viewport:HTMLElement,panes:Record<
  const button=(label:string,text:string,action:()=>void)=>{const b=document.createElement('button');b.type='button';b.className='window-control';b.title=label;b.setAttribute('aria-label',label);b.textContent=text;b.onclick=action;return b;};
  const styleRect=(p:HTMLElement,r:WindowRect)=>Object.assign(p.style,{left:`${r.x}px`,top:`${r.y}px`,width:`${r.width}px`,height:`${r.height}px`});
  function render(){
-  root.classList.toggle('workflow-focused',!!maximized&&['packages','supplies','catalogues','macro','production','timeline'].includes(maximized));
+  root.classList.toggle('workflow-focused',!!maximized&&['packages','supplies','catalogues','macro','production','timeline','restrictions'].includes(maximized));
   if(!moving)for(let pass=0;pass<names.length;pass++){const before=JSON.stringify(state);for(const n of names)settle(n);if(before===JSON.stringify(state))break;}
   rail.replaceChildren();
   for(const name of names){
