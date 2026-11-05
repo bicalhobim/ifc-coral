@@ -1,0 +1,1480 @@
+{
+  "format": "ifc-coral-procurement",
+  "schema_version": 1,
+  "scope": {
+    "kind": "filtered_supply_map",
+    "filters": {
+      "query": "",
+      "kind": "all",
+      "status": "all",
+      "package_id": null
+    },
+    "demand_ids": [
+      "[\"[\\\"model-synthetic\\\",\\\"Pavimento 3\\\",\\\"concrete\\\",\\\"2026-11-20\\\",\\\"2026-11-22\\\"]\",\"concrete\"]",
+      "[\"package-known\",\"concrete\"]",
+      "[\"package-unknown\",\"steel\"]",
+      "[\"package-panels-a\",\"panels\"]",
+      "[\"package-panels-a\",\"release-agent\"]",
+      "[\"package-panels-b\",\"panels\"]",
+      "[\"package-panels-b\",\"release-agent\"]"
+    ],
+    "total_available": 7,
+    "exported_count": 7
+  },
+  "project": {
+    "id": "synthetic-procurement-v1",
+    "name": "Ensaio sintético — Concretagem, aço e fôrmas 🏗️",
+    "schema_version": 3,
+    "planning_version": 1,
+    "models": [
+      {
+        "id": "model-synthetic",
+        "name": "EXEMPLO_SINTETICO.ifc",
+        "projectGlobalId": "root-synthetic",
+        "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ]
+  },
+  "calendar": {
+    "unit": "calendar_days",
+    "timezone": "date_only",
+    "dates_are_execution_evidence": false
+  },
+  "semantics": {
+    "quantities": "base_quantity is service quantity; derived_preview.quantity already includes factor and loss once",
+    "dates": "derived_preview dates already include lead times once; preserve original task dates",
+    "revision": "changed source fingerprint or model hash requires human review; never carry approval forward",
+    "scope": "only exported demands; no project-wide coverage inference from filtered totals",
+    "purchase_authorized": false
+  },
+  "demands": [
+    {
+      "id": "[\"[\\\"model-synthetic\\\",\\\"Pavimento 3\\\",\\\"concrete\\\",\\\"2026-11-20\\\",\\\"2026-11-22\\\"]\",\"concrete\"]",
+      "origin": {
+        "kind": "macro_4d",
+        "id": "[\"model-synthetic\",\"Pavimento 3\",\"concrete\",\"2026-11-20\",\"2026-11-22\"]",
+        "package_id": null,
+        "macro_id": "[\"model-synthetic\",\"Pavimento 3\",\"concrete\",\"2026-11-20\",\"2026-11-22\"]",
+        "location": "Pavimento 3",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "macro"
+          }
+        ],
+        "task_ids": [
+          "task-macro"
+        ]
+      },
+      "service": {
+        "id": "concrete",
+        "name": "Concretagem",
+        "unit": "m³",
+        "method": "concrete",
+        "criterion": "Concretagem do recorte concluída e conferida."
+      },
+      "base_quantity": {
+        "value": 7.125,
+        "unit": "m³",
+        "source": "Quantificação disponível para o recorte IFC 4D",
+        "method": "concrete",
+        "calculation_status": "available",
+        "review_status": "unreviewed",
+        "reviews": []
+      },
+      "input": {
+        "id": "concrete",
+        "specification": "Concreto usinado — especificar",
+        "unit": "m³",
+        "reusable": false,
+        "fresh_concrete": true
+      },
+      "composition": {
+        "line_id": "concrete",
+        "service_version": 1,
+        "factor": 1,
+        "loss_percent": 0,
+        "preparation_days": 1,
+        "manufacturing_days": 0,
+        "transport_days": 1,
+        "inspection_days": 0,
+        "buffer_days": 0,
+        "return_days": 0,
+        "source": "Premissa didática editável; não conferida.",
+        "status": "unreviewed"
+      },
+      "derived_preview": {
+        "quantity": 7.125,
+        "unit": "m³",
+        "formula": "base_quantity.value * composition.factor * (1 + composition.loss_percent / 100)",
+        "losses_applied": true,
+        "lead_times_applied": true,
+        "dates": {
+          "need_on_site": "2026-11-20",
+          "receive_on_site": "2026-11-20",
+          "order_by": "2026-11-19",
+          "start_procurement_by": "2026-11-18",
+          "occupied_until": "2026-11-20"
+        },
+        "status": "preview"
+      },
+      "coverage": {
+        "status": "unknown",
+        "covered": null,
+        "balance": null,
+        "excess": null,
+        "resource_ids": [],
+        "reservation_ids": [],
+        "legacy_reservation_ids": []
+      },
+      "human_review": {
+        "composition_evidence": null,
+        "requires_review_for_changed_source": true,
+        "release_purchase": false
+      },
+      "pending": [
+        "Premissas de composição a conferir",
+        "Cobertura e saldo de compra ainda não determinados."
+      ],
+      "fingerprint": {
+        "algorithm": "SHA-256",
+        "value": "93016cbe1376d510f18f37b96bc9511f0fb9e7b36c551197e412708ecfdb5be5",
+        "basis": "demand excluding fingerprint; coral-c14n-1"
+      }
+    },
+    {
+      "id": "[\"package-known\",\"concrete\"]",
+      "origin": {
+        "kind": "package",
+        "id": "package-known",
+        "package_id": "package-known",
+        "macro_id": null,
+        "location": "Pavimento 1",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "known"
+          }
+        ],
+        "task_ids": [
+          "task-known"
+        ]
+      },
+      "service": {
+        "id": "concrete",
+        "name": "Concretagem",
+        "unit": "m³",
+        "method": "concrete",
+        "criterion": "Concretagem do recorte concluída e conferida."
+      },
+      "base_quantity": {
+        "value": 12.375,
+        "unit": "m³",
+        "source": "QTO sintético conferido",
+        "method": "concrete",
+        "calculation_status": "available",
+        "review_status": "reviewed",
+        "reviews": [
+          {
+            "measure_id": "[\"model-synthetic\",\"known\",\"concrete\"]",
+            "model_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "amount": 12.375,
+            "unit": "m³",
+            "source": "declared",
+            "method": "Quantidade sintética conhecida",
+            "reviewer": "Conferente fictício",
+            "at": "2026-11-02T12:00:00.000Z",
+            "evidence": "Memória sintética conferida só para teste",
+            "origin": "calculated",
+            "measurement": {
+              "id": "[\"model-synthetic\",\"known\",\"concrete\"]",
+              "elementRef": {
+                "modelId": "model-synthetic",
+                "globalId": "known",
+                "modelHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "ifcClass": "IFCSLAB",
+                "predefinedType": "FLOOR",
+                "typeName": "Laje sintética",
+                "properties": {
+                  "observacao": "Parâmetro de teste — não é projeto estrutural",
+                  "fracao": 0.123456789,
+                  "pequeno": 1e-7,
+                  "温度": 23.5
+                }
+              },
+              "serviceCode": "concrete",
+              "ruleId": "slab",
+              "ruleVersion": "1.0.0",
+              "ruleSnapshot": {
+                "id": "slab",
+                "label": "Laje suspensa",
+                "ifcClass": "IFCSLAB",
+                "steelRate": 60,
+                "formMethod": "suspended",
+                "version": "1.0.0",
+                "priority": 50,
+                "source": "Cenário didático proposto; Jablonski/UNIPAMPA (2013), tabela 2. Não é taxa NBR nem dimensionamento.",
+                "status": "draft",
+                "predefinedType": "FLOOR"
+              },
+              "inputs": {
+                "volume": 12.375,
+                "source": "QTO sintético para o ensaio; não extraído de IFC real"
+              },
+              "amount": 12.375,
+              "unit": "m³",
+              "origin": "declared",
+              "status": "draft",
+              "pendingReasons": [],
+              "evidence": [
+                "QTO sintético para o ensaio; não extraído de IFC real"
+              ]
+            },
+            "current": true
+          }
+        ]
+      },
+      "input": {
+        "id": "concrete",
+        "specification": "Concreto usinado — especificar",
+        "unit": "m³",
+        "reusable": false,
+        "fresh_concrete": true
+      },
+      "composition": {
+        "line_id": "concrete",
+        "service_version": 1,
+        "factor": 1,
+        "loss_percent": 0,
+        "preparation_days": 1,
+        "manufacturing_days": 0,
+        "transport_days": 1,
+        "inspection_days": 0,
+        "buffer_days": 0,
+        "return_days": 0,
+        "source": "Premissa didática editável; não conferida.",
+        "status": "recorded"
+      },
+      "derived_preview": {
+        "quantity": 12.375,
+        "unit": "m³",
+        "formula": "base_quantity.value * composition.factor * (1 + composition.loss_percent / 100)",
+        "losses_applied": true,
+        "lead_times_applied": true,
+        "dates": {
+          "need_on_site": "2026-11-20",
+          "receive_on_site": "2026-11-20",
+          "order_by": "2026-11-19",
+          "start_procurement_by": "2026-11-18",
+          "occupied_until": "2026-11-20"
+        },
+        "status": "preview"
+      },
+      "coverage": {
+        "status": "known",
+        "covered": 5,
+        "balance": 7.375,
+        "excess": 0,
+        "resource_ids": [
+          "resource-known-concrete"
+        ],
+        "reservation_ids": [
+          "reservation-synthetic"
+        ],
+        "legacy_reservation_ids": []
+      },
+      "human_review": {
+        "composition_evidence": "Conferente fictício: Especificação sintética de concreto",
+        "requires_review_for_changed_source": true,
+        "release_purchase": false
+      },
+      "pending": [],
+      "fingerprint": {
+        "algorithm": "SHA-256",
+        "value": "680f9ad96f92ae0cd131e8df274c76060356a21b90c99639aa79072e1af9fc9c",
+        "basis": "demand excluding fingerprint; coral-c14n-1"
+      }
+    },
+    {
+      "id": "[\"package-unknown\",\"steel\"]",
+      "origin": {
+        "kind": "package",
+        "id": "package-unknown",
+        "package_id": "package-unknown",
+        "macro_id": null,
+        "location": "Pavimento 2",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "unknown"
+          }
+        ],
+        "task_ids": [
+          "task-unknown"
+        ]
+      },
+      "service": {
+        "id": "reinforcement",
+        "name": "Armação",
+        "unit": "kg",
+        "method": "reinforcement",
+        "criterion": "Armação instalada e conferida conforme projeto."
+      },
+      "base_quantity": {
+        "value": null,
+        "unit": "kg",
+        "source": "Medições ou estimativas disponíveis; conferir o recorte e as premissas.",
+        "method": "reinforcement",
+        "calculation_status": "unknown",
+        "review_status": "unreviewed",
+        "reviews": []
+      },
+      "input": {
+        "id": "steel",
+        "specification": "Aço — detalhar bitolas/BBS",
+        "unit": "kg",
+        "reusable": false,
+        "fresh_concrete": false
+      },
+      "composition": {
+        "line_id": "steel",
+        "service_version": 1,
+        "factor": 1,
+        "loss_percent": 0,
+        "preparation_days": 2,
+        "manufacturing_days": 5,
+        "transport_days": 2,
+        "inspection_days": 1,
+        "buffer_days": 0,
+        "return_days": 0,
+        "source": "Premissa didática editável; não conferida.",
+        "status": "unreviewed"
+      },
+      "derived_preview": {
+        "quantity": null,
+        "unit": "kg",
+        "formula": "base_quantity.value * composition.factor * (1 + composition.loss_percent / 100)",
+        "losses_applied": true,
+        "lead_times_applied": true,
+        "dates": {
+          "need_on_site": "2026-11-20",
+          "receive_on_site": "2026-11-19",
+          "order_by": "2026-11-12",
+          "start_procurement_by": "2026-11-10",
+          "occupied_until": "2026-11-20"
+        },
+        "status": "preview"
+      },
+      "coverage": {
+        "status": "unknown",
+        "covered": null,
+        "balance": null,
+        "excess": null,
+        "resource_ids": [],
+        "reservation_ids": [],
+        "legacy_reservation_ids": []
+      },
+      "human_review": {
+        "composition_evidence": null,
+        "requires_review_for_changed_source": true,
+        "release_purchase": false
+      },
+      "pending": [
+        "Quantificação pendente",
+        "Premissas de composição a conferir",
+        "Cobertura e saldo de compra ainda não determinados."
+      ],
+      "fingerprint": {
+        "algorithm": "SHA-256",
+        "value": "e5024061f6dec99a0b13ae5379856178566b9ce183d459ce1534e6e8435eb5d1",
+        "basis": "demand excluding fingerprint; coral-c14n-1"
+      }
+    },
+    {
+      "id": "[\"package-panels-a\",\"panels\"]",
+      "origin": {
+        "kind": "package",
+        "id": "package-panels-a",
+        "package_id": "package-panels-a",
+        "macro_id": null,
+        "location": "Pavimento 4",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "panels-a"
+          }
+        ],
+        "task_ids": [
+          "task-panels-a"
+        ]
+      },
+      "service": {
+        "id": "formwork",
+        "name": "Montagem de fôrmas",
+        "unit": "m²",
+        "method": "formwork",
+        "criterion": "Fôrmas montadas e conferidas para liberação."
+      },
+      "base_quantity": {
+        "value": 100,
+        "unit": "m²",
+        "source": "Quantidade ajustada manualmente; conferir.",
+        "method": "formwork",
+        "calculation_status": "available",
+        "review_status": "unreviewed",
+        "reviews": []
+      },
+      "input": {
+        "id": "panels",
+        "specification": "Painéis de fôrma — especificar sistema",
+        "unit": "m²",
+        "reusable": true,
+        "fresh_concrete": false
+      },
+      "composition": {
+        "line_id": "panels",
+        "service_version": 1,
+        "factor": 1,
+        "loss_percent": 0,
+        "preparation_days": 2,
+        "manufacturing_days": 3,
+        "transport_days": 2,
+        "inspection_days": 1,
+        "buffer_days": 0,
+        "return_days": 1,
+        "source": "Premissa didática editável; não conferida.",
+        "status": "unreviewed"
+      },
+      "derived_preview": {
+        "quantity": 100,
+        "unit": "m²",
+        "formula": "base_quantity.value * composition.factor * (1 + composition.loss_percent / 100)",
+        "losses_applied": true,
+        "lead_times_applied": true,
+        "dates": {
+          "need_on_site": "2026-11-20",
+          "receive_on_site": "2026-11-19",
+          "order_by": "2026-11-14",
+          "start_procurement_by": "2026-11-12",
+          "occupied_until": "2026-11-23"
+        },
+        "status": "preview"
+      },
+      "coverage": {
+        "status": "unknown",
+        "covered": null,
+        "balance": null,
+        "excess": null,
+        "resource_ids": [],
+        "reservation_ids": [],
+        "legacy_reservation_ids": []
+      },
+      "human_review": {
+        "composition_evidence": null,
+        "requires_review_for_changed_source": true,
+        "release_purchase": false
+      },
+      "pending": [
+        "Premissas de composição a conferir",
+        "Cobertura e saldo de compra ainda não determinados."
+      ],
+      "fingerprint": {
+        "algorithm": "SHA-256",
+        "value": "2b327208346ba583b0a4270a0c50442d75937907ddb23add2b1508013af0a66b",
+        "basis": "demand excluding fingerprint; coral-c14n-1"
+      }
+    },
+    {
+      "id": "[\"package-panels-a\",\"release-agent\"]",
+      "origin": {
+        "kind": "package",
+        "id": "package-panels-a",
+        "package_id": "package-panels-a",
+        "macro_id": null,
+        "location": "Pavimento 4",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "panels-a"
+          }
+        ],
+        "task_ids": [
+          "task-panels-a"
+        ]
+      },
+      "service": {
+        "id": "formwork",
+        "name": "Montagem de fôrmas",
+        "unit": "m²",
+        "method": "formwork",
+        "criterion": "Fôrmas montadas e conferidas para liberação."
+      },
+      "base_quantity": {
+        "value": 100,
+        "unit": "m²",
+        "source": "Quantidade ajustada manualmente; conferir.",
+        "method": "formwork",
+        "calculation_status": "available",
+        "review_status": "unreviewed",
+        "reviews": []
+      },
+      "input": {
+        "id": "release-agent",
+        "specification": "Desmoldante — especificar produto",
+        "unit": "L",
+        "reusable": false,
+        "fresh_concrete": false
+      },
+      "composition": {
+        "line_id": "release-agent",
+        "service_version": 1,
+        "factor": 1e-7,
+        "loss_percent": 0,
+        "preparation_days": 2,
+        "manufacturing_days": 3,
+        "transport_days": 2,
+        "inspection_days": 1,
+        "buffer_days": 0,
+        "return_days": 0,
+        "source": "Premissa didática editável; não conferida.",
+        "status": "unreviewed"
+      },
+      "derived_preview": {
+        "quantity": 0.000009999999999999999,
+        "unit": "L",
+        "formula": "base_quantity.value * composition.factor * (1 + composition.loss_percent / 100)",
+        "losses_applied": true,
+        "lead_times_applied": true,
+        "dates": {
+          "need_on_site": "2026-11-20",
+          "receive_on_site": "2026-11-19",
+          "order_by": "2026-11-14",
+          "start_procurement_by": "2026-11-12",
+          "occupied_until": "2026-11-20"
+        },
+        "status": "preview"
+      },
+      "coverage": {
+        "status": "unknown",
+        "covered": null,
+        "balance": null,
+        "excess": null,
+        "resource_ids": [],
+        "reservation_ids": [],
+        "legacy_reservation_ids": []
+      },
+      "human_review": {
+        "composition_evidence": null,
+        "requires_review_for_changed_source": true,
+        "release_purchase": false
+      },
+      "pending": [
+        "Premissas de composição a conferir",
+        "Cobertura e saldo de compra ainda não determinados."
+      ],
+      "fingerprint": {
+        "algorithm": "SHA-256",
+        "value": "d25ae0cfb54cde1cb2b1475ea14bcb1429705d4832990692925eceb55bbc3c97",
+        "basis": "demand excluding fingerprint; coral-c14n-1"
+      }
+    },
+    {
+      "id": "[\"package-panels-b\",\"panels\"]",
+      "origin": {
+        "kind": "package",
+        "id": "package-panels-b",
+        "package_id": "package-panels-b",
+        "macro_id": null,
+        "location": "Pavimento 5",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "panels-b"
+          }
+        ],
+        "task_ids": [
+          "task-panels-b"
+        ]
+      },
+      "service": {
+        "id": "formwork",
+        "name": "Montagem de fôrmas",
+        "unit": "m²",
+        "method": "formwork",
+        "criterion": "Fôrmas montadas e conferidas para liberação."
+      },
+      "base_quantity": {
+        "value": 80,
+        "unit": "m²",
+        "source": "Quantidade ajustada manualmente; conferir.",
+        "method": "formwork",
+        "calculation_status": "available",
+        "review_status": "unreviewed",
+        "reviews": []
+      },
+      "input": {
+        "id": "panels",
+        "specification": "Painéis de fôrma — especificar sistema",
+        "unit": "m²",
+        "reusable": true,
+        "fresh_concrete": false
+      },
+      "composition": {
+        "line_id": "panels",
+        "service_version": 1,
+        "factor": 1,
+        "loss_percent": 0,
+        "preparation_days": 2,
+        "manufacturing_days": 3,
+        "transport_days": 2,
+        "inspection_days": 1,
+        "buffer_days": 0,
+        "return_days": 1,
+        "source": "Premissa didática editável; não conferida.",
+        "status": "unreviewed"
+      },
+      "derived_preview": {
+        "quantity": 80,
+        "unit": "m²",
+        "formula": "base_quantity.value * composition.factor * (1 + composition.loss_percent / 100)",
+        "losses_applied": true,
+        "lead_times_applied": true,
+        "dates": {
+          "need_on_site": "2026-11-20",
+          "receive_on_site": "2026-11-19",
+          "order_by": "2026-11-14",
+          "start_procurement_by": "2026-11-12",
+          "occupied_until": "2026-11-23"
+        },
+        "status": "preview"
+      },
+      "coverage": {
+        "status": "unknown",
+        "covered": null,
+        "balance": null,
+        "excess": null,
+        "resource_ids": [],
+        "reservation_ids": [],
+        "legacy_reservation_ids": []
+      },
+      "human_review": {
+        "composition_evidence": null,
+        "requires_review_for_changed_source": true,
+        "release_purchase": false
+      },
+      "pending": [
+        "Premissas de composição a conferir",
+        "Cobertura e saldo de compra ainda não determinados."
+      ],
+      "fingerprint": {
+        "algorithm": "SHA-256",
+        "value": "da517935d339cf530e7c23fdfaf047cc3d3575af1f2b91dae9ec7240e1db40d5",
+        "basis": "demand excluding fingerprint; coral-c14n-1"
+      }
+    },
+    {
+      "id": "[\"package-panels-b\",\"release-agent\"]",
+      "origin": {
+        "kind": "package",
+        "id": "package-panels-b",
+        "package_id": "package-panels-b",
+        "macro_id": null,
+        "location": "Pavimento 5",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "panels-b"
+          }
+        ],
+        "task_ids": [
+          "task-panels-b"
+        ]
+      },
+      "service": {
+        "id": "formwork",
+        "name": "Montagem de fôrmas",
+        "unit": "m²",
+        "method": "formwork",
+        "criterion": "Fôrmas montadas e conferidas para liberação."
+      },
+      "base_quantity": {
+        "value": 80,
+        "unit": "m²",
+        "source": "Quantidade ajustada manualmente; conferir.",
+        "method": "formwork",
+        "calculation_status": "available",
+        "review_status": "unreviewed",
+        "reviews": []
+      },
+      "input": {
+        "id": "release-agent",
+        "specification": "Desmoldante — especificar produto",
+        "unit": "L",
+        "reusable": false,
+        "fresh_concrete": false
+      },
+      "composition": {
+        "line_id": "release-agent",
+        "service_version": 1,
+        "factor": 1e-7,
+        "loss_percent": 0,
+        "preparation_days": 2,
+        "manufacturing_days": 3,
+        "transport_days": 2,
+        "inspection_days": 1,
+        "buffer_days": 0,
+        "return_days": 0,
+        "source": "Premissa didática editável; não conferida.",
+        "status": "unreviewed"
+      },
+      "derived_preview": {
+        "quantity": 0.000008,
+        "unit": "L",
+        "formula": "base_quantity.value * composition.factor * (1 + composition.loss_percent / 100)",
+        "losses_applied": true,
+        "lead_times_applied": true,
+        "dates": {
+          "need_on_site": "2026-11-20",
+          "receive_on_site": "2026-11-19",
+          "order_by": "2026-11-14",
+          "start_procurement_by": "2026-11-12",
+          "occupied_until": "2026-11-20"
+        },
+        "status": "preview"
+      },
+      "coverage": {
+        "status": "unknown",
+        "covered": null,
+        "balance": null,
+        "excess": null,
+        "resource_ids": [],
+        "reservation_ids": [],
+        "legacy_reservation_ids": []
+      },
+      "human_review": {
+        "composition_evidence": null,
+        "requires_review_for_changed_source": true,
+        "release_purchase": false
+      },
+      "pending": [
+        "Premissas de composição a conferir",
+        "Cobertura e saldo de compra ainda não determinados."
+      ],
+      "fingerprint": {
+        "algorithm": "SHA-256",
+        "value": "7ed5623bee59b77f33c6a7ab7ee871b5da74fe098d1cd7f69f080f592938a7f2",
+        "basis": "demand excluding fingerprint; coral-c14n-1"
+      }
+    }
+  ],
+  "totals": [
+    {
+      "input_id": "concrete",
+      "specification": "Concreto usinado — especificar",
+      "unit": "m³",
+      "reusable": false,
+      "quantity": 19.5,
+      "known_quantity": 19.5,
+      "unknown_origins": 0,
+      "origins": 2,
+      "aggregation": "sum"
+    },
+    {
+      "input_id": "steel",
+      "specification": "Aço — detalhar bitolas/BBS",
+      "unit": "kg",
+      "reusable": false,
+      "quantity": null,
+      "known_quantity": 0,
+      "unknown_origins": 1,
+      "origins": 1,
+      "aggregation": "sum"
+    },
+    {
+      "input_id": "panels",
+      "specification": "Painéis de fôrma — especificar sistema",
+      "unit": "m²",
+      "reusable": true,
+      "quantity": 180,
+      "known_quantity": 180,
+      "unknown_origins": 0,
+      "origins": 2,
+      "aggregation": "concurrent_peak"
+    },
+    {
+      "input_id": "release-agent",
+      "specification": "Desmoldante — especificar produto",
+      "unit": "L",
+      "reusable": false,
+      "quantity": 0.000017999999999999997,
+      "known_quantity": 0.000017999999999999997,
+      "unknown_origins": 0,
+      "origins": 2,
+      "aggregation": "sum"
+    }
+  ],
+  "context": {
+    "estimates": [
+      {
+        "modelId": "model-synthetic",
+        "globalId": "macro",
+        "modelHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "serviceCode": "concrete",
+        "quantity": 7.125,
+        "unit": "m³",
+        "source": "Estimativa sintética; não conferida",
+        "model_revision_matches": true
+      }
+    ],
+    "tasks": [
+      {
+        "id": "task-known",
+        "modelId": "model-synthetic",
+        "globalId": "known",
+        "slot": "0",
+        "name": "Concretagem",
+        "location": "Pavimento 1",
+        "service": "Concretagem",
+        "start": "2026-11-20",
+        "finish": "2026-11-22"
+      },
+      {
+        "id": "task-unknown",
+        "modelId": "model-synthetic",
+        "globalId": "unknown",
+        "slot": "0",
+        "name": "Armação",
+        "location": "Pavimento 2",
+        "service": "Armação",
+        "start": "2026-11-20",
+        "finish": "2026-11-22"
+      },
+      {
+        "id": "task-macro",
+        "modelId": "model-synthetic",
+        "globalId": "macro",
+        "slot": "0",
+        "name": "Concretagem",
+        "location": "Pavimento 3",
+        "service": "Concretagem",
+        "start": "2026-11-20",
+        "finish": "2026-11-22"
+      },
+      {
+        "id": "task-panels-a",
+        "modelId": "model-synthetic",
+        "globalId": "panels-a",
+        "slot": "0",
+        "name": "Montagem de fôrmas",
+        "location": "Pavimento 4",
+        "service": "Montagem de fôrmas",
+        "start": "2026-11-20",
+        "finish": "2026-11-22"
+      },
+      {
+        "id": "task-panels-b",
+        "modelId": "model-synthetic",
+        "globalId": "panels-b",
+        "slot": "0",
+        "name": "Montagem de fôrmas",
+        "location": "Pavimento 5",
+        "service": "Montagem de fôrmas",
+        "start": "2026-11-20",
+        "finish": "2026-11-22"
+      }
+    ],
+    "elements": [
+      {
+        "modelId": "model-synthetic",
+        "globalId": "macro",
+        "model_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "ifc_class": null,
+        "predefined_type": null,
+        "type_name": null,
+        "properties": null,
+        "metadata_status": "unavailable"
+      },
+      {
+        "modelId": "model-synthetic",
+        "globalId": "known",
+        "model_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "ifc_class": "IFCSLAB",
+        "predefined_type": "FLOOR",
+        "type_name": "Laje sintética",
+        "properties": {
+          "observacao": "Parâmetro de teste — não é projeto estrutural",
+          "fracao": 0.123456789,
+          "pequeno": 1e-7,
+          "温度": 23.5
+        },
+        "metadata_status": "available"
+      },
+      {
+        "modelId": "model-synthetic",
+        "globalId": "unknown",
+        "model_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "ifc_class": null,
+        "predefined_type": null,
+        "type_name": null,
+        "properties": null,
+        "metadata_status": "unavailable"
+      },
+      {
+        "modelId": "model-synthetic",
+        "globalId": "panels-a",
+        "model_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "ifc_class": null,
+        "predefined_type": null,
+        "type_name": null,
+        "properties": null,
+        "metadata_status": "unavailable"
+      },
+      {
+        "modelId": "model-synthetic",
+        "globalId": "panels-b",
+        "model_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "ifc_class": null,
+        "predefined_type": null,
+        "type_name": null,
+        "properties": null,
+        "metadata_status": "unavailable"
+      }
+    ],
+    "packages": [
+      {
+        "id": "package-known",
+        "name": "Concretagem — Pavimento 1",
+        "location": "Pavimento 1",
+        "service": "Concretagem",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "known"
+          }
+        ],
+        "task_ids": [
+          "task-known"
+        ],
+        "quantity": 12.375,
+        "unit": "m³",
+        "quantity_source": "QTO sintético conferido",
+        "need_date": "2026-11-20",
+        "finish_date": "2026-11-22",
+        "responsible": "Equipe de teste",
+        "criterion": "Concretagem do recorte concluída e conferida.",
+        "review_required": false,
+        "capacity_confirmed": false,
+        "coverage_known": true,
+        "revision_of": null,
+        "stage": "draft",
+        "field_origins": {
+          "quantity": {
+            "mode": "auto",
+            "source": "Quantificação disponível; conferir"
+          },
+          "needDate": {
+            "mode": "auto",
+            "source": "Cronograma IFC 4D"
+          },
+          "finishDate": {
+            "mode": "auto",
+            "source": "Cronograma IFC 4D"
+          },
+          "composition": {
+            "mode": "reviewed",
+            "source": "Conferente fictício: Especificação sintética de concreto"
+          }
+        },
+        "constraints": [
+          {
+            "id": "package-known-constraint-0",
+            "category": "Projeto e informação",
+            "description": "Projeto e informações liberados",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-known-constraint-1",
+            "category": "Frente e predecessoras",
+            "description": "Frente e predecessoras liberadas",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-known-constraint-2",
+            "category": "Mão de obra",
+            "description": "Mão de obra disponível",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-known-constraint-3",
+            "category": "Equipamentos",
+            "description": "Equipamentos disponíveis",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-known-constraint-4",
+            "category": "Materiais e suprimentos",
+            "description": "Materiais e entrega confirmados",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          }
+        ]
+      },
+      {
+        "id": "package-unknown",
+        "name": "Armação — Pavimento 2",
+        "location": "Pavimento 2",
+        "service": "Armação",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "unknown"
+          }
+        ],
+        "task_ids": [
+          "task-unknown"
+        ],
+        "quantity": null,
+        "unit": "kg",
+        "quantity_source": "Medições ou estimativas disponíveis; conferir o recorte e as premissas.",
+        "need_date": "2026-11-20",
+        "finish_date": "2026-11-22",
+        "responsible": null,
+        "criterion": "Armação instalada e conferida conforme projeto.",
+        "review_required": false,
+        "capacity_confirmed": false,
+        "coverage_known": false,
+        "revision_of": null,
+        "stage": "draft",
+        "field_origins": {
+          "quantity": {
+            "mode": "auto",
+            "source": "Quantificação disponível; conferir"
+          },
+          "needDate": {
+            "mode": "auto",
+            "source": "Cronograma IFC 4D"
+          },
+          "finishDate": {
+            "mode": "auto",
+            "source": "Cronograma IFC 4D"
+          }
+        },
+        "constraints": [
+          {
+            "id": "package-unknown-constraint-0",
+            "category": "Projeto e informação",
+            "description": "Projeto e informações liberados",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-unknown-constraint-1",
+            "category": "Frente e predecessoras",
+            "description": "Frente e predecessoras liberadas",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-unknown-constraint-2",
+            "category": "Mão de obra",
+            "description": "Mão de obra disponível",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-unknown-constraint-3",
+            "category": "Equipamentos",
+            "description": "Equipamentos disponíveis",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-unknown-constraint-4",
+            "category": "Materiais e suprimentos",
+            "description": "Materiais e entrega confirmados",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          }
+        ]
+      },
+      {
+        "id": "package-panels-a",
+        "name": "Montagem de fôrmas — Pavimento 4",
+        "location": "Pavimento 4",
+        "service": "Montagem de fôrmas",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "panels-a"
+          }
+        ],
+        "task_ids": [
+          "task-panels-a"
+        ],
+        "quantity": 100,
+        "unit": "m²",
+        "quantity_source": "Quantidade ajustada manualmente; conferir.",
+        "need_date": "2026-11-20",
+        "finish_date": "2026-11-22",
+        "responsible": null,
+        "criterion": "Fôrmas montadas e conferidas para liberação.",
+        "review_required": false,
+        "capacity_confirmed": false,
+        "coverage_known": false,
+        "revision_of": null,
+        "stage": "draft",
+        "field_origins": {
+          "quantity": {
+            "mode": "manual",
+            "source": "Ajustado pelo usuário"
+          },
+          "needDate": {
+            "mode": "auto",
+            "source": "Cronograma IFC 4D"
+          },
+          "finishDate": {
+            "mode": "auto",
+            "source": "Cronograma IFC 4D"
+          }
+        },
+        "constraints": [
+          {
+            "id": "package-panels-a-constraint-0",
+            "category": "Projeto e informação",
+            "description": "Projeto e informações liberados",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-panels-a-constraint-1",
+            "category": "Frente e predecessoras",
+            "description": "Frente e predecessoras liberadas",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-panels-a-constraint-2",
+            "category": "Mão de obra",
+            "description": "Mão de obra disponível",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-panels-a-constraint-3",
+            "category": "Equipamentos",
+            "description": "Equipamentos disponíveis",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-panels-a-constraint-4",
+            "category": "Materiais e suprimentos",
+            "description": "Materiais e entrega confirmados",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          }
+        ]
+      },
+      {
+        "id": "package-panels-b",
+        "name": "Montagem de fôrmas — Pavimento 5",
+        "location": "Pavimento 5",
+        "service": "Montagem de fôrmas",
+        "elements": [
+          {
+            "modelId": "model-synthetic",
+            "globalId": "panels-b"
+          }
+        ],
+        "task_ids": [
+          "task-panels-b"
+        ],
+        "quantity": 80,
+        "unit": "m²",
+        "quantity_source": "Quantidade ajustada manualmente; conferir.",
+        "need_date": "2026-11-20",
+        "finish_date": "2026-11-22",
+        "responsible": null,
+        "criterion": "Fôrmas montadas e conferidas para liberação.",
+        "review_required": false,
+        "capacity_confirmed": false,
+        "coverage_known": false,
+        "revision_of": null,
+        "stage": "draft",
+        "field_origins": {
+          "quantity": {
+            "mode": "manual",
+            "source": "Ajustado pelo usuário"
+          },
+          "needDate": {
+            "mode": "auto",
+            "source": "Cronograma IFC 4D"
+          },
+          "finishDate": {
+            "mode": "auto",
+            "source": "Cronograma IFC 4D"
+          }
+        },
+        "constraints": [
+          {
+            "id": "package-panels-b-constraint-0",
+            "category": "Projeto e informação",
+            "description": "Projeto e informações liberados",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-panels-b-constraint-1",
+            "category": "Frente e predecessoras",
+            "description": "Frente e predecessoras liberadas",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-panels-b-constraint-2",
+            "category": "Mão de obra",
+            "description": "Mão de obra disponível",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-panels-b-constraint-3",
+            "category": "Equipamentos",
+            "description": "Equipamentos disponíveis",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          },
+          {
+            "id": "package-panels-b-constraint-4",
+            "category": "Materiais e suprimentos",
+            "description": "Materiais e entrega confirmados",
+            "resolved": false,
+            "evidence": null,
+            "reviewer": null,
+            "owner": null,
+            "due_date": null,
+            "action": null,
+            "scope": "package",
+            "elements": [],
+            "attachments": []
+          }
+        ]
+      }
+    ],
+    "resources": [
+      {
+        "id": "resource-known-concrete",
+        "packageId": "package-known",
+        "compositionId": "concrete",
+        "resourceCode": "concrete",
+        "specification": "Concreto usinado — especificar",
+        "specificationConfirmed": true,
+        "quantity": 12.375,
+        "unit": "m³",
+        "needDate": "2026-11-20",
+        "from": "2026-11-20",
+        "to": "2026-11-20",
+        "factor": 1,
+        "lossPercent": 0,
+        "leadDays": 1,
+        "preparationDays": 1,
+        "reusable": false,
+        "cycleDays": 0,
+        "evidence": "Conferente fictício: Especificação sintética de concreto",
+        "procurementBlockers": []
+      }
+    ],
+    "supplies": [
+      {
+        "id": "supply-synthetic",
+        "name": "Pedido fictício",
+        "resourceCode": "concrete",
+        "specification": "Concreto usinado — especificar",
+        "quantity": 10,
+        "unit": "m³",
+        "confirmed": true,
+        "technical": true,
+        "delivery": "2026-11-20",
+        "availableUntil": null,
+        "kind": "order",
+        "synthetic": true,
+        "reusable": false,
+        "evidence": "Confirmação sintética para ensaio"
+      }
+    ],
+    "reservations": [
+      {
+        "id": "reservation-synthetic",
+        "requirementId": "resource-known-concrete",
+        "supplyId": "supply-synthetic",
+        "quantity": 5
+      }
+    ],
+    "legacy_reservations": [],
+    "deliveries": []
+  },
+  "pending": [
+    "Premissas de composição a conferir",
+    "Cobertura e saldo de compra ainda não determinados.",
+    "Quantificação pendente",
+    "Metadados não disponíveis para todos os elementos; conferir fonte IFC.",
+    "Intercâmbio de prévias; revisão humana e autorização de compra no processo de destino."
+  ],
+  "export": {
+    "id": "synthetic-export-v1",
+    "created_at": "2026-11-02T12:00:00.000Z",
+    "application": {
+      "name": "IFC Coral",
+      "version": "0.2.0",
+      "commit": "b46d0c8",
+      "working_tree_dirty": true
+    },
+    "source_fingerprint": {
+      "algorithm": "SHA-256",
+      "value": "90b880746bd58991e1cc1e22d19cfb5f4858af97aaa5ad5526ae07ee67ac579d",
+      "basis": "full Project snapshot; coral-c14n-1"
+    },
+    "payload_fingerprint": {
+      "algorithm": "SHA-256",
+      "value": "827344163d5c0138662599692d576296c252fac692e322e6c69139d415cea59c",
+      "basis": "entire export excluding export.payload_fingerprint; coral-c14n-1"
+    }
+  }
+}

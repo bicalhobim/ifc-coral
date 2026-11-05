@@ -45,6 +45,10 @@ Abra [IFC Coral no navegador](http://127.0.0.1:5178/), preencha os campos de ent
 
 Os dados e modelos são gravados por **Salvar** na pasta local escolhida para o projeto; **Salvar como** cria uma cópia em outra pasta. Exportações ficam na subpasta Exportacoes. Veja o [guia de projetos locais](docs/PROJETOS_LOCAIS.md). O navegador mantém a lista de pastas recentes e o cache de compatibilidade de sessões anteriores. Antes de enviar informações a um provedor de IA, confira o conteúdo e as regras aplicáveis. As chaves são usadas em memória e não integram o arquivo exportado. O Codex local teve chamadas reais de QA; OpenAI/Gemini foram testados com transporte controlado, sem chave real. Acesso aos modelos e instalação em outra máquina ainda exigem ensaio por conta/ambiente; detalhes no [relatório de IA](docs/QA_IA_RESTRICOES.md).
 
+## Entenda a arquitetura
+
+[Visão geral, fluxo funcional e arquitetura técnica](docs/architecture/HIGH_LEVEL_DESIGN.md): duas imagens mostram como modelo IFC, planejamento, arquivos locais e IA se conectam. [Integração com Compras IA](docs/USO_INTEGRACAO_COMPRAS_IA.md): preparar e baixar um recorte rastreável do mapa de suprimentos em JSON v1.
+
 ## Origem e créditos
 
 O IFC Coral parte do [IFC4ALL](https://github.com/bicalhobim/ifc4all) e de sua evolução 4D, com contribuição de Luiz Sales. Projeto e condução didática: Lucas Fernandes Bicalho. O uso do código 4D e do modelo TORRE02 foi autorizado pelo autor. Veja [origem, créditos e bibliotecas](docs/CREDITOS.md).

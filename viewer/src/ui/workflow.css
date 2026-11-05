@@ -52,3 +52,6 @@
 .gantt-combined .gantt-combined-months-info,.gantt-combined .gantt-combined-info{width:360px;flex:0 0 360px;box-sizing:border-box;position:sticky;left:0;z-index:2;background:#fcfaff}
 .gantt-combined .gantt-combined-months-bars,.gantt-combined .gantt-combined-bars{width:auto;flex:1 1 0;min-width:0}
 .window-compact .window-place{display:none}
+
+.supply-export-download:not([hidden]){display:inline-flex;align-items:center;padding:8px 12px;border:1px solid #bc85ed;border-radius:8px;color:#7022aa;background:#f7efff;text-decoration:none;font-size:12px}
+.supply-export-download:focus-visible{outline:2px solid #a100ff;outline-offset:2px}

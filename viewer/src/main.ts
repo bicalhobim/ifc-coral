@@ -203,7 +203,7 @@ const areaIds:Record<string,ViewerPanel>={'Pacotes':'packages','Planejamento mac
 function openWorkspace(view:string){const area=workspaces.get(view)!;area.show(view);h.focusPanel(areaIds[view]);return area;}
 function openPackageWorkspace(id:string,tab='Resumo'){const area=workspaces.get('Pacotes')!;area.openPackage(id,tab);h.focusPanel('packages');}
 for(const [view,id]of Object.entries(areaIds)){
- const area=new IntegratedWorkspace({get:()=>project,change:operate,selection:()=>[...new Map(selected.filter(t=>t.globalId&&t.modelKey).map(t=>[JSON.stringify([t.modelKey,t.globalId]),{modelId:t.modelKey!,globalId:t.globalId!}])).values()],show:showElementRefs,open:(id,tab)=>{h.focusPanel('production');panel.focusPackage(id,tab);},close:()=>{}});
+ const area=new IntegratedWorkspace({metadata:refs=>refs.flatMap(ref=>{const model=project.models.find(m=>m.id===ref.modelId),bytes=modelBytes.get(ref.modelId);if(!model||!bytes)return [];let metadata=metadataCache.get(model.id+model.hash);if(!metadata){metadata=readIfcMetadata(new TextDecoder().decode(bytes),model.id,model.hash);metadataCache.set(model.id+model.hash,metadata);}const found=metadata.get(ref.globalId);return found?[found]:[];}),get:()=>project,change:operate,selection:()=>[...new Map(selected.filter(t=>t.globalId&&t.modelKey).map(t=>[JSON.stringify([t.modelKey,t.globalId]),{modelId:t.modelKey!,globalId:t.globalId!}])).values()],show:showElementRefs,open:(id,tab)=>{h.focusPanel('production');panel.focusPackage(id,tab);},close:()=>{}});
  workspaces.set(view,area);h.addPanel(id,view,area.element,'bottom');area.bind(view,()=>h.setPanel(id,true),()=>h.setPanel(id,false),openWorkspace);
  button(view,()=>{gantt.pause();openWorkspace(view);});
 }

@@ -252,3 +252,17 @@ Lucas autorizou novo commit após o ensaio de 184 testes e verificação visual.
 ## 02/11/2026 — zoom e quantificação da seleção física
 
 Zoom por arraste na escala temporal (Gantt integrado, hierarquia e balanço), cabeçalhos recolhíveis, catálogo com cobertura explícita e rascunhos preservados. Quantificação independente de tarefas 4D. QA: 187 testes, tipos, build e schedule selfcheck aprovados; ensaio real na TORRE02 em projeto QA. Registro: `QA_ZOOM_QUANTIFICACAO_2026-11-02.md`. Commit autorizado pelo pedido desta rodada após testes; publicação remota não solicitada.
+
+
+## 02/11/2026 — integração local com Compras IA
+
+Implementado o contrato `ifc-coral-procurement` v1, exportador sem mutações, captura de escopo/filtros, memória de quantificação quando disponível, composição/insumos, datas, cobertura, evidências e fingerprints interoperáveis. Grade: Preparar pacote → Baixar pacote; saídas simples preservadas. Fixture sintética gerada pelo exportador e pacote da TORRE02 baixado pela UI isolada em 5186, ambos validados por Python. Conferência antiga não é herdada por estimativa nova/regra alterada. Checks finais em `QA_INTEGRACAO_COMPRAS_2026-11-02.md`; uso em `USO_INTEGRACAO_COMPRAS_IA.md`. Sem consumidor, contatos, pedidos ou deploy neste repositório. Alterações locais ainda sem commit; autorização por commit continua aplicável.
+
+
+## Arquitetura visual e fechamento do intercâmbio — 04/11/2026
+
+- High-level design conferido contra o código atual, com fluxo funcional ilustrado, diagrama técnico vetorial/PNG, persistência, IA, vínculo modelo + GlobalId e próximos passos identificados como propostas. [Abrir arquitetura](architecture/HIGH_LEVEL_DESIGN.md).
+- Fechamento autorizado por Lucas do estado pronto: integração IFC Coral → Compras IA já implementada, contrato v1 congelado, filtros/escopo, download, memórias e contexto de origem. A arquitetura documenta esta integração; nenhuma funcionalidade de compra ou retorno automático foi acrescentada.
+- Revalidação: 201 testes, tipos e build aprovados. O aviso de bundle grande permanece. O ensaio visual da exportação de 02/11 continua sendo a evidência funcional desta interface, que não foi alterada na rodada de documentação. A sessão de trabalho do professor foi preservada.
+- Novas imagens revisadas visualmente. A figura funcional é ilustração conceitual, não captura de tela. Fontes técnicas e limites em `architecture/HIGH_LEVEL_DESIGN.md` e no recibo de QA da integração.
+- Commit solicitado expressamente nesta rodada; não há autorização de push neste pedido. Registros anteriores de “sem commit” descrevem a situação histórica de cada rodada.

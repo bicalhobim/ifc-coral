@@ -1,0 +1,1836 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ifc-coral:procurement:1",
+  "title": "IFC Coral → Compras IA v1",
+  "description": "Intercâmbio local de rascunhos. Valores derivados já incluem perdas e prazos. null = desconhecido. Não constitui compra autorizada. Campos current/reviewed descrevem registros no Coral e exigem revalidação se a origem mudar.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "ifc-coral-procurement"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "export": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "application": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "const": "IFC Coral"
+            },
+            "version": {
+              "type": "string"
+            },
+            "commit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "working_tree_dirty": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "version",
+            "commit",
+            "working_tree_dirty"
+          ]
+        },
+        "source_fingerprint": {
+          "$ref": "#/$defs/fingerprint"
+        },
+        "payload_fingerprint": {
+          "$ref": "#/$defs/fingerprint"
+        }
+      },
+      "required": [
+        "id",
+        "created_at",
+        "application",
+        "source_fingerprint",
+        "payload_fingerprint"
+      ]
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "filtered_supply_map"
+        },
+        "filters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "query": {
+              "type": "string"
+            },
+            "kind": {
+              "enum": [
+                "all",
+                "package",
+                "macro"
+              ]
+            },
+            "status": {
+              "enum": [
+                "all",
+                "pending",
+                "reviewed"
+              ]
+            },
+            "package_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "query",
+            "kind",
+            "status",
+            "package_id"
+          ]
+        },
+        "demand_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "total_available": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "exported_count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "kind",
+        "filters",
+        "demand_ids",
+        "total_available",
+        "exported_count"
+      ]
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "schema_version": {
+          "type": "integer"
+        },
+        "planning_version": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/model"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "schema_version",
+        "planning_version",
+        "models"
+      ]
+    },
+    "calendar": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "const": "calendar_days"
+        },
+        "timezone": {
+          "const": "date_only"
+        },
+        "dates_are_execution_evidence": {
+          "const": false
+        }
+      },
+      "required": [
+        "unit",
+        "timezone",
+        "dates_are_execution_evidence"
+      ]
+    },
+    "semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "quantities": {
+          "const": "base_quantity is service quantity; derived_preview.quantity already includes factor and loss once"
+        },
+        "dates": {
+          "const": "derived_preview dates already include lead times once; preserve original task dates"
+        },
+        "revision": {
+          "const": "changed source fingerprint or model hash requires human review; never carry approval forward"
+        },
+        "scope": {
+          "const": "only exported demands; no project-wide coverage inference from filtered totals"
+        },
+        "purchase_authorized": {
+          "const": false
+        }
+      },
+      "required": [
+        "quantities",
+        "dates",
+        "revision",
+        "scope",
+        "purchase_authorized"
+      ]
+    },
+    "demands": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/demand"
+      }
+    },
+    "totals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/total"
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/task"
+          }
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/element"
+          }
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/package"
+          }
+        },
+        "resources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/resource"
+          }
+        },
+        "supplies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/supply"
+          }
+        },
+        "reservations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/allocation"
+          }
+        },
+        "legacy_reservations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/legacy_allocation"
+          }
+        },
+        "deliveries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/delivery"
+          }
+        },
+        "estimates": {
+          "description": "Entradas persistidas de estimativa por elemento, quando disponíveis. Coincidência do hash não é conferência humana.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "modelId",
+              "modelHash",
+              "globalId",
+              "serviceCode",
+              "quantity",
+              "unit",
+              "source",
+              "model_revision_matches"
+            ],
+            "properties": {
+              "modelId": {
+                "type": "string"
+              },
+              "modelHash": {
+                "type": "string"
+              },
+              "globalId": {
+                "type": "string"
+              },
+              "serviceCode": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0
+              },
+              "unit": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              },
+              "model_revision_matches": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "required": [
+        "tasks",
+        "elements",
+        "packages",
+        "resources",
+        "supplies",
+        "reservations",
+        "legacy_reservations",
+        "deliveries"
+      ]
+    },
+    "pending": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "format",
+    "schema_version",
+    "export",
+    "scope",
+    "project",
+    "calendar",
+    "semantics",
+    "demands",
+    "totals",
+    "context",
+    "pending"
+  ],
+  "$defs": {
+    "fingerprint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "const": "SHA-256"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "basis": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "value",
+        "basis"
+      ]
+    },
+    "element_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modelId": {
+          "type": "string"
+        },
+        "globalId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "modelId",
+        "globalId"
+      ]
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "projectGlobalId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "projectGlobalId",
+        "hash"
+      ]
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "modelId": {
+          "type": "string"
+        },
+        "globalId": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "service": {
+          "type": "string"
+        },
+        "start": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "finish": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "modelId",
+        "globalId",
+        "slot",
+        "name",
+        "location",
+        "service",
+        "start",
+        "finish"
+      ]
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "measure_id": {
+          "type": "string"
+        },
+        "model_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "amount": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string"
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "method": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "calculated",
+            "manual"
+          ]
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "measurement": {
+          "$ref": "#/$defs/measure"
+        }
+      },
+      "required": [
+        "measure_id",
+        "model_hash",
+        "amount",
+        "unit",
+        "source",
+        "method",
+        "reviewer",
+        "at",
+        "evidence",
+        "origin",
+        "current",
+        "measurement"
+      ]
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resolved": {
+          "type": "boolean"
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "due_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scope": {
+          "type": "string"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/element_ref"
+          }
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "mime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "mime"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "category",
+        "description",
+        "resolved",
+        "evidence",
+        "reviewer",
+        "owner",
+        "due_date",
+        "action",
+        "scope",
+        "elements",
+        "attachments"
+      ]
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "service": {
+          "type": "string"
+        },
+        "elements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/element_ref"
+          }
+        },
+        "task_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "quantity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string"
+        },
+        "quantity_source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "need_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "finish_date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "responsible": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "criterion": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "review_required": {
+          "type": "boolean"
+        },
+        "capacity_confirmed": {
+          "type": "boolean"
+        },
+        "coverage_known": {
+          "type": "boolean"
+        },
+        "revision_of": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stage": {
+          "type": "string"
+        },
+        "field_origins": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mode": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mode",
+              "source"
+            ]
+          }
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/constraint"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "location",
+        "service",
+        "elements",
+        "task_ids",
+        "quantity",
+        "unit",
+        "quantity_source",
+        "need_date",
+        "finish_date",
+        "responsible",
+        "criterion",
+        "review_required",
+        "capacity_confirmed",
+        "coverage_known",
+        "revision_of",
+        "stage",
+        "field_origins",
+        "constraints"
+      ]
+    },
+    "element": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modelId": {
+          "type": "string"
+        },
+        "globalId": {
+          "type": "string"
+        },
+        "model_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ifc_class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "predefined_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "properties": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "metadata_status": {
+          "enum": [
+            "available",
+            "unavailable"
+          ]
+        }
+      },
+      "required": [
+        "modelId",
+        "globalId",
+        "model_hash",
+        "ifc_class",
+        "predefined_type",
+        "type_name",
+        "properties",
+        "metadata_status"
+      ]
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "packageId": {
+          "type": "string"
+        },
+        "compositionId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resourceCode": {
+          "type": "string"
+        },
+        "specification": {
+          "type": "string"
+        },
+        "specificationConfirmed": {
+          "type": "boolean"
+        },
+        "quantity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string"
+        },
+        "needDate": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "from": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "to": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "factor": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "lossPercent": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "leadDays": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "preparationDays": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "reusable": {
+          "type": "boolean"
+        },
+        "cycleDays": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "procurementBlockers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "packageId",
+        "compositionId",
+        "resourceCode",
+        "specification",
+        "specificationConfirmed",
+        "quantity",
+        "unit",
+        "needDate",
+        "from",
+        "to",
+        "factor",
+        "lossPercent",
+        "leadDays",
+        "preparationDays",
+        "reusable",
+        "cycleDays",
+        "evidence",
+        "procurementBlockers"
+      ]
+    },
+    "supply": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "resourceCode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "specification": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "quantity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string"
+        },
+        "confirmed": {
+          "type": "boolean"
+        },
+        "technical": {
+          "type": "boolean"
+        },
+        "delivery": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "availableUntil": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "stock",
+            "order"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "reusable": {
+          "type": "boolean"
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "resourceCode",
+        "specification",
+        "quantity",
+        "unit",
+        "confirmed",
+        "technical",
+        "delivery",
+        "availableUntil",
+        "kind",
+        "synthetic",
+        "reusable",
+        "evidence"
+      ]
+    },
+    "allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "requirementId": {
+          "type": "string"
+        },
+        "supplyId": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "requirementId",
+        "supplyId",
+        "quantity"
+      ]
+    },
+    "legacy_allocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "packageId": {
+          "type": "string"
+        },
+        "supplyId": {
+          "type": "string"
+        },
+        "quantity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "required": [
+        "id",
+        "packageId",
+        "supplyId",
+        "quantity"
+      ]
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "allocationId": {
+          "type": "string"
+        },
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "received": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "rejected": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reviewer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "allocationId",
+        "date",
+        "received",
+        "rejected",
+        "evidence",
+        "reviewer"
+      ]
+    },
+    "composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "line_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "service_version": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "factor": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "loss_percent": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "preparation_days": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "manufacturing_days": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "transport_days": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "inspection_days": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "buffer_days": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "return_days": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "unreviewed",
+            "recorded",
+            "needs_review",
+            "unavailable"
+          ]
+        }
+      },
+      "required": [
+        "line_id",
+        "service_version",
+        "factor",
+        "loss_percent",
+        "preparation_days",
+        "manufacturing_days",
+        "transport_days",
+        "inspection_days",
+        "buffer_days",
+        "return_days",
+        "source",
+        "status"
+      ]
+    },
+    "demand": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/fingerprint"
+        },
+        "origin": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "package",
+                "macro_4d"
+              ]
+            },
+            "id": {
+              "type": "string"
+            },
+            "package_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "macro_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "location": {
+              "type": "string"
+            },
+            "elements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/element_ref"
+              }
+            },
+            "task_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "id",
+            "package_id",
+            "macro_id",
+            "location",
+            "elements",
+            "task_ids"
+          ]
+        },
+        "service": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "method": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "criterion": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "unit",
+            "method",
+            "criterion"
+          ]
+        },
+        "base_quantity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "unit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "source": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "method": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "calculation_status": {
+              "enum": [
+                "available",
+                "unknown"
+              ]
+            },
+            "review_status": {
+              "enum": [
+                "reviewed",
+                "unreviewed",
+                "needs_review"
+              ]
+            },
+            "reviews": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/review"
+              }
+            }
+          },
+          "required": [
+            "value",
+            "unit",
+            "source",
+            "method",
+            "calculation_status",
+            "review_status",
+            "reviews"
+          ]
+        },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "specification": {
+              "type": "string"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "reusable": {
+              "type": "boolean"
+            },
+            "fresh_concrete": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "specification",
+            "unit",
+            "reusable",
+            "fresh_concrete"
+          ]
+        },
+        "composition": {
+          "$ref": "#/$defs/composition"
+        },
+        "derived_preview": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "quantity": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "unit": {
+              "type": "string"
+            },
+            "formula": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "losses_applied": {
+              "type": "boolean"
+            },
+            "lead_times_applied": {
+              "type": "boolean"
+            },
+            "dates": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "need_on_site": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "receive_on_site": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "order_by": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "start_procurement_by": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "occupied_until": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "need_on_site",
+                "receive_on_site",
+                "order_by",
+                "start_procurement_by",
+                "occupied_until"
+              ]
+            },
+            "status": {
+              "const": "preview"
+            }
+          },
+          "required": [
+            "quantity",
+            "unit",
+            "formula",
+            "losses_applied",
+            "lead_times_applied",
+            "dates",
+            "status"
+          ]
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "status": {
+              "enum": [
+                "known",
+                "unknown"
+              ]
+            },
+            "covered": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "balance": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "excess": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "resource_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "reservation_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "legacy_reservation_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "status",
+            "covered",
+            "balance",
+            "excess",
+            "resource_ids",
+            "reservation_ids",
+            "legacy_reservation_ids"
+          ]
+        },
+        "human_review": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "composition_evidence": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "requires_review_for_changed_source": {
+              "const": true
+            },
+            "release_purchase": {
+              "const": false
+            }
+          },
+          "required": [
+            "composition_evidence",
+            "requires_review_for_changed_source",
+            "release_purchase"
+          ]
+        },
+        "pending": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "fingerprint",
+        "origin",
+        "service",
+        "base_quantity",
+        "input",
+        "composition",
+        "derived_preview",
+        "coverage",
+        "human_review",
+        "pending"
+      ]
+    },
+    "total": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input_id": {
+          "type": "string"
+        },
+        "specification": {
+          "type": "string"
+        },
+        "unit": {
+          "type": "string"
+        },
+        "reusable": {
+          "type": "boolean"
+        },
+        "quantity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "known_quantity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "unknown_origins": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "origins": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aggregation": {
+          "enum": [
+            "sum",
+            "concurrent_peak"
+          ]
+        }
+      },
+      "required": [
+        "input_id",
+        "specification",
+        "unit",
+        "reusable",
+        "quantity",
+        "known_quantity",
+        "unknown_origins",
+        "origins",
+        "aggregation"
+      ]
+    },
+    "measure": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "elementRef": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "modelId": {
+              "type": "string"
+            },
+            "modelHash": {
+              "type": "string"
+            },
+            "globalId": {
+              "type": "string"
+            },
+            "ifcClass": {
+              "type": "string"
+            },
+            "predefinedType": {
+              "type": "string"
+            },
+            "typeName": {
+              "type": "string"
+            },
+            "properties": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "modelId",
+            "modelHash",
+            "globalId",
+            "ifcClass",
+            "predefinedType",
+            "typeName",
+            "properties"
+          ]
+        },
+        "serviceCode": {
+          "type": "string"
+        },
+        "ruleId": {
+          "type": "string"
+        },
+        "ruleVersion": {
+          "type": "string"
+        },
+        "ruleSnapshot": {
+          "type": "object"
+        },
+        "inputs": {
+          "type": "object"
+        },
+        "amount": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": "string"
+        },
+        "origin": {
+          "enum": [
+            "declared",
+            "geometric",
+            "estimated"
+          ]
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "pending"
+          ]
+        },
+        "pendingReasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "classificationOverride": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "author": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "author",
+            "reason"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "elementRef",
+        "serviceCode",
+        "ruleId",
+        "ruleVersion",
+        "ruleSnapshot",
+        "inputs",
+        "amount",
+        "unit",
+        "origin",
+        "status",
+        "pendingReasons",
+        "evidence"
+      ]
+    }
+  }
+}

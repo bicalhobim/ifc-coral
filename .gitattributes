@@ -14,3 +14,8 @@
 *.wasm -text -diff
 viewer/public/engine/* -text -diff
 docs/origem/* -text -diff
+
+# Frozen procurement v1 handoff: preserve exact bytes covered by its manifest.
+docs/contracts/* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+viewer/tests/fixtures/coral-procurement-1.*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/evidencias/integracao-compras-2026-11-02/TORRE02-fundacao-browser-v1-congelado.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

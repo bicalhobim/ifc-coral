@@ -1,0 +1,45 @@
+{
+  "format": "ifc-coral-procurement",
+  "schema_version": 1,
+  "contract_status": "frozen-2026-11-02",
+  "base_commit": "b46d0c8b236439d3ac9023dd58149a301cd086e6",
+  "state": "local-uncommitted",
+  "hash_kind": "SHA256 of exact file bytes; distinct from payload fingerprint",
+  "files": [
+    {
+      "path": "docs/contracts/coral-procurement-1.schema.json",
+      "bytes": 40525,
+      "sha256": "b66fe6d82116636e94afe6912ae3ee6b0cc40abf8549758b5c74a43858adaab3"
+    },
+    {
+      "path": "docs/contracts/coral-procurement-1.example.json",
+      "bytes": 45557,
+      "sha256": "5261bd62c00a9764006183c40b56f02d86a17d908e0cd5ce1f4ac6fe4bacd880"
+    },
+    {
+      "path": "viewer/tests/fixtures/coral-procurement-1.generated.json",
+      "bytes": 45557,
+      "sha256": "5261bd62c00a9764006183c40b56f02d86a17d908e0cd5ce1f4ac6fe4bacd880"
+    },
+    {
+      "path": "viewer/tests/fixtures/coral-procurement-1.project.json",
+      "bytes": 32939,
+      "sha256": "c7310d7b024fe3afb3fc03e4facd79936ffbe46eabf5977e8349352d20d8e51b"
+    },
+    {
+      "path": "docs/contracts/verify-coral-procurement.py",
+      "bytes": 2088,
+      "sha256": "ee48e330575e6f86fdac730b2d738e80de588f3fabbdaf4e6f382010faa082f1"
+    },
+    {
+      "path": "docs/contracts/README.md",
+      "bytes": 6247,
+      "sha256": "f9ec1352699c4c4bab2455204757a3aed1626a871150a02d4b6d89ab0443cdad"
+    },
+    {
+      "path": "docs/evidencias/integracao-compras-2026-11-02/TORRE02-fundacao-browser-v1-congelado.json",
+      "bytes": 407825,
+      "sha256": "ece1d001e413423fc71c849093e03229d6a82e2c3b199a40631e98e9a0697c1a"
+    }
+  ]
+}

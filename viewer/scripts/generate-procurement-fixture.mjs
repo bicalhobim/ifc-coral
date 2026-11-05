@@ -1,0 +1,10 @@
+import {writeFile} from 'node:fs/promises';
+import {exportProcurement} from '../src/production/procurement-export.ts';
+import {validateProject} from '../src/production/project.ts';
+import {procurementProject,fixtureOptions} from '../tests/fixtures/procurement-project.mjs';
+const p=procurementProject();validateProject(p);
+const bundle=await exportProcurement(p,fixtureOptions(p));
+await writeFile(new URL('../tests/fixtures/coral-procurement-1.generated.json',import.meta.url),JSON.stringify(bundle,null,2)+'\n');
+await writeFile(new URL('../../docs/contracts/coral-procurement-1.example.json',import.meta.url),JSON.stringify(bundle,null,2)+'\n');
+await writeFile(new URL('../tests/fixtures/coral-procurement-1.project.json',import.meta.url),JSON.stringify(p,null,2)+'\n');
+console.log(JSON.stringify({demands:bundle.demands.length,hash:bundle.export.payload_fingerprint.value}));

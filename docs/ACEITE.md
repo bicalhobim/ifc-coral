@@ -91,3 +91,16 @@ Planejamento integrado por atividade/local/tempo e inspetor de relações implem
 ## Revisão UX de suprimentos e linha de balanço
 
 Em 02/11/2026, mapa em grade com edição e exportações filtradas, detalhes do pacote com abas e linha de balanço ascendente foram verificados localmente. [Escopo, testes, evidências e limites](QA_UX_SUPRIMENTOS_LOB_2026-11-02.md). Aceite de Lucas e novo commit ainda pendentes.
+
+
+## Complemento local — intercâmbio Compras IA (02/11/2026)
+
+Exportador v1 implementado e testado com rascunhos, lacunas, revisões, reservas, reutilização e filtros. Não confirma composição, não reserva nem libera compra. Conferência de quantidade exige regra vigente, cobertura dos elementos e compatibilidade com a base exportada; evidências antigas são preservadas sem aprovação reaproveitada. Contrato congelado em `docs/contracts`; verificação e limites em `QA_INTEGRACAO_COMPRAS_2026-11-02.md`. Aceite técnico do exportador não prova o processo completo de compras no consumidor. Nenhum commit/push/deploy integra esta autorização.
+
+
+## Referência de arquitetura — 04/11/2026
+
+- [High-level design e imagens](architecture/HIGH_LEVEL_DESIGN.md): divisão efetiva entre front-end, regras no navegador, ponte Node.js local, arquivos e serviços opcionais.
+- Revalidação nesta data: 201 testes aprovados, typecheck e build aprovados, com aviso de bundle grande. Os testes não substituem ensaio em outra máquina nem conferência técnica dos quantitativos.
+- Contrato/exportador Compras IA documentados; o ciclo completo com o consumidor continua pendente de ensaio conjunto. IA OpenAI/Gemini com chave real, autenticação de contas, colaboração e sincronização contínua não foram validados/implementados por esta rodada, conforme os limites específicos do HLD.
+- A documentação e as imagens não alteram critérios de liberação ou o kit institucional aprovado.
