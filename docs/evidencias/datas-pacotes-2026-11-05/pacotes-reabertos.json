@@ -1,0 +1,330 @@
+{
+  "packages": [
+    {
+      "id": "4b4192bc-b9d9-4177-874f-7c3b89e62a0e",
+      "name": "Concretagem — Local não identificado",
+      "service": "Concretagem",
+      "location": "Local não identificado",
+      "elements": [
+        {
+          "modelId": "a",
+          "globalId": "0000000000000000000001"
+        },
+        {
+          "modelId": "a",
+          "globalId": "0000000000000000000002"
+        },
+        {
+          "modelId": "b",
+          "globalId": "0000000000000000000001"
+        },
+        {
+          "modelId": "b",
+          "globalId": "0000000000000000000002"
+        }
+      ],
+      "taskIds": [
+        "[\"a\",\"0000000000000000000001\",\"CSV:C\"]",
+        "[\"a\",\"0000000000000000000002\",\"CSV:C\"]",
+        "[\"b\",\"0000000000000000000001\",\"CSV:C\"]",
+        "[\"b\",\"0000000000000000000002\",\"CSV:C\"]"
+      ],
+      "quantity": null,
+      "unit": "m³",
+      "quantitySource": "Medições ou estimativas disponíveis; conferir o recorte e as premissas.",
+      "coverageKnown": false,
+      "needDate": "2026-11-08",
+      "finishDate": "2026-11-10",
+      "criterion": "Concretagem do recorte concluída e conferida.",
+      "responsible": "",
+      "capacityConfirmed": false,
+      "reviewRequired": false,
+      "constraints": [
+        {
+          "id": "f4677ae6-5c29-4729-bcb6-d1f5bb74108c",
+          "category": "Projeto e informação",
+          "description": "Projeto e informações liberados",
+          "resolved": false,
+          "evidence": "",
+          "reviewer": "",
+          "scope": "package"
+        },
+        {
+          "id": "5ef3588d-f7f0-4063-82f8-e843bdfee0e2",
+          "category": "Frente e predecessoras",
+          "description": "Frente e predecessoras liberadas",
+          "resolved": false,
+          "evidence": "",
+          "reviewer": "",
+          "scope": "package"
+        },
+        {
+          "id": "2a31ddb0-28fd-4d88-ad72-18e3a3382d92",
+          "category": "Mão de obra",
+          "description": "Mão de obra disponível",
+          "resolved": false,
+          "evidence": "",
+          "reviewer": "",
+          "scope": "package"
+        },
+        {
+          "id": "3191895e-3c4f-46ff-8bdc-dc359595b068",
+          "category": "Equipamentos",
+          "description": "Equipamentos disponíveis",
+          "resolved": false,
+          "evidence": "",
+          "reviewer": "",
+          "scope": "package"
+        },
+        {
+          "id": "09b4010d-b1b0-497a-bce4-0c0ea6af401a",
+          "category": "Materiais e suprimentos",
+          "description": "Materiais e entrega confirmados",
+          "resolved": false,
+          "evidence": "",
+          "reviewer": "",
+          "scope": "package"
+        }
+      ],
+      "serviceCode": "concrete"
+    },
+    {
+      "id": "d378a937-cac5-458c-989a-65a7013d8d6b",
+      "name": "Armação — Local não identificado",
+      "service": "Armação",
+      "location": "Local não identificado",
+      "elements": [
+        {
+          "modelId": "a",
+          "globalId": "0000000000000000000001"
+        },
+        {
+          "modelId": "a",
+          "globalId": "0000000000000000000002"
+        },
+        {
+          "modelId": "b",
+          "globalId": "0000000000000000000001"
+        },
+        {
+          "modelId": "b",
+          "globalId": "0000000000000000000002"
+        }
+      ],
+      "taskIds": [
+        "[\"a\",\"0000000000000000000001\",\"CSV:B\"]",
+        "[\"a\",\"0000000000000000000002\",\"CSV:B\"]",
+        "[\"b\",\"0000000000000000000001\",\"CSV:B\"]",
+        "[\"b\",\"0000000000000000000002\",\"CSV:B\"]"
+      ],
+      "quantity": null,
+      "unit": "kg",
+      "quantitySource": "Medições ou estimativas disponíveis; conferir o recorte e as premissas.",
+      "coverageKnown": false,
+      "needDate": "2026-11-07",
+      "finishDate": "2026-11-08",
+      "criterion": "Armação instalada e conferida conforme projeto.",
+      "responsible": "",
+      "capacityConfirmed": false,
+      "reviewRequired": false,
+      "constraints": [
+        {
+          "id": "6e79b962-0db7-4352-b191-7fb2a9435c5b",
+          "category": "Projeto e informação",
+          "description": "Projeto e informações liberados",
+          "resolved": false,
+          "evidence": "",
+          "reviewer": "",
+          "scope": "package"
+        },
+        {
+          "id": "f0d615b5-824f-4c3c-b1d8-357723957cdb",
+          "category": "Frente e predecessoras",
+          "description": "Frente e predecessoras liberadas",
+          "resolved": false,
+          "evidence": "",
+          "reviewer": "",
+          "scope": "package"
+        },
+        {
+          "id": "461d1db9-45b1-4398-b049-bec8a488dda2",
+          "category": "Mão de obra",
+          "description": "Mão de obra disponível",
+          "resolved": false,
+          "evidence": "",
+          "reviewer": "",
+          "scope": "package"
+        },
+        {
+          "id": "bb791d84-6fa8-44ea-8c9d-2e9d2626fae8",
+          "category": "Equipamentos",
+          "description": "Equipamentos disponíveis",
+          "resolved": false,
+          "evidence": "",
+          "reviewer": "",
+          "scope": "package"
+        },
+        {
+          "id": "be4e1d2c-8a17-478a-8280-d4623b2db9c1",
+          "category": "Materiais e suprimentos",
+          "description": "Materiais e entrega confirmados",
+          "resolved": false,
+          "evidence": "",
+          "reviewer": "",
+          "scope": "package"
+        }
+      ],
+      "serviceCode": "reinforcement"
+    }
+  ],
+  "origins": {
+    "4b4192bc-b9d9-4177-874f-7c3b89e62a0e": {
+      "serviceId": "concrete",
+      "serviceSnapshot": {
+        "id": "concrete",
+        "name": "Concretagem",
+        "unit": "m³",
+        "active": true,
+        "version": 1,
+        "method": "concrete",
+        "criterion": "Concretagem do recorte concluída e conferida.",
+        "composition": [
+          {
+            "id": "concrete",
+            "inputId": "concrete",
+            "factor": 1,
+            "loss": 0,
+            "preparation": 1,
+            "manufacturing": 0,
+            "transport": 1,
+            "inspection": 0,
+            "buffer": 0,
+            "returnDays": 0,
+            "source": "Premissa didática editável; não conferida."
+          }
+        ]
+      },
+      "inputSnapshot": [
+        {
+          "id": "concrete",
+          "name": "Concreto usinado — especificar",
+          "unit": "m³",
+          "active": true,
+          "reusable": false
+        },
+        {
+          "id": "steel",
+          "name": "Aço — detalhar bitolas/BBS",
+          "unit": "kg",
+          "active": true,
+          "reusable": false
+        },
+        {
+          "id": "panels",
+          "name": "Painéis de fôrma — especificar sistema",
+          "unit": "m²",
+          "active": true,
+          "reusable": true
+        },
+        {
+          "id": "release-agent",
+          "name": "Desmoldante — especificar produto",
+          "unit": "L",
+          "active": true,
+          "reusable": false
+        }
+      ],
+      "stage": "draft",
+      "origins": {
+        "quantity": {
+          "mode": "auto",
+          "source": "Quantificação disponível; conferir"
+        },
+        "needDate": {
+          "mode": "manual",
+          "source": "Cronograma CSV aprovado e incorporado ao IFC. Janela composta: menor início e maior término das atividades deste serviço nos elementos selecionados. Atividades: a/CSV:C: Concreto; b/CSV:C: Concreto"
+        },
+        "finishDate": {
+          "mode": "auto",
+          "source": "Cronograma CSV aprovado e incorporado ao IFC. Janela composta: menor início e maior término das atividades deste serviço nos elementos selecionados. Atividades: a/CSV:C: Concreto; b/CSV:C: Concreto"
+        }
+      },
+      "suggestions": {
+        "needDate": "2026-11-09"
+      }
+    },
+    "d378a937-cac5-458c-989a-65a7013d8d6b": {
+      "serviceId": "reinforcement",
+      "serviceSnapshot": {
+        "id": "reinforcement",
+        "name": "Armação",
+        "unit": "kg",
+        "active": true,
+        "version": 1,
+        "method": "reinforcement",
+        "criterion": "Armação instalada e conferida conforme projeto.",
+        "composition": [
+          {
+            "id": "steel",
+            "inputId": "steel",
+            "factor": 1,
+            "loss": 0,
+            "preparation": 2,
+            "manufacturing": 5,
+            "transport": 2,
+            "inspection": 1,
+            "buffer": 0,
+            "returnDays": 0,
+            "source": "Premissa didática editável; não conferida."
+          }
+        ]
+      },
+      "inputSnapshot": [
+        {
+          "id": "concrete",
+          "name": "Concreto usinado — especificar",
+          "unit": "m³",
+          "active": true,
+          "reusable": false
+        },
+        {
+          "id": "steel",
+          "name": "Aço — detalhar bitolas/BBS",
+          "unit": "kg",
+          "active": true,
+          "reusable": false
+        },
+        {
+          "id": "panels",
+          "name": "Painéis de fôrma — especificar sistema",
+          "unit": "m²",
+          "active": true,
+          "reusable": true
+        },
+        {
+          "id": "release-agent",
+          "name": "Desmoldante — especificar produto",
+          "unit": "L",
+          "active": true,
+          "reusable": false
+        }
+      ],
+      "stage": "draft",
+      "origins": {
+        "quantity": {
+          "mode": "auto",
+          "source": "Quantificação disponível; conferir"
+        },
+        "needDate": {
+          "mode": "auto",
+          "source": "Cronograma CSV aprovado e incorporado ao IFC. Janela composta: menor início e maior término das atividades deste serviço nos elementos selecionados. Atividades: a/CSV:B: Armar; b/CSV:B: Armar"
+        },
+        "finishDate": {
+          "mode": "auto",
+          "source": "Cronograma CSV aprovado e incorporado ao IFC. Janela composta: menor início e maior término das atividades deste serviço nos elementos selecionados. Atividades: a/CSV:B: Armar; b/CSV:B: Armar"
+        }
+      }
+    }
+  },
+  "week": null
+}

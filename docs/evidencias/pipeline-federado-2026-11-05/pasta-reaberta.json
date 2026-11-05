@@ -1,0 +1,46 @@
+{
+  "format": "ifc-coral-folder",
+  "version": 2,
+  "modelCount": 2,
+  "taskCount": 4,
+  "models": [
+    {
+      "id": "estrutura",
+      "name": "Estrutura-4D.ifc",
+      "hashMatches": true,
+      "bytes": 5406
+    },
+    {
+      "id": "instalacoes",
+      "name": "Instalacoes-4D.ifc",
+      "hashMatches": true,
+      "bytes": 5403
+    }
+  ],
+  "taskDates": [
+    {
+      "modelId": "estrutura",
+      "globalId": "0000000000000000000001",
+      "start": "2026-11-06",
+      "finish": "2026-11-07"
+    },
+    {
+      "modelId": "estrutura",
+      "globalId": "0000000000000000000002",
+      "start": "2026-11-06",
+      "finish": "2026-11-07"
+    },
+    {
+      "modelId": "instalacoes",
+      "globalId": "0000000000000000000001",
+      "start": "2026-11-06",
+      "finish": "2026-11-07"
+    },
+    {
+      "modelId": "instalacoes",
+      "globalId": "0000000000000000000002",
+      "start": "2026-11-06",
+      "finish": "2026-11-07"
+    }
+  ]
+}

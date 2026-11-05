@@ -1,0 +1,8 @@
+{
+  "format": "ifc-coral-folder",
+  "version": 2,
+  "models": 1,
+  "tasks": 1000,
+  "uniqueElements": 40,
+  "ifcHashVerified": true
+}
