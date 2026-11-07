@@ -1,129 +1,133 @@
-<p align="center">
-  <img src="docs/media/ifc-coral-capa.png" alt="IFC Coral: do modelo à decisão de obra, conectando BIM, planejamento, LPS e suprimentos" width="1200">
-</p>
+<p align="center"><img src="docs/media/ifc-coral-capa.png" alt="IFC Coral: modelo, planejamento e decisão de obra" width="1200"></p>
 
 # IFC Coral
 
-Explore um modelo de obra, confira a origem das quantidades, organize pacotes e restrições e prepare uma demanda rastreável para suprimentos. O IFC Coral é um laboratório didático local de **BIM, planejamento 4D e Last Planner System**, com decisões conferidas por pessoas.
+**A tarefa está no cronograma. Mas ela pode começar na obra?**
 
-**[Abrir o GitHub do projeto](https://github.com/bicalhobim/ifc-coral)** · **[Materiais da turma no Google Drive](https://drive.google.com/drive/folders/1I36l-GWqufSSFH3ZuI0tSnSONYQTTYXc)** · [Como funciona](#como-funciona) · [Instalação com Codex](#instalação-com-codex) · [Conheça as telas](#conheça-as-telas)
+Na disciplina **Planejamento e Gestão de Obras com IA — EBPÓS**, essa pergunta conecta Lean Construction, Last Planner System, BIM 4D e inteligência artificial. O IFC Coral é nosso laboratório didático para percorrer essa decisão: localizar os elementos, conferir quantidades e datas, preparar pacotes, tratar restrições e examinar as necessidades de suprimentos.
 
-> **Acesso da turma:** a pasta do Drive foi criada; o acesso dos alunos por link ainda precisa ser confirmado. O pacote discente filtrado está em preparação. Este repositório público reúne o desenvolvimento; a versão da aula será identificada após os testes finais e a revisão de distribuição.
+**Professor Lucas Bicalho** · [Materiais da turma](https://drive.google.com/drive/folders/1I36l-GWqufSSFH3ZuI0tSnSONYQTTYXc) · [Código atualizado](https://github.com/bicalhobim/ifc-coral/tree/feat/ifc-coral-mvp) · [Instalação](#instalação-com-codex)
 
-## Como funciona
+> **Escolha a versão correta.** Em 06/11/2026, o código atualizado está na branch **`feat/ifc-coral-mvp`**, commit **`228ef62`**. A branch padrão `main` ainda contém a base anterior do aplicativo, com esta página de apresentação atualizada. Para instalar os recursos descritos abaixo, use a branch indicada. Não baixe o ZIP da `main` esperando a mesma versão.
 
-![Fluxo do exercício: modelo e 4D, quantidade com origem, pacote, restrições, demanda e exportação JSON; depois, comparação de propostas e aprendizagem em aula](docs/media/ifc-coral-fluxo.png)
+## O raciocínio da aula
 
-| Etapa | O que você faz | O que precisa conferir |
-|---|---|---|
-| **1. Modelo e 4D** | Abre o IFC, escolhe uma frente e observa as atividades. | Modelo, elemento, local e origem das datas. |
-| **2. Quantidades** | Consulta o quantitativo e sua memória de origem. | Valor declarado, unidade e diferença entre medição e estimativa. |
-| **3. Pacote de produção** | Reúne o serviço e os elementos do recorte. | Serviço, quantidade, frente e período. |
-| **4. Restrições** | Registra o que impede o trabalho e quem precisa agir. | Responsável, prazo, evidência e condição de liberação. |
-| **5. Suprimentos** | Examina a demanda, a cobertura e o saldo do recorte. | Especificação, quantidade, datas e pendências. |
-| **6. Exportação** | Prepara e baixa o pacote JSON para a próxima análise. | Escopo exportado, fontes e informações ainda pendentes. |
+Uma concretagem pode estar prevista no Gantt e ainda depender de projeto, fôrmas, armaduras, equipe, acesso, equipamento e entrega de concreto. O modelo e o cronograma ajudam a examinar a sequência; a preparação verifica se há condições para assumir o compromisso.
 
-**O Exercício 02 termina no download do JSON.** A aula continua com propostas fictícias, decisão justificada, compromisso semanal e análise do PPC. A exportação organiza a informação; a compra depende de conferência e autorização próprias.
+![Mapa mental da disciplina: Lean, LPS, IFC e 4D, pacotes, restrições, suprimentos, PPC e IA](docs/media/mapa-jornada-iat001.png)
 
-## Materiais para acompanhar a aula
+*Mapa elaborado a partir de consulta ao NotebookLM da IAT 001 em 06/11/2026, com síntese editorial e diagramação local. Representa a trilha de aprendizagem; não é uma certificação de capacidades do software. [Versão vetorial](docs/media/mapa-jornada-iat001.svg).*
 
-| Acesso | Para que usar |
+| Conversa do LPS | Pergunta que orienta o trabalho |
 |---|---|
-| [GitHub IFC Coral](https://github.com/bicalhobim/ifc-coral) | Encontrar o projeto e acompanhar a indicação da versão de instalação. |
-| [IAT 001 — Materiais dos alunos](https://drive.google.com/drive/folders/1I36l-GWqufSSFH3ZuI0tSnSONYQTTYXc) | Consultar os materiais liberados pelo professor, conforme o momento da atividade. Acesso por link em conferência. |
-| [Guia de projetos locais](docs/PROJETOS_LOCAIS.md) | Entender pastas de projeto, salvar e salvar como. |
-| [Quantificação e suprimentos](docs/QUANTIFICACAO.md) | Interpretar as quantidades e suas limitações. |
-| [Navegação e planejamento 4D](docs/NAVEGACAO_4D_QUANTIDADES.md) | Explorar o modelo e o cronograma. |
+| **Should — deveria** | Quais marcos e atividades orientam a sequência da obra? |
+| **Can — pode** | Quais restrições precisamos remover no lookahead? |
+| **Will — será feito** | O que a equipe pode assumir com critério, responsável e prazo? |
+| **Did — foi feito** | O que foi concluído conforme o compromisso registrado? |
+| **Learn — aprender** | Quais causas de desvio precisam mudar o próximo plano? |
 
-O Drive receberá o PDF dos slides e o guia atualizados quando forem liberados. Os arquivos editáveis do E01 serão disponibilizados conforme a sequência da prática. Materiais e respostas do professor têm distribuição própria.
+O elemento IFC mantém a referência física. Um pacote reúne **elementos + local + serviço + quantidade + período + responsável + condições de execução**. O mesmo elemento pode participar de serviços distintos, como fôrmas, armação e concretagem.
+
+## Comece pelo seu objetivo
+
+| Na home da versão atualizada | Como usar |
+|---|---|
+| **Explore — Projeto Modelo** | Conheça um cenário preenchido com dados fictícios e um tour que pode ser reiniciado. |
+| **Pratique — Exercício 02** | Abra uma cópia independente da TORRE02 com IFC/4D e construa os próprios pacotes. |
+| **Crie — Meu Novo Projeto** | Comece com projeto vazio e modelo próprio, escolhendo sua pasta de trabalho. |
+
+Explore e Pratique usam cópias independentes. Salve a sua em uma pasta de projeto. O endereço local funciona apenas no computador em que o servidor está em execução.
+
+## O percurso dentro do Coral
+
+| Etapa | Ação | Conferência |
+|---|---|---|
+| **1. Modelo e cronograma** | Importe o IFC ou abra a TORRE02; explore a árvore, o Gantt e a linha de balanço. | Modelo, elementos, local e origem das datas. |
+| **2. Preparação 4D, se necessária** | Analise os modelos, confira o CSV e associe atividades por código/propriedade IFC. | Escopo dos modelos, códigos, datas, linhas pendentes e vínculos. |
+| **3. Quantidades e serviços** | Confira concreto, aço e fôrmas conforme os dados e métodos disponíveis. | Unidade, origem, taxa adotada e cobertura da medição. Ausência não é zero. |
+| **4. Pacotes** | Crie pacotes por serviço e acompanhe a lista ou Kanban. | Quantidades, elementos e datas próprias de cada serviço, com ajustes humanos preservados. |
+| **5. Restrições** | Use o checklist e o painel com filtros por local, responsável e situação. | Condição, ação, prazo e evidência antes da liberação. |
+| **6. Suprimentos** | Examine e ajuste a demanda em tabela; confira necessidade em obra e preparação da compra. | Composição, quantidade, cobertura, saldo, prazos e premissas. |
+| **7. Compromisso e aprendizado** | Registre compromissos semanais, execução, evidências e PPC. | Critério congelado, resultado e causa de não conclusão. |
+
+**No Exercício 02, o recorte termina no download do JSON para a análise seguinte.** A continuidade didática com comparação de propostas, compromisso e PPC segue a orientação do professor. O mapa de suprimentos não envia pedidos nem compra materiais.
+
+## O que mudou na versão publicada de desenvolvimento
+
+- **Preparação IFC + CSV em etapas:** modelos, dados e correções, cronograma, associações, revisão e aplicação em cópias conferidas.
+- **Associação por códigos verificáveis:** coluna do CSV e propriedade IFC configuradas por modelo, com revisão dos vínculos. A associação básica dispensa IA.
+- **Cronogramas maiores:** normalização de até 1.000 atividades e datas exportadas como `Ter 01/10/24`, além dos formatos convencionais. Linhas sem informação ou sem vínculo continuam visíveis.
+- **Datas por serviço nos pacotes:** o período disponível no cronograma aparece na conferência. Pode ser ajustado; ambiguidades e ausências pedem decisão.
+- **Gestão integrada:** painel de restrições, pacotes em Kanban, catálogos editáveis, mapa de suprimentos em tabela, Gantt/linha de balanço e organização das janelas.
+- **Projeto local:** salvar, salvar como, histórico e salvamento automático após escolher a pasta, com indicação de falhas.
+
+Esses recursos estão registrados na branch indicada; não significam compatibilidade universal com qualquer IFC. A aplicação de cronograma preserva os originais e possui bloqueios para revisões com cronogramas existentes ou pacotes vinculados. Consulte o [guia de importação](https://github.com/bicalhobim/ifc-coral/blob/feat/ifc-coral-mvp/docs/IMPORTACAO_CRONOGRAMA.md).
 
 ## Instalação com Codex
 
-A prática foi desenhada para quem está começando: o **Codex auxilia na preparação do ambiente e na execução local do Coral**. Planeje pelo menos um computador operacional por grupo.
+Prepare o **ChatGPT para Windows e o Codex** conforme o guia técnico da atividade prévia, acesso à internet e permissões de administrador quando a instalação exigir. A oficina síncrona em grupo é não avaliativa; a preparação técnica é necessária para operar junto com o professor.
 
-Antes da aula, consulte o material **“2.4 Guia de instalação e acesso à IA — Atividade Prévia”** disponibilizado pelo professor. Prepare um computador Windows com acesso à internet, espaço para o projeto e uma conta com acesso ao Codex. Instalações podem solicitar autorização do Windows ou da organização.
-
-1. Acesse a [página oficial do Codex](https://openai.com/codex/) e conclua o acesso solicitado no material prévio.
-2. Use a cópia independente e a versão do IFC Coral indicadas pelo professor. Aguarde essa indicação para preparar a instalação da turma.
-3. Abra a pasta no Codex e envie a solicitação abaixo. O agente deve explicar o resultado e pedir sua intervenção quando depender de acesso ou autorização do computador.
+Abra o Codex e use esta solicitação:
 
 ```text
-Quero executar o IFC Coral localmente no Windows e não tenho experiência
-com programação. Leia AGENTS.md e README.md. Confira a versão indicada
-para a aula e os pré-requisitos antes de executar comandos.
-Prepare uma instalação independente, sem alterar outros projetos.
-Verifique o Node.js e instale as dependências a partir do lockfile.
-Inicie o aplicativo apenas no computador local, abra no navegador e
-confira o carregamento do exemplo. Explique como parar e iniciar de novo.
-Não publique arquivos, não faça commit e não solicite credenciais no chat.
-Se houver uma falha, explique a causa e a menor ação necessária para corrigir.
+Quero instalar o IFC Coral no Windows para acompanhar a aula.
+Use https://github.com/bicalhobim/ifc-coral, branch feat/ifc-coral-mvp.
+Antes de instalar, confira o commit publicado e informe qual será executado.
+Prepare uma cópia independente, leia AGENTS.md e README.md e confira Node.js 24.
+Instale as dependências pelo lockfile. Se eu for usar Preparação IFC + CSV,
+confira também Python e IfcOpenShell conforme docs/IMPORTACAO_CRONOGRAMA.md.
+Inicie o servidor em 127.0.0.1:5178, abra no navegador e confira a home
+e o carregamento do exemplo. Explique como parar e iniciar novamente.
+Não altere outros projetos, não faça commit e não publique meus arquivos.
 ```
 
 <details>
-<summary><strong>Referência técnica de execução local</strong></summary>
-
-O projeto usa Node.js 24. Em uma **cópia independente** da versão selecionada:
+<summary><strong>Comandos para uma instalação independente</strong></summary>
 
 ```powershell
-cd caminho\para\ifc-coral\viewer
+git clone --branch feat/ifc-coral-mvp --single-branch https://github.com/bicalhobim/ifc-coral.git
+cd ifc-coral
+git log -1 --oneline
+cd viewer
 npm ci
 npm run dev -- --host 127.0.0.1 --port 5178 --strictPort
 ```
 
-Abra [IFC Coral neste computador](http://127.0.0.1:5178/) e mantenha o terminal em execução. Para encerrar, use `Ctrl+C` no terminal. A interface de entrada local ainda não comprova cadastro nem autenticação do aluno.
+Abra [o Coral neste computador](http://127.0.0.1:5178/). Mantenha o terminal aberto; encerre com `Ctrl+C`.
+A Preparação IFC + CSV também requer o ambiente Python/IfcOpenShell descrito no guia de importação.
 
-A instalação em uma cópia isolada no mesmo computador foi ensaiada; a instalação em outro computador e o ciclo completo com o seletor nativo do Windows ainda precisam ser concluídos para liberar a turma.
+**Atenção à cópia de desenvolvimento:** em `C:\dev\ifc4all-2`, as dependências são compartilhadas. Não execute `npm ci` nessa pasta; use uma cópia independente.
 
 </details>
 
-## Conheça as telas
+A entrada local não autentica contas nem registra presença. Instalação em outro computador e seletor nativo de pastas ainda precisam de ensaio completo; os testes locais não substituem essa verificação.
 
-As imagens abaixo são **capturas reais de ensaios locais**, com dados de demonstração. A versão e a data de cada captura estão identificadas; melhorias locais podem ainda não estar disponíveis no código publicado.
+## Telas e materiais
 
-### Modelo e preparação de pacotes
+As capturas abaixo são históricas de ensaios locais com dados de demonstração. A posição dos comandos pode variar com a versão.
 
-![Captura real da TORRE02 no IFC Coral com modelo 3D e painel de produção](docs/media/modelo-e-pacotes.jpg)
+![Modelo TORRE02 e preparação de pacotes — ensaio de 05/11/2026](docs/media/modelo-e-pacotes.jpg)
+![Painel de restrições — ensaio de 05/11/2026](docs/media/restricoes.jpg)
+![Mapa de suprimentos — ensaio de 02/11/2026](docs/media/suprimentos.jpg)
 
-*Ensaio de 05/11/2026: modelo TORRE02 aberto e painel de produção. Os nomes dos comandos refletem a interface capturada nessa data.*
+Use os [materiais da turma no Drive](https://drive.google.com/drive/folders/1I36l-GWqufSSFH3ZuI0tSnSONYQTTYXc) conforme a liberação pelo professor. O acesso depende das permissões da pasta. Slides e atividades são disponibilizados na sequência da aula; gabaritos e notas docentes têm distribuição própria.
 
-### Painel de restrições
+[Projetos locais](https://github.com/bicalhobim/ifc-coral/blob/feat/ifc-coral-mvp/docs/PROJETOS_LOCAIS.md) · [Quantificação](https://github.com/bicalhobim/ifc-coral/blob/feat/ifc-coral-mvp/docs/QUANTIFICACAO.md) · [Planejamento e janelas](https://github.com/bicalhobim/ifc-coral/blob/feat/ifc-coral-mvp/docs/GUIA_PLANEJAMENTO_JANELAS.md) · [Gestão de restrições](https://github.com/bicalhobim/ifc-coral/blob/feat/ifc-coral-mvp/docs/GESTAO_RESTRICOES.md)
 
-![Captura real do painel de restrições com filtros, indicadores e agrupamento por área e responsável](docs/media/restricoes.jpg)
+## IA, evidência e decisão humana
 
-*Ensaio de 05/11/2026, melhoria local: filtros e indicadores por frente e responsável. A classificação e os nomes usados são fictícios. A inclusão desta melhoria na versão distribuída será conferida antes da aula.*
+A IA auxilia a organizar informações e sugerir condições para revisão. Cálculos e vínculos por código seguem regras verificáveis. Uma data herdada do cronograma representa previsão; não libera restrições nem registra compromisso automaticamente.
 
-### Mapa de suprimentos
+Use dados fictícios nos exercícios. Confira a autorização antes de enviar informações reais a provedores de IA. Credenciais não devem ser colocadas em arquivos ou mensagens.
 
-![Captura real do mapa de suprimentos com quantidades, datas, situação e exportação](docs/media/suprimentos.jpg)
-
-*Ensaio de 02/11/2026: recorte de demonstração com quantidades e datas. Os valores exibidos pertencem ao ensaio; cada grupo deve conferir o próprio recorte.*
-
-## Três formas de começar
-
-A implementação local de 05/11/2026 já oferece as três entradas abaixo. **A incorporação à versão publicada e à distribuição discente ainda está em preparação.**
-
-| Entrada | Experiência |
-|---|---|
-| **Explore — Projeto Modelo** | Exemplo preenchido com dados fictícios e tour que pode ser pulado e reiniciado. |
-| **Pratique — Exercício 02** | TORRE02 com IFC/4D, sem os pacotes do exemplo: o grupo constrói seu próprio percurso. |
-| **Crie — Meu Novo Projeto** | Projeto local vazio para começar com informações e modelo próprios. |
-
-Explore e Pratique abrem cópias independentes. A versão publicada anterior pode mostrar apenas **Iniciar exercício com TORRE02** e **Novo projeto**. Consulte a indicação da turma antes de seguir um roteiro de telas.
-
-## IA, dados e decisão humana
-
-O Codex tem dois papéis diferentes nesta experiência: ajudar a executar o software no computador e, quando configurado, sugerir restrições para revisão dentro do Coral. A operação básica do aplicativo também permite registros manuais.
-
-Sugestões precisam ser conferidas antes de entrar no checklist. Quantidade desconhecida permanece pendente; estimativas não substituem projeto ou medição. Antes de usar IA com informações reais, confira o conteúdo e as permissões de envio ao provedor.
-
-O Coral é um **protótipo didático local**. O mapa não realiza compras nem envia mensagens. A integração demonstrativa com Compras IA é uma frente em desenvolvimento, com conferência humana e sem compra autorizada automaticamente.
+O Coral é um **protótipo didático local**. Estimativas de aço e fôrmas dependem das premissas e não substituem projeto ou medição. A exportação para Compras IA organiza dados para a análise seguinte; não autoriza compras.
 
 ## Origem e créditos
 
 Projeto e condução didática: **Professor Lucas Bicalho**. O IFC Coral parte do [IFC4ALL](https://github.com/bicalhobim/ifc4all) e da evolução 4D, com contribuição de Luiz Sales. A autorização específica de uso do código 4D e da TORRE02 não estabelece licença aberta para todo o projeto.
 
-[Créditos e bibliotecas](docs/CREDITOS.md) · [Arquivos e avisos de terceiros](third_party/README.md)
+[Créditos e bibliotecas](docs/CREDITOS.md) · [Avisos de terceiros](third_party/README.md)
 
-A licença geral e os avisos de terceiros estão em revisão para a distribuição. Modelos e materiais da turma passarão pela revisão de metadados e de conteúdo antes da liberação.
+A licença geral e a distribuição de modelos e materiais continuam sujeitas à revisão própria.
 
 **[GitHub](https://github.com/bicalhobim) · [LinkedIn](https://www.linkedin.com/in/bicalhobim/) · [lucas@bicalhoengenharia.com](mailto:lucas@bicalhoengenharia.com)**
